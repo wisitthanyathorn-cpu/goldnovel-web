@@ -528,10 +528,16 @@
       const { data: setRow } = await sb.from('site_settings').select('*').eq('id', 'main').single();
       if (setRow) state.settings = setRow;
 
-      const { data: novels } = await sb.from('novels').select('*, chapters(*)').order('created_at', { ascending: false });
+      const { data: novels } = await sb.from('novels').select('*').order('created_at', { ascending: false });
+      const { data: chMeta } = await sb.from('chapters_public').select('*').order('chapter_number', { ascending: true });
       if (novels) {
+        const byNovel = {};
+        (chMeta || []).forEach(c => {
+          if (!byNovel[c.novel_id]) byNovel[c.novel_id] = [];
+          byNovel[c.novel_id].push(c);
+        });
         novels.forEach(n => {
-          n.chapters = (n.chapters || []).sort((a, b) => a.chapter_number - b.chapter_number);
+          n.chapters = (byNovel[n.id] || []).sort((a, b) => a.chapter_number - b.chapter_number);
         });
         state.novels = novels;
       }
@@ -561,6 +567,15 @@
 
     function getNovel(id) {
       return state.novels.find(n => n.id === id) || state.novels[0];
+    }
+
+    async function fetchChapterContentIfNeeded(ch) {
+      if (!ch || !state.isLive) return true;
+      if (typeof ch.content === 'string' && ch.content.length > 0) return true;
+      const { data, error } = await sb.from('chapters').select('content').eq('id', ch.id).single();
+      if (error || !data) return false;
+      ch.content = data.content || '';
+      return true;
     }
 
     function isChapterPublished(ch) {
@@ -1555,11 +1570,16 @@
       m.classList.remove('flex');
     }
 
-    function openChapter(chId) {
+    async function openChapter(chId) {
       const novel = getNovel(state.activeNovelId);
       const ch = (novel?.chapters || []).find(c => c.id === chId);
       if (!ch) return;
       if (isAccessible(ch)) {
+        const ok = await fetchChapterContentIfNeeded(ch);
+        if (!ok) {
+          showToast('ไม่สามารถโหลดเนื้อหาได้ กรุณาปลดล็อกตอนนี้ก่อน');
+          return;
+        }
         state.activeChapterId = ch.id;
         state.view = 'reader';
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1914,8 +1934,12 @@
       });
 
       document.querySelectorAll('[data-edit-ch]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.editingChapterId = btn.getAttribute('data-edit-ch');
+        btn.addEventListener('click', async () => {
+          const cid = btn.getAttribute('data-edit-ch');
+          const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+          const ch = novel?.chapters?.find(c => c.id === cid);
+          if (ch) await fetchChapterContentIfNeeded(ch);
+          state.editingChapterId = cid;
           state.adminShowChapterForm = true;
           window.scrollTo({ top: 0, behavior: 'smooth' });
           render();
@@ -2280,6 +2304,9 @@
           saveDemo();
         }
         state.pendingUnlock = null;
+        const freshNovel = getNovel(novel.id);
+        const freshCh = (freshNovel?.chapters || []).find(c => c.id === ch.id);
+        if (freshCh) await fetchChapterContentIfNeeded(freshCh);
         state.activeNovelId = novel.id;
         state.activeChapterId = ch.id;
         state.view = 'reader';
