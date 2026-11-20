@@ -395,7 +395,11 @@
       readTheme: 'dark',
       fontSize: 18,
       view: 'home', // home | novel | reader | library | settings | admin
-      adminTab: 'novels', // novels | chapters | banners | topups
+      adminTab: 'novels', // novels | banners | topups
+      adminSelectedNovelId: null, // null = novel list view, id = inside that novel's workspace
+      adminShowNewNovel: false,
+      adminShowChapterForm: false,
+      editingChapterId: null,
       rankFilter: 'ทั้งหมด',
       activeCategory: null,
       searchQuery: '',
@@ -524,6 +528,12 @@
 
     function getNovel(id) {
       return state.novels.find(n => n.id === id) || state.novels[0];
+    }
+
+    function isChapterPublished(ch) {
+      if (ch.status === 'draft') return false;
+      if (ch.publish_at && new Date(ch.publish_at).getTime() > Date.now()) return false;
+      return true;
     }
 
     function isAccessible(ch) {
@@ -743,7 +753,7 @@
     function renderNovelDetail() {
       const novel = getNovel(state.activeNovelId);
       if (!novel) return `<div class="p-8 text-center">ไม่พบนิยาย</div>`;
-      const chapters = novel.chapters || [];
+      const chapters = (novel.chapters || []).filter(c => isAdmin() || isChapterPublished(c));
       const unlockedCount = chapters.filter(c => isAccessible(c)).length;
       const pct = chapters.length ? Math.round((unlockedCount / chapters.length) * 100) : 0;
 
@@ -924,85 +934,258 @@
       }
 
       const tabs = [
-        { id: 'novels', label: '📖 จัดการนิยาย & ปก' },
-        { id: 'chapters', label: '📝 ลงตอนนิยาย' },
+        { id: 'novels', label: '📖 นิยายของฉัน & จัดการตอน' },
         { id: 'banners', label: '🎨 แบนเนอร์ & โปรโมชัน' },
         { id: 'topups', label: '💳 ตรวจสลิปเติมเงิน' }
       ];
 
       let body = '';
       if (state.adminTab === 'novels') {
-        body = `
-          <form id="addNovelForm" class="card-panel rounded-2xl p-5 space-y-3 mb-6">
-            <h3 class="font-bold text-base" style="color: var(--gold-1);">+ เพิ่มนิยายเรื่องใหม่ (อัปโหลดรูปปกจากเครื่องได้เลย)</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input id="nTitle" required placeholder="ชื่อเรื่องนิยาย" class="px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-              <input id="nAuthor" value="GoldNovel" placeholder="นามปากกาผู้แต่ง" class="px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <select id="nCategory" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
-              </select>
-              <select id="nAudience" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                <option value="ทั้งหมด">กลุ่มผู้อ่าน: ทั้งหมด</option>
-                <option value="ชาย">ชาย</option>
-                <option value="หญิง">หญิง</option>
-              </select>
-              <select id="nStatus" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                <option value="กำลังอัปเดต">กำลังอัปเดต</option>
-                <option value="จบแล้ว">จบแล้ว</option>
-              </select>
-            </div>
-            <textarea id="nSynopsis" rows="2" placeholder="คำโปรย / เรื่องย่อ" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);"></textarea>
-            <div>
-              <label class="block text-xs mb-1" style="color: var(--text-sub);">อัปโหลดรูปปกนิยาย (สัดส่วนแนวตั้ง 3:4)</label>
-              <input id="nCoverFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
-            </div>
-            <button type="submit" class="px-6 py-2.5 rounded-xl text-sm btn-gold">บันทึกและสร้างนิยาย</button>
-          </form>
+        // LEVEL 2: Inside a specific novel's dedicated workspace
+        if (state.adminSelectedNovelId) {
+          const targetNovel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+          if (!targetNovel) {
+            state.adminSelectedNovelId = null;
+          } else {
+            const chList = (targetNovel.chapters || []).slice().sort((a, b) => a.chapter_number - b.chapter_number);
+            const editCh = state.editingChapterId ? chList.find(c => c.id === state.editingChapterId) : null;
+            const nextNum = chList.length ? Math.max(...chList.map(c => c.chapter_number)) + 1 : 1;
 
-          <div class="card-panel rounded-2xl overflow-hidden">
-            <div class="px-5 py-3.5 border-b font-bold text-sm" style="border-color: var(--border-soft);">นิยายทั้งหมด (${state.novels.length} เรื่อง)</div>
-            <div>
-              ${state.novels.map(n => `
-                <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3" style="border-color: var(--border-soft);">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-11 h-14 rounded-lg overflow-hidden shrink-0 border" style="border-color: var(--border-subtle);">${renderCoverBox(n)}</div>
-                    <div class="min-w-0">
-                      <div class="text-sm font-semibold truncate">${n.title}</div>
-                      <div class="text-xs" style="color: var(--text-muted);">${(n.chapters || []).length} ตอน · ${n.status}</div>
-                    </div>
-                  </div>
+            const missingNums = [];
+            if (chList.length > 0) {
+              const maxN = Math.max(...chList.map(c => c.chapter_number));
+              const existingSet = new Set(chList.map(c => c.chapter_number));
+              for (let i = 1; i <= maxN; i++) {
+                if (!existingSet.has(i)) missingNums.push(i);
+              }
+            }
+
+            const toLocalDatetime = (iso) => {
+              if (!iso) return '';
+              const d = new Date(iso);
+              if (isNaN(d.getTime())) return '';
+              const pad = (n) => String(n).padStart(2, '0');
+              return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            };
+
+            const editPublishVal = editCh?.publish_at ? toLocalDatetime(editCh.publish_at) : '';
+            const editStatus = editCh?.status || 'published';
+
+            const chapterEditorHtml = (state.adminShowChapterForm || editCh) ? `
+              <form id="addChapterForm" class="card-panel rounded-2xl p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <h3 class="font-bold text-base" style="color: var(--gold-1);">${editCh ? `✏️ กำลังแก้ไข: ตอนที่ ${editCh.chapter_number} — ${editCh.title}` : `+ เพิ่มตอนใหม่ให้เรื่อง "${targetNovel.title}"`}</h3>
                   <div class="flex items-center gap-2">
                     <label class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer" style="background-color: var(--gold-soft); color: var(--gold-1);">
-                      เปลี่ยนรูปปก
-                      <input type="file" accept="image/*" data-change-cover="${n.id}" class="hidden">
+                      📄 ดึงข้อความจากไฟล์ .txt
+                      <input id="importTxtInput" type="file" accept=".txt,.md" class="hidden">
                     </label>
-                    <button type="button" data-del-novel="${n.id}" class="px-3 py-1.5 rounded-lg text-xs text-rose-400" style="background-color: rgba(244,63,94,0.12);">ลบ</button>
+                    <button type="button" id="cancelEditChBtn" class="px-3 py-1.5 rounded-lg text-xs" style="background-color: var(--bg-input); color: var(--text-sub);">ปิดฟอร์ม</button>
                   </div>
                 </div>
-              `).join('')}
+
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label class="block text-xs mb-1" style="color: var(--text-sub);">ลำดับตอนที่</label>
+                    <input id="chNum" type="number" min="1" value="${editCh ? editCh.chapter_number : nextNum}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="block text-xs mb-1" style="color: var(--text-sub);">ชื่อตอน</label>
+                    <input id="chTitle" required value="${editCh ? editCh.title.replace(/"/g, '&quot;') : ''}" placeholder="เช่น จุดเริ่มต้นแห่งตำนาน" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                  </div>
+                  <div>
+                    <label class="block text-xs mb-1" style="color: var(--text-sub);">ราคาเหรียญ (0 = ฟรี)</label>
+                    <input id="chPrice" type="number" min="0" value="${editCh ? editCh.price_coins : 1}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs mb-1" style="color: var(--text-sub);">สถานะการเผยแพร่</label>
+                    <select id="chStatus" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                      <option value="published" ${editStatus === 'published' ? 'selected' : ''}>เผยแพร่ทันที (หรือตามเวลาที่ตั้ง)</option>
+                      <option value="draft" ${editStatus === 'draft' ? 'selected' : ''}>บันทึกเป็นแบบร่าง (ซ่อนจากคนอ่าน)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs mb-1" style="color: var(--text-sub);">ตั้งเวลาลงอัตโนมัติ (ปล่อยว่าง = ลงทันที)</label>
+                    <input id="chPublishAt" type="datetime-local" value="${editPublishVal}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-xs" style="color: var(--text-sub);">เนื้อหานิยาย</label>
+                    <div class="flex items-center gap-3">
+                      <button type="button" id="cleanFormatBtn" class="text-[11px] hover:underline" style="color: var(--gold-1);">✨ จัดย่อหน้าอัตโนมัติ</button>
+                      <span id="chCharCount" class="text-[11px]" style="color: var(--text-muted);">${(editCh?.content || '').length.toLocaleString()} ตัวอักษร</span>
+                    </div>
+                  </div>
+                  <textarea id="chContent" required rows="9" placeholder="วางเนื้อหานิยายที่นี่ หรือกดปุ่ม 'ดึงข้อความจากไฟล์ .txt' ด้านบน..." class="w-full px-3.5 py-3 rounded-xl text-sm leading-relaxed focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">${editCh ? editCh.content : ''}</textarea>
+                </div>
+
+                <div class="flex flex-wrap gap-2.5">
+                  <button type="submit" class="px-6 py-2.5 rounded-xl text-sm btn-gold">${editCh ? 'บันทึกการแก้ไขตอน' : 'เผยแพร่ / บันทึกตอนนิยาย'}</button>
+                  <button type="button" id="cancelEditChBtn2" class="px-4 py-2.5 rounded-xl text-xs" style="background-color: var(--bg-input); color: var(--text-sub);">ยกเลิก</button>
+                </div>
+              </form>
+            ` : '';
+
+            body = `
+              <div class="space-y-5 fade-in">
+                <button type="button" id="backToNovelListBtn" class="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 hover:underline" style="color: var(--gold-1);">← กลับไปหน้ารายการนิยายทั้งหมด</button>
+
+                <!-- Selected Novel Header Card -->
+                <div class="card-panel rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div class="flex items-center gap-4 min-w-0">
+                    <div class="w-16 h-22 rounded-xl overflow-hidden shrink-0 border" style="border-color: var(--border-subtle);">${renderCoverBox(targetNovel)}</div>
+                    <div class="min-w-0">
+                      <div class="text-[11px] font-medium mb-0.5" style="color: var(--gold-1);">กำลังจัดการนิยายเรื่อง</div>
+                      <h2 class="text-lg sm:text-xl font-bold truncate">${targetNovel.title}</h2>
+                      <div class="text-xs mt-0.5" style="color: var(--text-muted);">โดย ${targetNovel.author} · ${targetNovel.status} · ทั้งหมด ${chList.length} ตอน</div>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2 shrink-0">
+                    <label class="px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-main);">
+                      🖼️ เปลี่ยนรูปปก
+                      <input type="file" accept="image/*" data-change-cover="${targetNovel.id}" class="hidden">
+                    </label>
+                    <button type="button" id="openNewChapterBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มตอนใหม่</button>
+                  </div>
+                </div>
+
+                ${chapterEditorHtml}
+
+                <!-- Chapter List for THIS Novel Only -->
+                <div class="card-panel rounded-2xl overflow-hidden">
+                  <div class="px-5 py-4 border-b flex flex-wrap items-center justify-between gap-3" style="border-color: var(--border-soft);">
+                    <div>
+                      <h3 class="font-bold text-sm">รายชื่อตอนทั้งหมด (${chList.length} ตอน)</h3>
+                      ${missingNums.length ? `<div class="text-xs mt-1 text-amber-400">⚠️ พบเลขตอนที่ข้ามไป: ตอนที่ ${missingNums.slice(0, 6).join(', ')}${missingNums.length > 6 ? '...' : ''}</div>` : `<div class="text-xs mt-0.5" style="color: var(--text-muted);">คลิก "แก้ไข" เพื่อปรับเนื้อหา ราคา หรือตั้งเวลาลง · กด ↑ ↓ เพื่อสลับตอน</div>`}
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <label class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-main);">
+                        📚 นำเข้าหลายไฟล์ .txt
+                        <input id="bulkImportTxtInput" type="file" accept=".txt,.md" multiple class="hidden">
+                      </label>
+                      ${chList.length > 1 ? `<button type="button" id="renumberChaptersBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">🔢 เรียงเลขตอนใหม่</button>` : ''}
+                    </div>
+                  </div>
+                  <div>
+                    ${chList.length === 0 ? `<div class="p-10 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยายในเรื่องนี้ กดปุ่ม <strong>+ เพิ่มตอนใหม่</strong> ด้านบนได้เลยครับ</div>` :
+                      chList.map((c, idx) => {
+                        const isScheduled = c.status !== 'draft' && c.publish_at && new Date(c.publish_at).getTime() > Date.now();
+                        let stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">เผยแพร่แล้ว</span>`;
+                        if (c.status === 'draft') {
+                          stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(148,163,184,0.16); color: #94A3B8;">แบบร่าง</span>`;
+                        } else if (isScheduled) {
+                          const dt = new Date(c.publish_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                          stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">⏰ ตั้งเวลา ${dt}</span>`;
+                        }
+                        return `
+                          <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3" style="border-color: var(--border-soft);">
+                            <div class="min-w-0 flex-1">
+                              <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                                <span class="text-xs font-bold" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
+                                <span class="text-sm font-semibold truncate">${c.title}</span>
+                              </div>
+                              <div class="flex flex-wrap items-center gap-2 text-[11px]" style="color: var(--text-muted);">
+                                ${stBadge}
+                                <span>${c.price_coins === 0 ? 'อ่านฟรี' : `🔒 ${c.price_coins} เหรียญ`}</span>
+                                <span>· ${(c.content || '').length.toLocaleString()} ตัวอักษร</span>
+                              </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                              <button type="button" data-move-ch="${c.id}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} title="เลื่อนขึ้น" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↑</button>
+                              <button type="button" data-move-ch="${c.id}" data-dir="1" ${idx === chList.length - 1 ? 'disabled' : ''} title="เลื่อนลง" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↓</button>
+                              <button type="button" data-edit-ch="${c.id}" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">แก้ไข</button>
+                              <button type="button" data-del-ch="${c.id}" class="px-2.5 py-1.5 rounded-lg text-xs text-rose-400" style="background-color: rgba(244,63,94,0.12);">ลบ</button>
+                            </div>
+                          </div>
+                        `;
+                      }).join('')}
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        }
+
+        // LEVEL 1: Clean List of Novels (Click any novel to manage its chapters!)
+        if (!state.adminSelectedNovelId) {
+          const newNovelFormHtml = state.adminShowNewNovel ? `
+            <form id="addNovelForm" class="card-panel rounded-2xl p-5 space-y-3 mb-5 fade-in">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-base" style="color: var(--gold-1);">+ สร้างนิยายเรื่องใหม่</h3>
+                <button type="button" id="closeNewNovelBtn" class="text-xs px-3 py-1 rounded-lg" style="background-color: var(--bg-input); color: var(--text-sub);">ปิด</button>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs mb-1" style="color: var(--text-sub);">ชื่อเรื่องนิยาย</label>
+                  <input id="nTitle" required placeholder="พิมพ์ชื่อเรื่อง" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                </div>
+                <div>
+                  <label class="block text-xs mb-1" style="color: var(--text-sub);">นามปากกาผู้แต่ง</label>
+                  <input id="nAuthor" value="GoldNovel" placeholder="นามปากกา" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <select id="nCategory" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                  ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
+                <select id="nAudience" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                  <option value="ทั้งหมด">กลุ่มผู้อ่าน: ทั้งหมด</option>
+                  <option value="ชาย">ชาย</option>
+                  <option value="หญิง">หญิง</option>
+                </select>
+                <select id="nStatus" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                  <option value="กำลังอัปเดต">กำลังอัปเดต</option>
+                  <option value="จบแล้ว">จบแล้ว</option>
+                </select>
+              </div>
+              <textarea id="nSynopsis" rows="2" placeholder="คำโปรย / เรื่องย่อ" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);"></textarea>
+              <div>
+                <label class="block text-xs mb-1" style="color: var(--text-sub);">อัปโหลดรูปปกนิยาย (สัดส่วนแนวตั้ง 3:4)</label>
+                <input id="nCoverFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+              </div>
+              <button type="submit" class="px-6 py-2.5 rounded-xl text-sm btn-gold">บันทึกและสร้างนิยาย</button>
+            </form>
+          ` : '';
+
+          body = `
+            <div class="space-y-5 fade-in">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 class="text-base font-bold">รายการนิยายของคุณ (${state.novels.length} เรื่อง)</h2>
+                  <p class="text-xs" style="color: var(--text-muted);">คลิกเลือกเรื่องที่ต้องการเพื่อเข้าไปเพิ่ม แก้ไข หรือจัดการตอนนิยายของเรื่องนั้นโดยเฉพาะ</p>
+                </div>
+                <button type="button" id="toggleNewNovelBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มนิยายเรื่องใหม่</button>
+              </div>
+
+              ${newNovelFormHtml}
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${state.novels.length === 0 ? `<div class="col-span-full card-panel rounded-2xl p-10 text-center text-sm" style="color: var(--text-muted);">ยังไม่มีนิยาย กดปุ่ม "+ เพิ่มนิยายเรื่องใหม่" ด้านบนเพื่อเริ่มต้นได้เลยครับ</div>` :
+                  state.novels.map(n => `
+                    <div class="card-panel rounded-2xl p-4 flex gap-4 items-center justify-between hover:border-amber-300/40 transition-colors">
+                      <button type="button" data-manage-novel="${n.id}" class="flex items-center gap-4 min-w-0 flex-1 text-left focus:outline-none">
+                        <div class="w-16 h-22 rounded-xl overflow-hidden shrink-0 border" style="border-color: var(--border-subtle);">${renderCoverBox(n)}</div>
+                        <div class="min-w-0">
+                          <div class="text-base font-bold truncate">${n.title}</div>
+                          <div class="text-xs mt-0.5" style="color: var(--text-muted);">${(n.categories || []).join(' · ')} · ${n.status}</div>
+                          <div class="text-xs mt-1.5 font-semibold" style="color: var(--gold-1);">ทั้งหมด ${(n.chapters || []).length} ตอน → กดเพื่อจัดการตอน</div>
+                        </div>
+                      </button>
+                      <div class="flex flex-col gap-1.5 shrink-0">
+                        <button type="button" data-manage-novel="${n.id}" class="px-3.5 py-1.5 rounded-lg text-xs btn-gold">จัดการตอน</button>
+                        <button type="button" data-del-novel="${n.id}" class="px-3.5 py-1.5 rounded-lg text-xs text-rose-400" style="background-color: rgba(244,63,94,0.12);">ลบเรื่อง</button>
+                      </div>
+                    </div>
+                  `).join('')}
+              </div>
             </div>
-          </div>
-        `;
-      } else if (state.adminTab === 'chapters') {
-        body = `
-          <form id="addChapterForm" class="card-panel rounded-2xl p-5 space-y-3">
-            <h3 class="font-bold text-base" style="color: var(--gold-1);">+ ลงตอนนิยายใหม่</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <select id="chNovelId" class="sm:col-span-2 px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                ${state.novels.map(n => `<option value="${n.id}">${n.title}</option>`).join('')}
-              </select>
-              <input id="chPrice" type="number" min="0" value="1" placeholder="ราคาเหรียญ (0 = ฟรี)" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-              <input id="chNum" type="number" min="1" value="3" placeholder="ตอนที่" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-              <input id="chTitle" required placeholder="ชื่อตอน" class="sm:col-span-3 px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-            </div>
-            <textarea id="chContent" required rows="7" placeholder="วางเนื้อหานิยายที่นี่... (ขึ้นย่อหน้าใหม่ด้วยการกด Enter)" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);"></textarea>
-            <button type="submit" class="px-6 py-2.5 rounded-xl text-sm btn-gold">เผยแพร่ตอนนิยาย</button>
-          </form>
-        `;
+          `;
+        }
       } else if (state.adminTab === 'banners') {
         const s = state.settings;
         body = `
@@ -1050,11 +1233,9 @@
 
       return `
         <div class="fade-in max-w-4xl mx-auto space-y-5">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h1 class="text-xl font-bold">หลังบ้านนักเขียน (GoldNovel Admin)</h1>
-              <p class="text-xs" style="color: var(--text-sub);">อัปโหลดรูปปก แบนเนอร์ ลงตอนนิยาย และจัดการการเติมเงินได้เองโดยไม่ต้องแก้โค้ด</p>
-            </div>
+          <div>
+            <h1 class="text-xl font-bold">หลังบ้านนักเขียน (GoldNovel Admin)</h1>
+            <p class="text-xs" style="color: var(--text-sub);">คลิกเลือกนิยายทีละเรื่องเพื่อจัดการตอน ตั้งเวลาลง แก้ไข และตั้งราคาเหรียญได้สะดวก</p>
           </div>
           <div class="flex flex-wrap gap-2">
             ${tabs.map(t => `
@@ -1232,7 +1413,52 @@
       });
 
       document.querySelectorAll('[data-admin-tab]').forEach(btn => {
-        btn.addEventListener('click', () => { state.adminTab = btn.getAttribute('data-admin-tab'); render(); });
+        btn.addEventListener('click', () => {
+          state.adminTab = btn.getAttribute('data-admin-tab');
+          if (state.adminTab === 'novels') {
+            state.adminSelectedNovelId = null;
+            state.adminShowChapterForm = false;
+            state.editingChapterId = null;
+          }
+          render();
+        });
+      });
+
+      const toggleNewNovelBtn = document.getElementById('toggleNewNovelBtn');
+      if (toggleNewNovelBtn) toggleNewNovelBtn.addEventListener('click', () => {
+        state.adminShowNewNovel = !state.adminShowNewNovel;
+        render();
+      });
+
+      const closeNewNovelBtn = document.getElementById('closeNewNovelBtn');
+      if (closeNewNovelBtn) closeNewNovelBtn.addEventListener('click', () => {
+        state.adminShowNewNovel = false;
+        render();
+      });
+
+      document.querySelectorAll('[data-manage-novel]').forEach(el => {
+        el.addEventListener('click', () => {
+          state.adminSelectedNovelId = el.getAttribute('data-manage-novel');
+          state.adminShowChapterForm = false;
+          state.editingChapterId = null;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          render();
+        });
+      });
+
+      const backToNovelListBtn = document.getElementById('backToNovelListBtn');
+      if (backToNovelListBtn) backToNovelListBtn.addEventListener('click', () => {
+        state.adminSelectedNovelId = null;
+        state.adminShowChapterForm = false;
+        state.editingChapterId = null;
+        render();
+      });
+
+      const openNewChapterBtn = document.getElementById('openNewChapterBtn');
+      if (openNewChapterBtn) openNewChapterBtn.addEventListener('click', () => {
+        state.editingChapterId = null;
+        state.adminShowChapterForm = true;
+        render();
       });
 
       document.querySelectorAll('[data-rank-filter]').forEach(btn => {
@@ -1306,6 +1532,7 @@
             state.novels.unshift({ ...payload, id: 'n-' + Date.now(), chapters: [] });
             saveDemo();
           }
+          state.adminShowNewNovel = false;
           render();
           showToast('เพิ่มนิยายใหม่เรียบร้อยแล้ว!');
         } catch (err) {
@@ -1351,35 +1578,227 @@
         });
       });
 
-      // Admin: Add Chapter
+      // Admin: Chapter Manager Controls
+
+      const chContentEl = document.getElementById('chContent');
+      if (chContentEl) chContentEl.addEventListener('input', () => {
+        const cnt = document.getElementById('chCharCount');
+        if (cnt) cnt.textContent = `${chContentEl.value.length.toLocaleString()} ตัวอักษร`;
+      });
+
+      const cleanFormatBtn = document.getElementById('cleanFormatBtn');
+      if (cleanFormatBtn && chContentEl) cleanFormatBtn.addEventListener('click', () => {
+        const cleaned = chContentEl.value
+          .replace(/\r\n/g, '\n')
+          .split('\n')
+          .map(line => line.trim())
+          .filter(Boolean)
+          .join('\n\n');
+        chContentEl.value = cleaned;
+        const cnt = document.getElementById('chCharCount');
+        if (cnt) cnt.textContent = `${cleaned.length.toLocaleString()} ตัวอักษร`;
+        showToast('จัดย่อหน้าเรียบร้อยแล้ว');
+      });
+
+      const importTxtInput = document.getElementById('importTxtInput');
+      if (importTxtInput) importTxtInput.addEventListener('change', async () => {
+        const file = importTxtInput.files[0];
+        if (!file) return;
+        const text = await file.text();
+        const titleInput = document.getElementById('chTitle');
+        if (titleInput && !titleInput.value.trim()) {
+          titleInput.value = file.name.replace(/\.(txt|md)$/i, '');
+        }
+        if (chContentEl) {
+          chContentEl.value = text.trim();
+          const cnt = document.getElementById('chCharCount');
+          if (cnt) cnt.textContent = `${chContentEl.value.length.toLocaleString()} ตัวอักษร`;
+        }
+        showToast('ดึงข้อความจากไฟล์เรียบร้อย!');
+      });
+
+      const bulkImportInput = document.getElementById('bulkImportTxtInput');
+      if (bulkImportInput) bulkImportInput.addEventListener('change', async () => {
+        const files = Array.from(bulkImportInput.files || []).sort((a, b) => a.name.localeCompare(b.name, 'th', { numeric: true }));
+        if (!files.length) return;
+        const nid = state.adminSelectedNovelId;
+        const defaultPrice = Number(document.getElementById('chPrice')?.value || 1);
+        const novel = state.novels.find(n => n.id === nid);
+        const existing = novel?.chapters || [];
+        let nextN = existing.length ? Math.max(...existing.map(c => c.chapter_number)) + 1 : 1;
+        try {
+          for (const f of files) {
+            const text = (await f.text()).trim();
+            const title = f.name.replace(/\.(txt|md)$/i, '');
+            const row = {
+              novel_id: nid,
+              chapter_number: nextN++,
+              title,
+              price_coins: defaultPrice,
+              content: text,
+              status: 'published',
+              publish_at: new Date().toISOString()
+            };
+            if (state.isLive) {
+              const { error } = await sb.from('chapters').insert(row);
+              if (error) throw error;
+            } else if (novel) {
+              novel.chapters.push({ ...row, id: 'ch-' + Date.now() + '-' + nextN });
+            }
+          }
+          if (state.isLive) await loadLiveData();
+          else saveDemo();
+          render();
+          showToast(`นำเข้าสำเร็จทั้งหมด ${files.length} ตอน!`);
+        } catch (err) {
+          showToast('นำเข้าไม่สำเร็จ: ' + err.message);
+        }
+      });
+
+      [document.getElementById('cancelEditChBtn'), document.getElementById('cancelEditChBtn2')].forEach(btn => {
+        if (btn) btn.addEventListener('click', () => {
+          state.editingChapterId = null;
+          state.adminShowChapterForm = false;
+          render();
+        });
+      });
+
       const addChForm = document.getElementById('addChapterForm');
       if (addChForm) addChForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
-          const nid = document.getElementById('chNovelId').value;
+          const nid = state.adminSelectedNovelId;
+          const pubRaw = document.getElementById('chPublishAt').value;
+          const publishIso = pubRaw ? new Date(pubRaw).toISOString() : new Date().toISOString();
           const payload = {
             novel_id: nid,
             chapter_number: Number(document.getElementById('chNum').value),
             title: document.getElementById('chTitle').value.trim(),
             price_coins: Number(document.getElementById('chPrice').value || 0),
-            content: document.getElementById('chContent').value.trim()
+            content: document.getElementById('chContent').value.trim(),
+            status: document.getElementById('chStatus').value,
+            publish_at: publishIso
           };
+
+          if (state.editingChapterId) {
+            if (state.isLive) {
+              const { error } = await sb.from('chapters').update(payload).eq('id', state.editingChapterId);
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const novel = state.novels.find(n => n.id === nid);
+              const ch = novel?.chapters?.find(c => c.id === state.editingChapterId);
+              if (ch) Object.assign(ch, payload);
+              novel?.chapters?.sort((a, b) => a.chapter_number - b.chapter_number);
+              saveDemo();
+            }
+            state.editingChapterId = null;
+            state.adminShowChapterForm = false;
+            render();
+            showToast('บันทึกการแก้ไขตอนเรียบร้อย!');
+          } else {
+            if (state.isLive) {
+              const { error } = await sb.from('chapters').insert(payload);
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const novel = state.novels.find(n => n.id === nid);
+              if (novel) {
+                novel.chapters = novel.chapters || [];
+                novel.chapters.push({ ...payload, id: 'ch-' + Date.now() });
+                novel.chapters.sort((a, b) => a.chapter_number - b.chapter_number);
+              }
+              saveDemo();
+            }
+            state.adminShowChapterForm = false;
+            render();
+            showToast('บันทึกตอนนิยายเรียบร้อย!');
+          }
+        } catch (err) {
+          showToast('บันทึกไม่สำเร็จ: ' + err.message);
+        }
+      });
+
+      document.querySelectorAll('[data-edit-ch]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.editingChapterId = btn.getAttribute('data-edit-ch');
+          state.adminShowChapterForm = true;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          render();
+        });
+      });
+
+      document.querySelectorAll('[data-del-ch]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const cid = btn.getAttribute('data-del-ch');
+          try {
+            if (state.isLive) {
+              const { error } = await sb.from('chapters').delete().eq('id', cid);
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+              if (novel) novel.chapters = novel.chapters.filter(c => c.id !== cid);
+              saveDemo();
+            }
+            if (state.editingChapterId === cid) state.editingChapterId = null;
+            render();
+            showToast('ลบตอนนิยายเรียบร้อย');
+          } catch (err) { showToast('ลบไม่สำเร็จ: ' + err.message); }
+        });
+      });
+
+      document.querySelectorAll('[data-move-ch]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const cid = btn.getAttribute('data-move-ch');
+          const dir = Number(btn.getAttribute('data-dir'));
+          const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+          if (!novel) return;
+          const sorted = novel.chapters.slice().sort((a, b) => a.chapter_number - b.chapter_number);
+          const idx = sorted.findIndex(c => c.id === cid);
+          const swapIdx = idx + dir;
+          if (idx < 0 || swapIdx < 0 || swapIdx >= sorted.length) return;
+          const a = sorted[idx], b = sorted[swapIdx];
+          const numA = a.chapter_number, numB = b.chapter_number;
+          try {
+            if (state.isLive) {
+              await sb.from('chapters').update({ chapter_number: 999999 }).eq('id', a.id);
+              await sb.from('chapters').update({ chapter_number: numA }).eq('id', b.id);
+              await sb.from('chapters').update({ chapter_number: numB }).eq('id', a.id);
+              await loadLiveData();
+            } else {
+              a.chapter_number = numB;
+              b.chapter_number = numA;
+              novel.chapters.sort((x, y) => x.chapter_number - y.chapter_number);
+              saveDemo();
+            }
+            render();
+            showToast('สลับลำดับตอนเรียบร้อย');
+          } catch (err) { showToast('สลับไม่สำเร็จ: ' + err.message); }
+        });
+      });
+
+      const renumBtn = document.getElementById('renumberChaptersBtn');
+      if (renumBtn) renumBtn.addEventListener('click', async () => {
+        const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+        if (!novel) return;
+        const sorted = novel.chapters.slice().sort((a, b) => a.chapter_number - b.chapter_number);
+        try {
           if (state.isLive) {
-            const { error } = await sb.from('chapters').insert(payload);
-            if (error) throw error;
+            for (let i = 0; i < sorted.length; i++) {
+              await sb.from('chapters').update({ chapter_number: 900000 + i }).eq('id', sorted[i].id);
+            }
+            for (let i = 0; i < sorted.length; i++) {
+              await sb.from('chapters').update({ chapter_number: i + 1 }).eq('id', sorted[i].id);
+            }
             await loadLiveData();
           } else {
-            const novel = state.novels.find(n => n.id === nid);
-            if (novel) {
-              novel.chapters = novel.chapters || [];
-              novel.chapters.push({ ...payload, id: 'ch-' + Date.now() });
-              novel.chapters.sort((a, b) => a.chapter_number - b.chapter_number);
-            }
+            sorted.forEach((c, i) => { c.chapter_number = i + 1; });
             saveDemo();
           }
           render();
-          showToast('เผยแพร่ตอนนิยายเรียบร้อย!');
-        } catch (err) { showToast('บันทึกไม่สำเร็จ: ' + err.message); }
+          showToast('จัดเรียงเลขตอน 1, 2, 3... ใหม่เรียบร้อย!');
+        } catch (err) { showToast('จัดเรียงไม่สำเร็จ: ' + err.message); }
       });
 
       // Admin: Update Banners
