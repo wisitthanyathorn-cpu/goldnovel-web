@@ -213,7 +213,6 @@
           <button type="button" data-top-tab="home" class="top-tab py-4 border-b-2 transition-colors">หน้าหลัก</button>
           <button type="button" data-top-tab="ranking" class="top-tab py-4 border-b-2 transition-colors">นิยายประจำสัปดาห์</button>
           <button type="button" data-top-tab="categories" class="top-tab py-4 border-b-2 transition-colors">คลังนิยาย</button>
-          <button type="button" data-top-tab="promo" class="top-tab py-4 border-b-2 transition-colors">โปรโมชั่น</button>
         </nav>
       </div>
 
@@ -364,14 +363,38 @@
       </div>
 
       <div id="topupStep1">
-        <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">1. เลือกจำนวนเงิน (ล็อกยอดบน QR อัตโนมัติ)</div>
-        <div id="pkgGrid" class="grid grid-cols-3 gap-2.5 mb-3"></div>
-        <div class="mb-4 space-y-2">
-          <label class="block text-[11px]" style="color: var(--text-sub);">หรือกรอกจำนวนเงินที่ต้องการโอนเอง (กี่บาทก็ได้ เช่น 10, 20, 30, 75 บาท)</label>
-          <input id="customBahtInput" type="number" min="1" step="1" placeholder="พิมพ์จำนวนเงิน (บาท) เช่น 10, 20, 30" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
-          <div id="topupLiveSummary" class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">
-            <span>ยอดโอนที่เลือก: 100 บาท</span>
-            <span>ได้รับ 120 เหรียญ</span>
+        <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl mb-4" style="background-color: var(--bg-input);">
+          <button type="button" id="topupModeCoinsBtn" class="py-2 rounded-lg text-xs font-semibold transition-all">เติมเหรียญรายตอน</button>
+          <button type="button" id="topupModeVipBtn" class="py-2 rounded-lg text-xs font-semibold transition-all">👑 สมัคร VIP (139฿/เดือน)</button>
+        </div>
+
+        <div id="topupCoinsPane">
+          <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">1. เลือกจำนวนเงิน (ล็อกยอดบน QR อัตโนมัติ)</div>
+          <div id="pkgGrid" class="grid grid-cols-3 gap-2.5 mb-3"></div>
+          <div class="mb-4 space-y-2">
+            <label class="block text-[11px]" style="color: var(--text-sub);">หรือกรอกจำนวนเงินที่ต้องการโอนเอง (กี่บาทก็ได้ เช่น 10, 20, 30, 75 บาท)</label>
+            <input id="customBahtInput" type="number" min="1" step="1" placeholder="พิมพ์จำนวนเงิน (บาท) เช่น 10, 20, 30" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
+            <div id="topupLiveSummary" class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">
+              <span>ยอดโอนที่เลือก: 100 บาท</span>
+              <span>ได้รับ 120 เหรียญ</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="topupVipPane" class="hidden mb-4">
+          <div class="rounded-2xl p-4 space-y-3 border" style="background: linear-gradient(145deg, rgba(234,184,84,0.14), rgba(20,23,32,0.95)); border-color: rgba(234,184,84,0.4);">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="text-xs font-bold uppercase tracking-wider" style="color: var(--gold-1);">👑 GoldNovel VIP 30 วัน</div>
+                <div class="text-2xl font-extrabold mt-0.5">139 <span class="text-xs font-normal" style="color: var(--text-sub);">บาท / 30 วัน</span></div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold" style="background: linear-gradient(135deg, #F0C466, #CE9631); color: #120F0A;">คุ้มที่สุด</span>
+            </div>
+            <ul class="text-xs space-y-1.5" style="color: var(--text-main);">
+              <li>✓ อ่านนิยายได้ <strong>ทุกเรื่อง ทุกตอน</strong> ไม่จำกัดตลอด 30 วัน</li>
+              <li>✓ หมดอายุอัตโนมัติเมื่อครบกำหนด ไม่ผูกบัตร ไม่หักเงินซ้ำ</li>
+              <li>✓ ต่ออายุก่อนหมด ระบบทบวันต่อจากวันเดิมให้ +30 วันเต็ม</li>
+            </ul>
           </div>
         </div>
 
@@ -619,6 +642,7 @@
       bulkSelectedIds: [],
       selectedBaht: 100,
       selectedPay: 'promptpay',
+      topupMode: 'coins',
       pendingUnlock: null,
       pendingDelete: null, // { type: 'novel'|'chapter', id, title }
       user: sb ? null : { id: 'demo-admin', email: 'owner@goldnovel.demo', display_name: 'เจ้าของเว็บ (โหมดทดลอง)', role: 'admin', coin_balance: 0 },
@@ -781,8 +805,19 @@
       return true;
     }
 
+    function isVipActive() {
+      if (!state.user) return false;
+      if (state.previewAsReader && state.user.role === 'admin') return false;
+      return !!(state.user.vip_until && new Date(state.user.vip_until).getTime() > Date.now());
+    }
+
+    function formatVipExpiry() {
+      if (!isVipActive()) return '';
+      return new Date(state.user.vip_until).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
     function isAccessible(ch) {
-      return ch.price_coins === 0 || isAdmin() || state.unlockedIds.includes(ch.id);
+      return ch.price_coins === 0 || isAdmin() || isVipActive() || state.unlockedIds.includes(ch.id);
     }
 
     function renderCoverBox(novel, extraClass = '') {
@@ -1072,21 +1107,6 @@
                 : categoryNovels.map(n => renderEditorialNovelCard(n)).join('')}
             </div>
           </section>
-
-          <!-- Section 4: กิจกรรม & โปรโมชั่น (กะทัดรัด เป็นระเบียบ) -->
-          <section id="promoSection">
-            <div class="relative rounded-2xl overflow-hidden border min-h-[155px] flex items-center promo-placeholder" style="border-color: var(--border-subtle);">
-              ${s.promo_banner_url ? `<img src="${s.promo_banner_url}" alt="Promo" class="absolute inset-0 w-full h-full object-cover">` : ''}
-              <div class="absolute inset-0 bg-gradient-to-r from-[#141210]/92 via-[#141210]/65 to-transparent"></div>
-              <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
-                <div>
-                  <div class="text-lg sm:text-xl font-extrabold text-amber-200 leading-snug mb-1">${s.promo_title}</div>
-                  <div class="text-xs sm:text-sm text-neutral-300">${s.promo_subtitle}</div>
-                </div>
-                <button type="button" id="promoTopupBtn" class="px-5 py-2.5 rounded-full text-xs sm:text-sm btn-gold shrink-0 self-start sm:self-center">เติมเหรียญเลย</button>
-              </div>
-            </div>
-          </section>
         </div>
       `;
     }
@@ -1264,7 +1284,7 @@
                             const badge = ch.price_coins === 0
                               ? `<span class="text-xs px-2.5 py-1 rounded-full shrink-0" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">อ่านฟรี</span>`
                               : open
-                                ? `<span class="text-xs px-2.5 py-1 rounded-full shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">✓ ปลดล็อกแล้ว</span>`
+                                ? `<span class="text-xs px-2.5 py-1 rounded-full shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">${isVipActive() && !state.unlockedIds.includes(ch.id) ? '👑 VIP อ่านฟรี' : '✓ ปลดล็อกแล้ว'}</span>`
                                 : `<span class="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0" style="background-color: var(--bg-input); color: var(--gold-1);">🔒 ${ch.price_coins} เหรียญ</span>`;
                             return `
                               <button type="button" data-open-ch="${ch.id}" class="w-full text-left px-5 py-3 flex items-center justify-between gap-3 border-b last:border-b-0 hover:bg-white/5" style="border-color: var(--border-soft);">
@@ -1450,6 +1470,7 @@
             <div>
               <div class="text-xs mb-1" style="color: var(--text-muted);">ยอดเหรียญคงเหลือ</div>
               <div class="text-3xl font-bold" style="color: var(--gold-1);">${(state.user?.coin_balance || 0).toLocaleString()} <span class="text-sm font-normal" style="color: var(--text-sub);">เหรียญ</span></div>
+              ${isVipActive() ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">👑 สมาชิก VIP · อ่านฟรีทุกตอนถึง ${formatVipExpiry()}</div>` : ''}
             </div>
             <button type="button" id="libTopupBtn" class="px-6 py-2.5 rounded-full text-sm btn-gold">+ เติมเหรียญ</button>
           </div>
@@ -1843,7 +1864,7 @@
           </form>
         `;
       } else {
-        const topups = state.transactions.filter(t => t.type === 'topup');
+        const topups = state.transactions.filter(t => t.type === 'topup' || t.type === 'vip');
         const pendingCount = topups.filter(t => t.status === 'pending').length;
         body = `
           <div class="card-panel rounded-2xl overflow-hidden">
@@ -1882,7 +1903,9 @@
                             ${stChip}
                           </div>
                           <div class="text-xs sm:text-sm font-semibold" style="color: var(--gold-1);">
-                            แจ้งโอน ${Number(tx.amount_baht || 0).toLocaleString()} บาท → +${Number(tx.coins_delta || 0).toLocaleString()} เหรียญ
+                            ${tx.type === 'vip'
+                              ? `👑 สมัคร VIP รายเดือน 30 วัน (แจ้งโอน ${Number(tx.amount_baht || 139).toLocaleString()} บาท)`
+                              : `แจ้งโอน ${Number(tx.amount_baht || 0).toLocaleString()} บาท → +${Number(tx.coins_delta || 0).toLocaleString()} เหรียญ`}
                           </div>
                           <div class="text-[11px]" style="color: var(--text-muted);">
                             ช่องทาง: ${tx.payment_method || '-'} · เวลา: ${dtText}${tx.slip_url ? ` · <a href="${tx.slip_url}" target="_blank" rel="noopener" class="underline" style="color: var(--gold-1);">เปิดดูสลิปเต็มจอ ↗</a>` : ''}
@@ -1892,11 +1915,13 @@
 
                       ${tx.status === 'pending' ? `
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
-                          <div class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="แก้จำนวนเหรียญให้ตรงกับยอดเงินในสลิปจริงได้">
-                            <span style="color: var(--text-muted);">🪙</span>
-                            <input type="number" min="0.5" step="0.5" value="${tx.coins_delta}" data-approve-coins="${tx.id}" class="w-14 bg-transparent text-center font-bold focus:outline-none" style="color: var(--gold-1);">
-                          </div>
-                          <button type="button" data-approve-tx="${tx.id}" class="px-4 py-2 rounded-xl text-xs font-bold btn-gold">✅ อนุมัติ</button>
+                          ${tx.type === 'vip' ? '' : `
+                            <div class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="แก้จำนวนเหรียญให้ตรงกับยอดเงินในสลิปจริงได้">
+                              <span style="color: var(--text-muted);">🪙</span>
+                              <input type="number" min="0.5" step="0.5" value="${tx.coins_delta}" data-approve-coins="${tx.id}" class="w-14 bg-transparent text-center font-bold focus:outline-none" style="color: var(--gold-1);">
+                            </div>
+                          `}
+                          <button type="button" data-approve-tx="${tx.id}" class="px-4 py-2 rounded-xl text-xs font-bold btn-gold">${tx.type === 'vip' ? '👑 อนุมัติ VIP (+30 วัน)' : '✅ อนุมัติ'}</button>
                           <button type="button" data-reject-tx="${tx.id}" class="px-3 py-2 rounded-xl text-xs font-semibold text-rose-400" style="background-color: rgba(244,63,94,0.14);">ปฏิเสธ</button>
                         </div>
                       ` : ''}
@@ -1972,7 +1997,7 @@
       document.getElementById('topupSubtext').textContent = msg || 'รองรับ PromptPay และ TrueMoney Wallet';
       document.getElementById('topupStep1').classList.remove('hidden');
       document.getElementById('topupStep2').classList.add('hidden');
-      renderPackages();
+      setTopupMode('coins');
       renderPayOpts();
       const m = document.getElementById('topupModal');
       m.classList.remove('hidden');
@@ -2087,8 +2112,26 @@
         sumEl.innerHTML = `<span>ยอดโอนที่เลือก: ${curBaht.toLocaleString()} บาท</span><span>ได้รับ ${curCoins.toLocaleString()} เหรียญ</span>`;
       }
       if (goBtn) {
-        goBtn.textContent = `ดำเนินการชำระเงิน (${curBaht.toLocaleString()} บาท)`;
+        goBtn.textContent = state.topupMode === 'vip'
+          ? 'สมัคร VIP 30 วัน (139 บาท)'
+          : `ดำเนินการชำระเงิน (${curBaht.toLocaleString()} บาท)`;
       }
+    }
+
+    function setTopupMode(mode) {
+      state.topupMode = mode === 'vip' ? 'vip' : 'coins';
+      const isVip = state.topupMode === 'vip';
+      const cBtn = document.getElementById('topupModeCoinsBtn');
+      const vBtn = document.getElementById('topupModeVipBtn');
+      const cPane = document.getElementById('topupCoinsPane');
+      const vPane = document.getElementById('topupVipPane');
+      if (cPane) cPane.classList.toggle('hidden', isVip);
+      if (vPane) vPane.classList.toggle('hidden', !isVip);
+      const actStyle = 'background: linear-gradient(135deg, #F0C466, #CE9631); color: #120F0A;';
+      const offStyle = 'background: transparent; color: var(--text-sub);';
+      if (cBtn) cBtn.style.cssText = isVip ? offStyle : actStyle;
+      if (vBtn) vBtn.style.cssText = isVip ? actStyle : offStyle;
+      renderPackages();
     }
 
     function renderPayOpts() {
@@ -2630,8 +2673,6 @@
 
       const heroPureTopupBtn = document.getElementById('heroPureTopupBtn');
       if (heroPureTopupBtn) heroPureTopupBtn.addEventListener('click', () => openTopup());
-      const promoBtn = document.getElementById('promoTopupBtn');
-      if (promoBtn) promoBtn.addEventListener('click', () => openTopup());
 
       const libTopup = document.getElementById('libTopupBtn');
       if (libTopup) libTopup.addEventListener('click', () => openTopup());
@@ -3015,10 +3056,16 @@
             } else {
               const tx = state.transactions.find(t => t.id === txId);
               if (tx && tx.status === 'pending') {
-                const credit = customCoins > 0 ? customCoins : tx.coins_delta;
-                tx.coins_delta = credit;
                 tx.status = 'approved';
-                state.user.coin_balance = roundCoins((state.user.coin_balance || 0) + credit);
+                if (tx.type === 'vip') {
+                  const baseMs = state.user.vip_until && new Date(state.user.vip_until).getTime() > Date.now()
+                    ? new Date(state.user.vip_until).getTime() : Date.now();
+                  state.user.vip_until = new Date(baseMs + 30 * 86400000).toISOString();
+                } else {
+                  const credit = customCoins > 0 ? customCoins : tx.coins_delta;
+                  tx.coins_delta = credit;
+                  state.user.coin_balance = roundCoins((state.user.coin_balance || 0) + credit);
+                }
               }
               saveDemo();
             }
@@ -3298,6 +3345,8 @@
       btn.addEventListener('click', () => { state.selectedPay = btn.getAttribute('data-pay'); renderPayOpts(); });
     });
 
+    document.getElementById('topupModeCoinsBtn').addEventListener('click', () => setTopupMode('coins'));
+    document.getElementById('topupModeVipBtn').addEventListener('click', () => setTopupMode('vip'));
     document.getElementById('customBahtInput').addEventListener('input', (e) => {
       const v = Number(e.target.value);
       if (v > 0) {
@@ -3307,11 +3356,16 @@
     });
 
     document.getElementById('goPayStepBtn').addEventListener('click', () => {
-      const customVal = Number(document.getElementById('customBahtInput').value);
-      if (customVal > 0) state.selectedBaht = Math.floor(customVal);
-      const baht = Math.max(1, Number(state.selectedBaht || 100));
+      const isVip = state.topupMode === 'vip';
+      if (isVip) {
+        state.selectedBaht = 139;
+      } else {
+        const customVal = Number(document.getElementById('customBahtInput').value);
+        if (customVal > 0) state.selectedBaht = Math.floor(customVal);
+      }
+      const baht = isVip ? 139 : Math.max(1, Number(state.selectedBaht || 100));
       state.selectedBaht = baht;
-      const coins = calcCoins(baht);
+      const coins = isVip ? 0 : calcCoins(baht);
 
       const isPP = state.selectedPay === 'promptpay';
       const targetNum = isPP ? CFG.promptpayNumber : CFG.truemoneyPhone;
@@ -3322,7 +3376,7 @@
         ? `พร้อมเพย์: ${CFG.promptpayNumber} (${CFG.promptpayAccountName})`
         : `เบอร์วอลเล็ท: ${CFG.truemoneyPhone} (${CFG.promptpayAccountName})`;
       document.getElementById('payBahtText').textContent = `${baht.toFixed(2)} บาท`;
-      document.getElementById('payCoinText').textContent = `รับ ${coins.toLocaleString()} เหรียญ`;
+      document.getElementById('payCoinText').textContent = state.topupMode === 'vip' ? '👑 สิทธิ์ VIP อ่านฟรีทุกตอน 30 วัน' : `รับ ${coins.toLocaleString()} เหรียญ`;
       document.getElementById('payPlaceholderWarn').classList.toggle('hidden', !isPlaceholder);
 
       const qrWrap = document.getElementById('qrBoxWrap');
@@ -3365,14 +3419,15 @@
       try {
         const slipUrl = await uploadImageFile(slipFile, 'slips');
         if (state.isLive) {
+          const isVip = state.topupMode === 'vip';
           const { error } = await sb.from('transactions').insert({
             user_id: state.user.id,
-            type: 'topup',
-            amount_baht: state.selectedBaht,
-            coins_delta: coins,
+            type: isVip ? 'vip' : 'topup',
+            amount_baht: isVip ? 139 : state.selectedBaht,
+            coins_delta: isVip ? 0 : coins,
             payment_method: state.selectedPay,
             slip_url: slipUrl,
-            note: `เติมเงิน ${state.selectedBaht} บาท (${state.selectedPay})`,
+            note: isVip ? `สมัคร VIP รายเดือน 30 วัน (${state.selectedPay})` : `เติมเงิน ${state.selectedBaht} บาท (${state.selectedPay})`,
             status: 'pending'
           });
           if (error) throw error;
