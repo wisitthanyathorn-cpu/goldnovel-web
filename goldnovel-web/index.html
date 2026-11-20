@@ -125,7 +125,7 @@
         </div>
         <div>
           <div id="brandNameSide" class="text-base font-bold tracking-wide" style="color: var(--gold-1);">GoldNovel</div>
-          <div id="modeBadgeSide" class="text-[10px] tracking-wider" style="color: var(--text-muted);">พร้อมเชื่อม Supabase</div>
+          <div id="modeBadgeSide" class="text-[10px] tracking-widest uppercase" style="color: var(--text-muted);">Online Novels</div>
         </div>
       </button>
 
@@ -597,7 +597,7 @@
           <div class="absolute inset-2.5 border rounded-xl pointer-events-none" style="border-color: rgba(232,197,123,0.22);"></div>
           <span class="text-[10px] uppercase tracking-widest mb-2" style="color: var(--gold-2);">${(novel.categories || [])[0] || 'NOVEL'}</span>
           <div class="font-display-thai text-sm font-bold leading-snug line-clamp-3 px-1" style="color: var(--gold-1);">${novel.title}</div>
-          <span class="text-[10px] mt-2 opacity-60" style="color: var(--text-sub);">รออัปโหลดปก</span>
+          <span class="text-[10px] mt-2 opacity-70" style="color: var(--text-sub);">${isAdmin() ? 'รออัปโหลดปก' : (novel.author || 'GoldNovel')}</span>
         </div>
       `;
     }
@@ -605,7 +605,7 @@
     function applyChrome() {
       document.body.setAttribute('data-mode', state.mode);
       document.getElementById('brandNameSide').textContent = CFG.siteName;
-      document.getElementById('modeBadgeSide').textContent = state.isLive ? 'เชื่อมต่อ Supabase แล้ว' : 'โหมดทดลอง (ยังไม่เชื่อม DB)';
+      document.getElementById('modeBadgeSide').textContent = state.isLive ? 'ONLINE NOVELS' : 'DEMO PREVIEW';
       document.getElementById('coinBalanceText').textContent = (state.user?.coin_balance || 0).toLocaleString();
       document.getElementById('authHeaderBtn').textContent = state.user ? (state.user.display_name || state.user.email.split('@')[0]) : 'เข้าสู่ระบบ';
 
