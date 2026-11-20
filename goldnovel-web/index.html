@@ -146,6 +146,9 @@
           <button type="button" id="sideAdminBtn" data-view="admin" class="side-nav w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all">
             <span>✍️</span><span>หลังบ้านนักเขียน</span>
           </button>
+          <button type="button" id="sideReaderPreviewBtn" class="hidden w-full flex items-center gap-3 px-3.5 py-2 mt-1 rounded-xl text-xs font-medium transition-all" style="background-color: var(--bg-input); color: var(--gold-1); border: 1px solid var(--border-subtle);">
+            <span>👁️</span><span>สลับเป็นมุมมองนักอ่าน</span>
+          </button>
         </div>
       </nav>
     </div>
@@ -160,6 +163,11 @@
 
   <!-- Right Main Area -->
   <div class="flex-1 min-w-0 flex flex-col">
+    <!-- Reader Preview Mode Banner (only shown when Admin toggles Reader View) -->
+    <div id="readerPreviewBanner" class="hidden px-4 py-2 text-xs sm:text-sm font-medium flex flex-wrap items-center justify-between gap-2 z-30" style="background: linear-gradient(90deg, #D4A857, #F3D999); color: #161410;">
+      <span>👁️ <strong>โหมดมุมมองนักอ่าน:</strong> คุณกำลังเห็นหน้าเว็บเหมือนผู้อ่านทั่วไปทุกประการ (ซ่อนแบบร่าง &amp; ล็อกตอนติดเหรียญ)</span>
+      <button type="button" id="exitReaderPreviewBtn" class="px-3.5 py-1 rounded-full text-xs font-bold bg-[#161410] text-amber-200 hover:opacity-90">กลับสู่มุมมองเจ้าของเว็บ (Admin)</button>
+    </div>
     <!-- Top Header -->
     <header class="sticky top-0 z-20 backdrop-blur-md border-b px-4 sm:px-6 h-16 flex items-center justify-between gap-3" style="background-color: color-mix(in srgb, var(--bg-app) 88%, transparent); border-color: var(--border-soft);">
       <div class="flex items-center gap-3 lg:gap-5 min-w-0">
@@ -334,6 +342,41 @@
     </div>
   </div>
 
+  <!-- Bulk Unlock Modal (Select multiple chapters at once) -->
+  <div id="bulkUnlockModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+    <div class="card-panel rounded-2xl max-w-lg w-full p-6 shadow-2xl fade-in max-h-[90vh] flex flex-col">
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <span class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-1" style="background-color: var(--gold-soft); color: var(--gold-1);">ปลดล็อกต่อเนื่อง</span>
+          <h3 class="text-lg font-bold">⚡ ปลดล็อกหลายตอนพร้อมกัน</h3>
+          <p class="text-xs mt-0.5" style="color: var(--text-sub);">ติ๊กเลือกตอนที่ต้องการ หรือกดปุ่มลัดเพื่อปลดล็อกอ่านยาวๆ ได้เลย</p>
+        </div>
+        <button type="button" id="closeBulkUnlockBtn" class="w-8 h-8 rounded-full text-sm shrink-0" style="background-color: var(--bg-input);">✕</button>
+      </div>
+
+      <div class="flex flex-wrap gap-1.5 mb-3">
+        <button type="button" data-bulk-preset="5" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">5 ตอนถัดไป</button>
+        <button type="button" data-bulk-preset="10" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">10 ตอนถัดไป</button>
+        <button type="button" data-bulk-preset="20" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">20 ตอนถัดไป</button>
+        <button type="button" data-bulk-preset="all" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">เลือกทั้งหมด</button>
+        <button type="button" data-bulk-preset="none" class="px-3 py-1.5 rounded-lg text-xs" style="background-color: var(--bg-input); color: var(--text-sub);">ล้าง</button>
+      </div>
+
+      <div id="bulkUnlockList" class="flex-1 overflow-y-auto space-y-1.5 pr-1 mb-4 max-h-64"></div>
+
+      <div class="pt-3 border-t space-y-3" style="border-color: var(--border-soft);">
+        <div class="flex items-center justify-between text-xs sm:text-sm">
+          <span id="bulkUnlockSummary" style="color: var(--text-sub);">เลือกแล้ว 0 ตอน</span>
+          <span id="bulkUnlockTotal" class="font-bold" style="color: var(--gold-1);">รวม 0 เหรียญ</span>
+        </div>
+        <div class="flex gap-2.5">
+          <button type="button" id="cancelBulkUnlockBtn" class="px-4 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input);">ยกเลิก</button>
+          <button type="button" id="confirmBulkUnlockBtn" disabled class="flex-1 py-2.5 rounded-xl text-sm btn-gold disabled:opacity-35 disabled:cursor-not-allowed">ยืนยันปลดล็อก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Unlock Confirm Modal -->
   <div id="unlockModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
     <div class="card-panel rounded-2xl max-w-sm w-full p-6 shadow-2xl fade-in">
@@ -379,7 +422,7 @@
         </div>
         <div>
           <label class="block text-xs mb-1" style="color: var(--text-sub);">ค่าเริ่มต้น: ราคาตอนติดเหรียญ</label>
-          <input id="splitPaidPrice" type="number" min="0" value="1" class="w-full px-3 py-2 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+          <input id="splitPaidPrice" type="number" min="0" step="0.5" value="1.5" class="w-full px-3 py-2 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
         </div>
       </div>
 
@@ -484,11 +527,14 @@
       adminShowNewNovel: false,
       adminShowChapterForm: false,
       editingChapterId: null,
+      previewAsReader: false,
       rankFilter: 'ทั้งหมด',
       activeCategory: null,
       searchQuery: '',
       activeNovelId: null,
       activeChapterId: null,
+      loadedChapterIds: [],
+      bulkSelectedIds: [],
       selectedBaht: 100,
       selectedPay: 'promptpay',
       pendingUnlock: null,
@@ -613,8 +659,12 @@
       }
     }
 
-    function isAdmin() {
+    function isRealAdmin() {
       return state.user && state.user.role === 'admin';
+    }
+
+    function isAdmin() {
+      return isRealAdmin() && !state.previewAsReader;
     }
 
     function getNovel(id) {
@@ -664,6 +714,8 @@
       const showAdmin = isAdmin();
       document.getElementById('sideAdminBtn').classList.toggle('hidden', !showAdmin);
       document.getElementById('mobileAdminBtn').classList.toggle('hidden', !showAdmin);
+      document.getElementById('sideReaderPreviewBtn').classList.toggle('hidden', !showAdmin);
+      document.getElementById('readerPreviewBanner').classList.toggle('hidden', !(isRealAdmin() && state.previewAsReader));
 
       document.querySelectorAll('.mode-pill').forEach(btn => {
         const active = btn.getAttribute('data-set-mode') === state.mode;
@@ -917,7 +969,10 @@
           </div>
 
           <div class="card-panel rounded-2xl overflow-hidden">
-            <div class="px-5 py-4 border-b font-bold text-sm" style="border-color: var(--border-soft);">สารบัญตอน (${chapters.length} ตอน)</div>
+            <div class="px-5 py-4 border-b flex flex-wrap items-center justify-between gap-2" style="border-color: var(--border-soft);">
+              <span class="font-bold text-sm">สารบัญตอน (${chapters.length} ตอน)</span>
+              ${chapters.some(c => !isAccessible(c)) ? `<button type="button" id="detailBulkUnlockBtn" class="px-3.5 py-1.5 rounded-full text-xs btn-gold">⚡ ปลดล็อกหลายตอนพร้อมกัน</button>` : ''}
+            </div>
             <div>
               ${chapters.length === 0 ? `<div class="p-8 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยาย เพิ่มตอนได้ในหน้า "หลังบ้านนักเขียน"</div>` :
                 chapters.map(ch => {
@@ -945,17 +1000,75 @@
 
     function renderReader() {
       const novel = getNovel(state.activeNovelId);
-      const chapters = novel?.chapters || [];
-      const idx = chapters.findIndex(c => c.id === state.activeChapterId);
-      const ch = chapters[idx] || chapters[0];
-      if (!ch) return `<div class="p-8 text-center">ไม่พบตอนนิยาย</div>`;
-      const prev = idx > 0 ? chapters[idx - 1] : null;
-      const next = idx < chapters.length - 1 ? chapters[idx + 1] : null;
-      const paras = String(ch.content || '').split(/\n+/).filter(Boolean).map(p => `<p>${p}</p>`).join('');
+      const chapters = (novel?.chapters || []).filter(c => isAdmin() || isChapterPublished(c));
+      if (!chapters.length) return `<div class="p-8 text-center">ไม่พบตอนนิยาย</div>`;
+
+      // Ensure loadedChapterIds contains at least activeChapterId
+      if (!state.loadedChapterIds.length || !chapters.some(c => c.id === state.loadedChapterIds[0])) {
+        const startId = chapters.some(c => c.id === state.activeChapterId) ? state.activeChapterId : chapters[0].id;
+        state.loadedChapterIds = [startId];
+      }
+
+      const loadedChapters = state.loadedChapterIds
+        .map(id => chapters.find(c => c.id === id))
+        .filter(Boolean);
+      const lastLoaded = loadedChapters[loadedChapters.length - 1];
+      const lastIdx = chapters.findIndex(c => c.id === lastLoaded.id);
+      const nextCh = lastIdx >= 0 && lastIdx < chapters.length - 1 ? chapters[lastIdx + 1] : null;
+      const lockedRemaining = chapters.slice(lastIdx + 1).filter(c => !isAccessible(c)).length;
+
+      const sheetsHtml = loadedChapters.map((ch, idx) => {
+        const paras = String(ch.content || '').split(/\n+/).filter(Boolean).map(p => `<p>${p}</p>`).join('');
+        return `
+          <article class="reading-sheet rounded-3xl p-6 sm:p-10 border mb-6 fade-in" data-read-theme="${state.readTheme}">
+            <div class="text-center mb-7 pb-5 border-b" style="border-color: var(--border-soft);">
+              <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">ตอนที่ ${ch.chapter_number}${idx > 0 ? ' · อ่านต่อเนื่อง' : ''}</div>
+              <h1 class="text-xl sm:text-2xl font-bold">${ch.title}</h1>
+            </div>
+            <div class="reading-prose" style="font-size: ${state.fontSize}px;">${paras}</div>
+          </article>
+        `;
+      }).join('');
+
+      let nextSectionHtml = '';
+      if (!nextCh) {
+        nextSectionHtml = `
+          <div class="card-panel rounded-2xl p-6 text-center space-y-3">
+            <div class="text-sm font-semibold" style="color: var(--gold-1);">🎉 คุณอ่านถึงตอนล่าสุดของเรื่องนี้แล้ว</div>
+            <button type="button" data-open-novel="${novel.id}" class="px-6 py-2.5 rounded-full text-xs sm:text-sm btn-gold">กลับหน้าสารบัญ</button>
+          </div>
+        `;
+      } else if (isAccessible(nextCh)) {
+        nextSectionHtml = `
+          <div class="card-panel rounded-2xl p-6 text-center space-y-3">
+            <div class="text-xs" style="color: var(--text-muted);">ตอนถัดไปพร้อมให้อ่านต่อเนื่องด้านล่างนี้</div>
+            <div class="text-base font-bold">ตอนที่ ${nextCh.chapter_number}: ${nextCh.title}</div>
+            <button type="button" id="appendNextFreeBtn" data-next-ch="${nextCh.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านตอนถัดไปต่อด้านล่าง ↓</button>
+          </div>
+        `;
+      } else {
+        const bal = state.user?.coin_balance || 0;
+        const canAfford = !!state.user && bal >= nextCh.price_coins;
+        nextSectionHtml = `
+          <div class="card-panel rounded-3xl p-6 sm:p-8 text-center space-y-4" style="border-color: rgba(232,197,123,0.35);">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">🔒 ตอนถัดไปติดเหรียญ</div>
+            <div>
+              <div class="text-lg font-bold">ตอนที่ ${nextCh.chapter_number}: ${nextCh.title}</div>
+              <div class="text-xs mt-1" style="color: var(--text-sub);">ปลดล็อกเพื่อโหลดเนื้อหาต่อด้านล่างทันที · ยอดเหรียญของคุณ: <strong style="color: var(--gold-1);">${bal.toLocaleString()} เหรียญ</strong></div>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+              <button type="button" id="inlineUnlockNextBtn" data-next-ch="${nextCh.id}" class="px-6 py-3 rounded-full text-sm btn-gold">
+                ${canAfford ? `ปลดล็อกอ่านต่อทันที (${nextCh.price_coins} เหรียญ)` : `เติมเหรียญเพื่อปลดล็อก (${nextCh.price_coins} เหรียญ)`}
+              </button>
+              ${lockedRemaining > 1 ? `<button type="button" id="readerBulkUnlockBtn" class="px-5 py-3 rounded-full text-xs sm:text-sm font-semibold" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">⚡ ปลดล็อกหลายตอน (เหลือ ${lockedRemaining} ตอน)</button>` : ''}
+            </div>
+          </div>
+        `;
+      }
 
       return `
         <div class="fade-in max-w-2xl mx-auto">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-3 border-b" style="border-color: var(--border-soft);">
+          <div class="sticky top-16 z-10 py-3 mb-4 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 border-b" style="background-color: color-mix(in srgb, var(--bg-app) 90%, transparent); border-color: var(--border-soft);">
             <button type="button" data-open-novel="${novel.id}" class="text-xs sm:text-sm font-medium hover:underline" style="color: var(--gold-1);">← สารบัญ ${novel.title}</button>
             <div class="flex items-center gap-2">
               <div class="flex gap-1 p-1 rounded-lg" style="background-color: var(--bg-input);">
@@ -968,18 +1081,8 @@
             </div>
           </div>
 
-          <article class="reading-sheet rounded-3xl p-6 sm:p-10 border mb-6" data-read-theme="${state.readTheme}">
-            <div class="text-center mb-7 pb-5 border-b" style="border-color: var(--border-soft);">
-              <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">ตอนที่ ${ch.chapter_number}</div>
-              <h1 class="text-xl sm:text-2xl font-bold">${ch.title}</h1>
-            </div>
-            <div class="reading-prose" style="font-size: ${state.fontSize}px;">${paras}</div>
-          </article>
-
-          <div class="flex items-center justify-between gap-3">
-            ${prev ? `<button type="button" data-open-ch="${prev.id}" class="px-4 py-2.5 rounded-full text-xs card-panel">← ตอนก่อนหน้า</button>` : '<div></div>'}
-            ${next ? `<button type="button" data-open-ch="${next.id}" class="px-5 py-2.5 rounded-full text-xs btn-gold">ตอนถัดไป ${isAccessible(next) ? '→' : `(🔒 ${next.price_coins} เหรียญ)`}</button>` : `<button type="button" data-open-novel="${novel.id}" class="px-5 py-2.5 rounded-full text-xs btn-gold">กลับหน้าสารบัญ</button>`}
-          </div>
+          ${sheetsHtml}
+          ${nextSectionHtml}
         </div>
       `;
     }
@@ -1101,150 +1204,152 @@
             const editPublishVal = editCh?.publish_at ? toLocalDatetime(editCh.publish_at) : '';
             const editStatus = editCh?.status || 'published';
 
-            const chapterEditorHtml = (state.adminShowChapterForm || editCh) ? `
-              <form id="addChapterForm" class="card-panel rounded-2xl p-5 space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <h3 class="font-bold text-base" style="color: var(--gold-1);">${editCh ? `✏️ กำลังแก้ไข: ตอนที่ ${editCh.chapter_number} — ${editCh.title}` : `+ เพิ่มตอนใหม่ให้เรื่อง "${targetNovel.title}"`}</h3>
-                  <div class="flex items-center gap-2">
-                    <label class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer" style="background-color: var(--gold-soft); color: var(--gold-1);">
-                      📄 ดึงข้อความจากไฟล์ .txt
-                      <input id="importTxtInput" type="file" accept=".txt,.md" class="hidden">
-                    </label>
-                    <button type="button" id="cancelEditChBtn" class="px-3 py-1.5 rounded-lg text-xs" style="background-color: var(--bg-input); color: var(--text-sub);">ปิดฟอร์ม</button>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label class="block text-xs mb-1" style="color: var(--text-sub);">ลำดับตอนที่</label>
-                    <input id="chNum" type="number" min="1" value="${editCh ? editCh.chapter_number : nextNum}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                  </div>
-                  <div class="sm:col-span-2">
-                    <label class="block text-xs mb-1" style="color: var(--text-sub);">ชื่อตอน</label>
-                    <input id="chTitle" required value="${editCh ? editCh.title.replace(/"/g, '&quot;') : ''}" placeholder="เช่น จุดเริ่มต้นแห่งตำนาน" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                  </div>
-                  <div>
-                    <label class="block text-xs mb-1" style="color: var(--text-sub);">ราคาเหรียญ (0 = ฟรี)</label>
-                    <input id="chPrice" type="number" min="0" value="${editCh ? editCh.price_coins : 1}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-xs mb-1" style="color: var(--text-sub);">สถานะการเผยแพร่</label>
-                    <select id="chStatus" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                      <option value="published" ${editStatus === 'published' ? 'selected' : ''}>เผยแพร่ทันที (หรือตามเวลาที่ตั้ง)</option>
-                      <option value="draft" ${editStatus === 'draft' ? 'selected' : ''}>บันทึกเป็นแบบร่าง (ซ่อนจากคนอ่าน)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-xs mb-1" style="color: var(--text-sub);">ตั้งเวลาลงอัตโนมัติ (ปล่อยว่าง = ลงทันที)</label>
-                    <input id="chPublishAt" type="datetime-local" value="${editPublishVal}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                  </div>
-                </div>
-
-                <div>
-                  <div class="flex items-center justify-between mb-1">
-                    <label class="text-xs" style="color: var(--text-sub);">เนื้อหานิยาย</label>
-                    <div class="flex items-center gap-3">
-                      <button type="button" id="cleanFormatBtn" class="text-[11px] hover:underline" style="color: var(--gold-1);">✨ จัดย่อหน้าอัตโนมัติ</button>
-                      <span id="chCharCount" class="text-[11px]" style="color: var(--text-muted);">${(editCh?.content || '').length.toLocaleString()} ตัวอักษร</span>
-                    </div>
-                  </div>
-                  <textarea id="chContent" required rows="9" placeholder="วางเนื้อหานิยายที่นี่ หรือกดปุ่ม 'ดึงข้อความจากไฟล์ .txt' ด้านบน..." class="w-full px-3.5 py-3 rounded-xl text-sm leading-relaxed focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">${editCh ? editCh.content : ''}</textarea>
-                </div>
-
-                <div class="flex flex-wrap gap-2.5">
-                  <button type="submit" class="px-6 py-2.5 rounded-xl text-sm btn-gold">${editCh ? 'บันทึกการแก้ไขตอน' : 'เผยแพร่ / บันทึกตอนนิยาย'}</button>
-                  <button type="button" id="cancelEditChBtn2" class="px-4 py-2.5 rounded-xl text-xs" style="background-color: var(--bg-input); color: var(--text-sub);">ยกเลิก</button>
-                </div>
-              </form>
-            ` : '';
-
-            body = `
-              <div class="space-y-5 fade-in">
-                <button type="button" id="backToNovelListBtn" class="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 hover:underline" style="color: var(--gold-1);">← กลับไปหน้ารายการนิยายทั้งหมด</button>
-
-                <!-- Selected Novel Header Card -->
-                <div class="card-panel rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-16 h-22 rounded-xl overflow-hidden shrink-0 border" style="border-color: var(--border-subtle);">${renderCoverBox(targetNovel)}</div>
-                    <div class="min-w-0">
-                      <div class="text-[11px] font-medium mb-0.5" style="color: var(--gold-1);">กำลังจัดการนิยายเรื่อง</div>
-                      <h2 class="text-lg sm:text-xl font-bold truncate">${targetNovel.title}</h2>
-                      <div class="text-xs mt-0.5" style="color: var(--text-muted);">โดย ${targetNovel.author} · ${targetNovel.status} · ทั้งหมด ${chList.length} ตอน</div>
-                    </div>
-                  </div>
-                  <div class="flex flex-wrap items-center gap-2 shrink-0">
-                    <label class="px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-main);">
-                      🖼️ เปลี่ยนรูปปก
-                      <input type="file" accept="image/*" data-change-cover="${targetNovel.id}" class="hidden">
-                    </label>
-                    <button type="button" id="openNewChapterBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มตอนใหม่</button>
-                  </div>
-                </div>
-
-                ${chapterEditorHtml}
-
-                <!-- Chapter List for THIS Novel Only -->
-                <div class="card-panel rounded-2xl overflow-hidden">
-                  <div class="px-5 py-4 border-b flex flex-wrap items-center justify-between gap-3" style="border-color: var(--border-soft);">
-                    <div>
-                      <h3 class="font-bold text-sm">รายชื่อตอนทั้งหมด (${chList.length} ตอน)</h3>
-                      ${missingNums.length ? `<div class="text-xs mt-1 text-amber-400">⚠️ พบเลขตอนที่ข้ามไป: ตอนที่ ${missingNums.slice(0, 6).join(', ')}${missingNums.length > 6 ? '...' : ''}</div>` : `<div class="text-xs mt-0.5" style="color: var(--text-muted);">คลิก "แก้ไข" เพื่อปรับเนื้อหา ราคา หรือตั้งเวลาลง · กด ↑ ↓ เพื่อสลับตอน</div>`}
-                    </div>
+            if (state.adminShowChapterForm || editCh) {
+              // LEVEL 3: Dedicated Full-Page Chapter Editor with HUGE comfortable textarea
+              body = `
+                <form id="addChapterForm" class="space-y-5 fade-in">
+                  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b" style="border-color: var(--border-soft);">
+                    <button type="button" id="cancelEditChBtn" class="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 hover:underline" style="color: var(--gold-1);">← กลับไปหน้ารายชื่อตอน (${targetNovel.title})</button>
                     <div class="flex flex-wrap items-center gap-2">
-                      <button type="button" id="openSplitModalBtn" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background-color: var(--gold-soft); border: 1px solid var(--border-subtle); color: var(--gold-1);">
-                        ✂️ แยกตอนจาก 1 ไฟล์ .txt
-                      </button>
-                      <label class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-main);">
-                        📚 นำเข้าหลายไฟล์ .txt
-                        <input id="bulkImportTxtInput" type="file" accept=".txt,.md" multiple class="hidden">
+                      <label class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">
+                        📄 ดึงจากไฟล์ .txt
+                        <input id="importTxtInput" type="file" accept=".txt,.md" class="hidden">
                       </label>
-                      ${chList.length > 1 ? `<button type="button" id="renumberChaptersBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">🔢 เรียงเลขตอนใหม่</button>` : ''}
+                      <button type="submit" class="px-5 py-2 rounded-xl text-xs sm:text-sm btn-gold">${editCh ? '💾 บันทึกการแก้ไขตอน' : '💾 เผยแพร่ / บันทึกตอน'}</button>
                     </div>
                   </div>
-                  <div>
-                    ${chList.length === 0 ? `<div class="p-10 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยายในเรื่องนี้ กดปุ่ม <strong>+ เพิ่มตอนใหม่</strong> ด้านบนได้เลยครับ</div>` :
-                      chList.map((c, idx) => {
-                        const isScheduled = c.status !== 'draft' && c.publish_at && new Date(c.publish_at).getTime() > Date.now();
-                        let stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">เผยแพร่แล้ว</span>`;
-                        if (c.status === 'draft') {
-                          stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(148,163,184,0.16); color: #94A3B8;">แบบร่าง</span>`;
-                        } else if (isScheduled) {
-                          const dt = new Date(c.publish_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                          stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">⏰ ตั้งเวลา ${dt}</span>`;
-                        }
-                        return `
-                          <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3" style="border-color: var(--border-soft);">
-                            <div class="min-w-0 flex-1">
-                              <div class="flex flex-wrap items-center gap-2 mb-0.5">
-                                <span class="text-xs font-bold" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
-                                <span class="text-sm font-semibold truncate">${c.title}</span>
-                              </div>
-                              <div class="flex flex-wrap items-center gap-2 text-[11px]" style="color: var(--text-muted);">
-                                ${stBadge}
-                                <span>${c.price_coins === 0 ? 'อ่านฟรี' : `🔒 ${c.price_coins} เหรียญ`}</span>
-                                <span>· ${(c.content || '').length.toLocaleString()} ตัวอักษร</span>
+
+                  <div class="card-panel rounded-2xl p-5 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label class="block text-xs mb-1" style="color: var(--text-sub);">ลำดับตอนที่</label>
+                        <input id="chNum" type="number" min="1" value="${editCh ? editCh.chapter_number : nextNum}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                      </div>
+                      <div class="sm:col-span-2">
+                        <label class="block text-xs mb-1" style="color: var(--text-sub);">ชื่อตอน</label>
+                        <input id="chTitle" required value="${editCh ? editCh.title.replace(/"/g, '&quot;') : ''}" placeholder="เช่น จุดเริ่มต้นแห่งตำนาน" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                      </div>
+                      <div>
+                        <label class="block text-xs mb-1" style="color: var(--text-sub);">ราคาเหรียญ (0 = ฟรี)</label>
+                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : 1}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs mb-1" style="color: var(--text-sub);">สถานะการเผยแพร่</label>
+                        <select id="chStatus" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                          <option value="published" ${editStatus === 'published' ? 'selected' : ''}>เผยแพร่ทันที (หรือตามเวลาที่ตั้ง)</option>
+                          <option value="draft" ${editStatus === 'draft' ? 'selected' : ''}>บันทึกเป็นแบบร่าง (ซ่อนจากคนอ่าน)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs mb-1" style="color: var(--text-sub);">ตั้งเวลาลงอัตโนมัติ (ปล่อยว่าง = ลงทันที)</label>
+                        <input id="chPublishAt" type="datetime-local" value="${editPublishVal}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-semibold" style="color: var(--gold-1);">เนื้อหานิยาย (พื้นที่แก้ไขแบบขยายใหญ่)</label>
+                        <div class="flex items-center gap-3">
+                          <button type="button" id="cleanFormatBtn" class="text-xs hover:underline" style="color: var(--gold-1);">✨ จัดย่อหน้าอัตโนมัติ</button>
+                          <span id="chCharCount" class="text-xs" style="color: var(--text-muted);">${(editCh?.content || '').length.toLocaleString()} ตัวอักษร</span>
+                        </div>
+                      </div>
+                      <textarea id="chContent" required rows="22" placeholder="พิมพ์หรือวางเนื้อหานิยายที่นี่..." class="w-full min-h-[62vh] px-5 py-4 rounded-2xl text-base leading-[1.9] overscroll-contain resize-y focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">${editCh ? editCh.content : ''}</textarea>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                      <button type="button" id="cancelEditChBtn2" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm" style="background-color: var(--bg-input); color: var(--text-sub);">← ยกเลิกและกลับหน้ารายชื่อตอน</button>
+                      <button type="submit" class="px-7 py-2.5 rounded-xl text-sm btn-gold">${editCh ? '💾 บันทึกการแก้ไขตอน' : '💾 เผยแพร่ / บันทึกตอนนิยาย'}</button>
+                    </div>
+                  </div>
+                </form>
+              `;
+            } else {
+              body = `
+                <div class="space-y-5 fade-in">
+                  <button type="button" id="backToNovelListBtn" class="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 hover:underline" style="color: var(--gold-1);">← กลับไปหน้ารายการนิยายทั้งหมด</button>
+
+                  <!-- Selected Novel Header Card -->
+                  <div class="card-panel rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 min-w-0">
+                      <div class="w-16 h-22 rounded-xl overflow-hidden shrink-0 border" style="border-color: var(--border-subtle);">${renderCoverBox(targetNovel)}</div>
+                      <div class="min-w-0">
+                        <div class="text-[11px] font-medium mb-0.5" style="color: var(--gold-1);">กำลังจัดการนิยายเรื่อง</div>
+                        <h2 class="text-lg sm:text-xl font-bold truncate">${targetNovel.title}</h2>
+                        <div class="text-xs mt-0.5" style="color: var(--text-muted);">โดย ${targetNovel.author} · ${targetNovel.status} · ทั้งหมด ${chList.length} ตอน</div>
+                      </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                      <label class="px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-main);">
+                        🖼️ เปลี่ยนรูปปก
+                        <input type="file" accept="image/*" data-change-cover="${targetNovel.id}" class="hidden">
+                      </label>
+                      <button type="button" id="openNewChapterBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มตอนใหม่</button>
+                    </div>
+                  </div>
+
+                  <!-- Chapter List for THIS Novel Only (Click any chapter to open full-page editor!) -->
+                  <div class="card-panel rounded-2xl overflow-hidden">
+                    <div class="px-5 py-4 border-b flex flex-wrap items-center justify-between gap-3" style="border-color: var(--border-soft);">
+                      <div>
+                        <h3 class="font-bold text-sm">รายชื่อตอนทั้งหมด (${chList.length} ตอน)</h3>
+                        ${missingNums.length ? `<div class="text-xs mt-1 text-amber-400">⚠️ พบเลขตอนที่ข้ามไป: ตอนที่ ${missingNums.slice(0, 6).join(', ')}${missingNums.length > 6 ? '...' : ''}</div>` : `<div class="text-xs mt-0.5" style="color: var(--text-muted);">คลิกที่ชื่อตอนเพื่อเข้าไปแก้ไขแบบเต็มจอ · ปรับราคาเหรียญด่วนได้ตรงช่อง 🪙</div>`}
+                      </div>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" id="openSplitModalBtn" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background-color: var(--gold-soft); border: 1px solid var(--border-subtle); color: var(--gold-1);">
+                          ✂️ แยกตอนจาก 1 ไฟล์ .txt
+                        </button>
+                        <label class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-main);">
+                          📚 นำเข้าหลายไฟล์ .txt
+                          <input id="bulkImportTxtInput" type="file" accept=".txt,.md" multiple class="hidden">
+                        </label>
+                        ${chList.length > 1 ? `<button type="button" id="renumberChaptersBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">🔢 เรียงเลขตอนใหม่</button>` : ''}
+                      </div>
+                    </div>
+                    <div>
+                      ${chList.length === 0 ? `<div class="p-10 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยายในเรื่องนี้ กดปุ่ม <strong>+ เพิ่มตอนใหม่</strong> หรือ <strong>✂️ แยกตอนจาก 1 ไฟล์ .txt</strong> ด้านบนได้เลยครับ</div>` :
+                        chList.map((c, idx) => {
+                          const isScheduled = c.status !== 'draft' && c.publish_at && new Date(c.publish_at).getTime() > Date.now();
+                          let stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">เผยแพร่แล้ว</span>`;
+                          if (c.status === 'draft') {
+                            stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(148,163,184,0.16); color: #94A3B8;">แบบร่าง</span>`;
+                          } else if (isScheduled) {
+                            const dt = new Date(c.publish_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                            stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">⏰ ตั้งเวลา ${dt}</span>`;
+                          }
+                          return `
+                            <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors" style="border-color: var(--border-soft);">
+                              <button type="button" data-edit-ch="${c.id}" class="min-w-0 flex-1 text-left focus:outline-none">
+                                <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                                  <span class="text-xs font-bold" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
+                                  <span class="text-sm font-semibold truncate hover:underline">${c.title}</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 text-[11px]" style="color: var(--text-muted);">
+                                  ${stBadge}
+                                  <span>${c.price_coins === 0 ? 'อ่านฟรี' : `🔒 ${c.price_coins} เหรียญ`}</span>
+                                </div>
+                              </button>
+                              <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                                <div class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="แก้ราคาเหรียญของตอนนี้ทันที (0 = ฟรี)">
+                                  <span class="text-[11px]" style="color: var(--text-muted);">🪙</span>
+                                  <input type="number" min="0" step="0.5" value="${c.price_coins}" data-quick-price="${c.id}" class="w-11 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price_coins === 0 ? '#4ADE80' : 'var(--gold-1)'};">
+                                </div>
+                                <button type="button" data-move-ch="${c.id}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} title="เลื่อนขึ้น" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↑</button>
+                                <button type="button" data-move-ch="${c.id}" data-dir="1" ${idx === chList.length - 1 ? 'disabled' : ''} title="เลื่อนลง" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↓</button>
+                                <button type="button" data-edit-ch="${c.id}" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">แก้ไข</button>
+                                <button type="button" data-del-ch="${c.id}" class="px-2.5 py-1.5 rounded-lg text-xs text-rose-400" style="background-color: rgba(244,63,94,0.12);">ลบ</button>
                               </div>
                             </div>
-                            <div class="flex flex-wrap items-center gap-1.5 shrink-0">
-                              <div class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="แก้ราคาเหรียญของตอนนี้ทันที (0 = ฟรี)">
-                                <span class="text-[11px]" style="color: var(--text-muted);">🪙</span>
-                                <input type="number" min="0" value="${c.price_coins}" data-quick-price="${c.id}" class="w-11 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price_coins === 0 ? '#4ADE80' : 'var(--gold-1)'};">
-                              </div>
-                              <button type="button" data-move-ch="${c.id}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} title="เลื่อนขึ้น" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↑</button>
-                              <button type="button" data-move-ch="${c.id}" data-dir="1" ${idx === chList.length - 1 ? 'disabled' : ''} title="เลื่อนลง" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↓</button>
-                              <button type="button" data-edit-ch="${c.id}" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">แก้ไข</button>
-                              <button type="button" data-del-ch="${c.id}" class="px-2.5 py-1.5 rounded-lg text-xs text-rose-400" style="background-color: rgba(244,63,94,0.12);">ลบ</button>
-                            </div>
-                          </div>
-                        `;
-                      }).join('')}
+                          `;
+                        }).join('')}
+                    </div>
                   </div>
                 </div>
-              </div>
-            `;
+              `;
+            }
           }
         }
 
@@ -1370,9 +1475,12 @@
 
       return `
         <div class="fade-in max-w-4xl mx-auto space-y-5">
-          <div>
-            <h1 class="text-xl font-bold">หลังบ้านนักเขียน (GoldNovel Admin)</h1>
-            <p class="text-xs" style="color: var(--text-sub);">คลิกเลือกนิยายทีละเรื่องเพื่อจัดการตอน ตั้งเวลาลง แก้ไข และตั้งราคาเหรียญได้สะดวก</p>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 class="text-xl font-bold">หลังบ้านนักเขียน (GoldNovel Admin)</h1>
+              <p class="text-xs" style="color: var(--text-sub);">คลิกเลือกนิยายทีละเรื่อง แล้วคลิกเข้าไปแก้ไขเนื้อหาแต่ละตอนแบบเต็มหน้าจอได้เลย</p>
+            </div>
+            <button type="button" id="adminEnterReaderViewBtn" class="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5" style="background-color: var(--gold-soft); border: 1px solid var(--border-subtle); color: var(--gold-1);">👁️ ดูหน้าเว็บในมุมมองนักอ่าน</button>
           </div>
           <div class="flex flex-wrap gap-2">
             ${tabs.map(t => `
@@ -1436,8 +1544,12 @@
       m.classList.remove('flex');
     }
 
+    function roundCoins(n) {
+      return Math.round((Number(n) || 0) * 100) / 100;
+    }
+
     function calcCoins(baht) {
-      return Math.round(baht * (1 + Number(CFG.topupBonusPercent || 0) / 100));
+      return roundCoins(baht * (1 + Number(CFG.topupBonusPercent || 0) / 100));
     }
 
     // Official Thai PromptPay EMVCo QR Payload Generator (Amount-Locked)
@@ -1584,7 +1696,7 @@
       }
       state.pendingUnlock = { novelId, chId };
       document.getElementById('unlockTitle').textContent = `ปลดล็อกตอนที่ ${ch.chapter_number}: ${ch.title}`;
-      document.getElementById('unlockDesc').innerHTML = `ใช้ <strong>${ch.price_coins} เหรียญ</strong> เพื่อปลดล็อกอ่านตลอดไป<br>คงเหลือหลังปลดล็อก: <strong>${(state.user.coin_balance - ch.price_coins).toLocaleString()} เหรียญ</strong>`;
+      document.getElementById('unlockDesc').innerHTML = `ใช้ <strong>${ch.price_coins} เหรียญ</strong> เพื่อปลดล็อกอ่านตลอดไป<br>คงเหลือหลังปลดล็อก: <strong>${roundCoins(state.user.coin_balance - Number(ch.price_coins)).toLocaleString()} เหรียญ</strong>`;
       const m = document.getElementById('unlockModal');
       m.classList.remove('hidden');
       m.classList.add('flex');
@@ -1640,6 +1752,7 @@
           return;
         }
         state.activeChapterId = ch.id;
+        state.loadedChapterIds = [ch.id];
         state.view = 'reader';
         window.scrollTo({ top: 0, behavior: 'smooth' });
         render();
@@ -1702,6 +1815,15 @@
           }
           render();
         });
+      });
+
+      const adminEnterReaderBtn = document.getElementById('adminEnterReaderViewBtn');
+      if (adminEnterReaderBtn) adminEnterReaderBtn.addEventListener('click', () => {
+        state.previewAsReader = true;
+        state.view = 'home';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        render();
+        showToast('สลับเป็นมุมมองนักอ่านแล้ว');
       });
 
       const toggleNewNovelBtn = document.getElementById('toggleNewNovelBtn');
@@ -1769,6 +1891,63 @@
 
       document.querySelectorAll('#mainContent [data-set-mode]').forEach(btn => {
         btn.addEventListener('click', () => { state.mode = btn.getAttribute('data-set-mode'); saveDemo(); render(); });
+      });
+
+      const detailBulkBtn = document.getElementById('detailBulkUnlockBtn');
+      if (detailBulkBtn) detailBulkBtn.addEventListener('click', () => openBulkUnlockModal());
+
+      const readerBulkBtn = document.getElementById('readerBulkUnlockBtn');
+      if (readerBulkBtn) readerBulkBtn.addEventListener('click', () => openBulkUnlockModal());
+
+      const appendNextFreeBtn = document.getElementById('appendNextFreeBtn');
+      if (appendNextFreeBtn) appendNextFreeBtn.addEventListener('click', async () => {
+        const nextId = appendNextFreeBtn.getAttribute('data-next-ch');
+        const novel = getNovel(state.activeNovelId);
+        const ch = (novel?.chapters || []).find(c => c.id === nextId);
+        if (!ch) return;
+        const ok = await fetchChapterContentIfNeeded(ch);
+        if (!ok) { showToast('โหลดตอนถัดไปไม่สำเร็จ'); return; }
+        if (!state.loadedChapterIds.includes(ch.id)) state.loadedChapterIds.push(ch.id);
+        state.activeChapterId = ch.id;
+        render();
+      });
+
+      const inlineUnlockNextBtn = document.getElementById('inlineUnlockNextBtn');
+      if (inlineUnlockNextBtn) inlineUnlockNextBtn.addEventListener('click', async () => {
+        const nextId = inlineUnlockNextBtn.getAttribute('data-next-ch');
+        const novel = getNovel(state.activeNovelId);
+        const ch = (novel?.chapters || []).find(c => c.id === nextId);
+        if (!ch) return;
+        if (!state.user) { openAuthModal(); showToast('กรุณาเข้าสู่ระบบก่อนปลดล็อกตอน'); return; }
+        if ((state.user.coin_balance || 0) < ch.price_coins) {
+          state.pendingUnlock = { novelId: novel.id, chId: ch.id, appendInline: true };
+          openTopup(`ตอนที่ ${ch.chapter_number} ใช้ ${ch.price_coins} เหรียญ (คุณมี ${state.user.coin_balance || 0} เหรียญ)`);
+          return;
+        }
+        inlineUnlockNextBtn.disabled = true;
+        inlineUnlockNextBtn.textContent = 'กำลังปลดล็อก...';
+        try {
+          if (state.isLive) {
+            const { error } = await sb.rpc('unlock_chapter', { p_chapter_id: ch.id });
+            if (error) throw error;
+            await loadLiveData();
+          } else {
+            state.user.coin_balance = roundCoins(state.user.coin_balance - Number(ch.price_coins));
+            if (!state.unlockedIds.includes(ch.id)) state.unlockedIds.push(ch.id);
+            state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'unlock', coins_delta: -ch.price_coins, note: `ปลดล็อก: ${ch.title}`, status: 'approved' });
+            saveDemo();
+          }
+          const freshNovel = getNovel(novel.id);
+          const freshCh = (freshNovel?.chapters || []).find(c => c.id === ch.id);
+          if (freshCh) await fetchChapterContentIfNeeded(freshCh);
+          if (!state.loadedChapterIds.includes(ch.id)) state.loadedChapterIds.push(ch.id);
+          state.activeChapterId = ch.id;
+          render();
+          showToast(`ปลดล็อกตอนที่ ${ch.chapter_number} แล้ว อ่านต่อด้านล่างได้เลย!`);
+        } catch (err) {
+          inlineUnlockNextBtn.disabled = false;
+          showToast('ปลดล็อกไม่สำเร็จ: ' + err.message);
+        }
       });
 
       const clearBtn = document.getElementById('clearFilterBtn');
@@ -1947,7 +2126,7 @@
             novel_id: nid,
             chapter_number: Number(document.getElementById('chNum').value),
             title: document.getElementById('chTitle').value.trim(),
-            price_coins: Number(document.getElementById('chPrice').value || 0),
+            price_coins: Math.max(0, roundCoins(document.getElementById('chPrice').value || 0)),
             content: document.getElementById('chContent').value.trim(),
             status: document.getElementById('chStatus').value,
             publish_at: publishIso
@@ -2047,7 +2226,7 @@
       document.querySelectorAll('[data-quick-price]').forEach(input => {
         input.addEventListener('change', async () => {
           const cid = input.getAttribute('data-quick-price');
-          const newPrice = Math.max(0, Math.floor(Number(input.value || 0)));
+          const newPrice = Math.max(0, roundCoins(input.value || 0));
           input.value = newPrice;
           try {
             if (state.isLive) {
@@ -2382,7 +2561,7 @@
           if (error) throw error;
           await loadLiveData();
         } else {
-          state.user.coin_balance -= ch.price_coins;
+          state.user.coin_balance = roundCoins(state.user.coin_balance - Number(ch.price_coins));
           if (!state.unlockedIds.includes(ch.id)) state.unlockedIds.push(ch.id);
           state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'unlock', coins_delta: -ch.price_coins, note: `ปลดล็อก: ${ch.title}`, status: 'approved' });
           saveDemo();
@@ -2535,7 +2714,7 @@
             <div class="shrink-0 flex items-center gap-2 text-[11px]">
               <label class="flex items-center gap-1 px-2 py-1 rounded" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                 <span>🪙</span>
-                <input type="number" min="0" value="${c.price}" data-split-price="${idx}" class="w-10 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price === 0 ? '#4ADE80' : 'var(--gold-1)'};">
+                <input type="number" min="0" step="0.5" value="${c.price}" data-split-price="${idx}" class="w-10 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price === 0 ? '#4ADE80' : 'var(--gold-1)'};">
                 <span style="color: var(--text-muted);">${c.price === 0 ? 'ฟรี' : 'เหรียญ'}</span>
               </label>
               <span style="color: var(--text-muted);">${c.content.length.toLocaleString()} อักษร</span>
@@ -2554,7 +2733,7 @@
       listEl.querySelectorAll('[data-split-price]').forEach(inp => {
         inp.addEventListener('input', () => {
           const i = Number(inp.getAttribute('data-split-price'));
-          const val = Math.max(0, Math.floor(Number(inp.value || 0)));
+          const val = Math.max(0, roundCoins(inp.value || 0));
           if (parsedSplitChapters[i]) {
             parsedSplitChapters[i].price = val;
             parsedSplitChapters[i].customPrice = val;
@@ -2637,7 +2816,7 @@
         novel_id: nid,
         chapter_number: nextN + idx,
         title: (c.title || `ตอนที่ ${nextN + idx}`).trim(),
-        price_coins: Math.max(0, Number(c.price || 0)),
+        price_coins: Math.max(0, roundCoins(c.price || 0)),
         content: c.content,
         status: 'published',
         publish_at: nowIso
@@ -2663,6 +2842,157 @@
         btn.textContent = `นำเข้าทั้งหมด ${rows.length} ตอนทันที`;
         showToast('นำเข้าไม่สำเร็จ: ' + err.message);
       }
+    });
+
+    // Bulk Unlock Modal Logic
+    function getLockedChaptersForActiveNovel() {
+      const novel = getNovel(state.activeNovelId);
+      if (!novel) return [];
+      return (novel.chapters || [])
+        .filter(c => (isAdmin() || isChapterPublished(c)) && !isAccessible(c))
+        .sort((a, b) => a.chapter_number - b.chapter_number);
+    }
+
+    function renderBulkUnlockList() {
+      const locked = getLockedChaptersForActiveNovel();
+      const listEl = document.getElementById('bulkUnlockList');
+      const sumEl = document.getElementById('bulkUnlockSummary');
+      const totEl = document.getElementById('bulkUnlockTotal');
+      const btn = document.getElementById('confirmBulkUnlockBtn');
+
+      if (!locked.length) {
+        listEl.innerHTML = `<div class="py-8 text-center text-xs" style="color: var(--text-muted);">คุณปลดล็อกครบทุกตอนของเรื่องนี้แล้ว!</div>`;
+        sumEl.textContent = 'ไม่มีตอนที่ต้องปลดล็อก';
+        totEl.textContent = '0 เหรียญ';
+        btn.disabled = true;
+        return;
+      }
+
+      listEl.innerHTML = locked.map(c => {
+        const checked = state.bulkSelectedIds.includes(c.id);
+        return `
+          <label class="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors" style="background-color: ${checked ? 'var(--gold-soft)' : 'var(--bg-input)'}; border: 1px solid ${checked ? 'var(--gold-1)' : 'var(--border-soft)'};">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <input type="checkbox" data-bulk-chk="${c.id}" ${checked ? 'checked' : ''} class="accent-amber-400 w-4 h-4 shrink-0">
+              <span class="text-xs font-bold shrink-0" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
+              <span class="text-xs truncate">${c.title}</span>
+            </div>
+            <span class="text-xs font-semibold shrink-0" style="color: var(--gold-1);">🪙 ${c.price_coins}</span>
+          </label>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('[data-bulk-chk]').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const cid = chk.getAttribute('data-bulk-chk');
+          if (chk.checked) {
+            if (!state.bulkSelectedIds.includes(cid)) state.bulkSelectedIds.push(cid);
+          } else {
+            state.bulkSelectedIds = state.bulkSelectedIds.filter(id => id !== cid);
+          }
+          renderBulkUnlockList();
+        });
+      });
+
+      const selectedRows = locked.filter(c => state.bulkSelectedIds.includes(c.id));
+      const totalCost = roundCoins(selectedRows.reduce((s, c) => s + Number(c.price_coins || 0), 0));
+      const bal = state.user?.coin_balance || 0;
+      sumEl.textContent = `เลือกแล้ว ${selectedRows.length} ตอน (มี ${bal.toLocaleString()} เหรียญ)`;
+      totEl.textContent = `รวม ${totalCost.toLocaleString()} เหรียญ`;
+      btn.disabled = selectedRows.length === 0;
+      btn.textContent = selectedRows.length === 0
+        ? 'เลือกตอนที่ต้องการปลดล็อก'
+        : (bal >= totalCost ? `ยืนยันปลดล็อก ${selectedRows.length} ตอน (${totalCost} เหรียญ)` : `เหรียญไม่พอ — กดเติมเหรียญเพิ่ม`);
+    }
+
+    function openBulkUnlockModal() {
+      if (!state.user) { openAuthModal(); showToast('กรุณาเข้าสู่ระบบก่อนปลดล็อกตอน'); return; }
+      const locked = getLockedChaptersForActiveNovel();
+      state.bulkSelectedIds = locked.slice(0, 10).map(c => c.id);
+      renderBulkUnlockList();
+      const m = document.getElementById('bulkUnlockModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeBulkUnlockModal() {
+      const m = document.getElementById('bulkUnlockModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    document.getElementById('closeBulkUnlockBtn').addEventListener('click', closeBulkUnlockModal);
+    document.getElementById('cancelBulkUnlockBtn').addEventListener('click', closeBulkUnlockModal);
+
+    document.querySelectorAll('[data-bulk-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = btn.getAttribute('data-bulk-preset');
+        const locked = getLockedChaptersForActiveNovel();
+        if (preset === 'none') state.bulkSelectedIds = [];
+        else if (preset === 'all') state.bulkSelectedIds = locked.map(c => c.id);
+        else state.bulkSelectedIds = locked.slice(0, Number(preset)).map(c => c.id);
+        renderBulkUnlockList();
+      });
+    });
+
+    document.getElementById('confirmBulkUnlockBtn').addEventListener('click', async () => {
+      const locked = getLockedChaptersForActiveNovel();
+      const targets = locked.filter(c => state.bulkSelectedIds.includes(c.id));
+      if (!targets.length) return;
+      const totalCost = roundCoins(targets.reduce((s, c) => s + Number(c.price_coins || 0), 0));
+      const bal = state.user?.coin_balance || 0;
+      if (bal < totalCost) {
+        closeBulkUnlockModal();
+        openTopup(`ปลดล็อก ${targets.length} ตอนต้องใช้ ${totalCost} เหรียญ (คุณมี ${bal} เหรียญ)`);
+        return;
+      }
+
+      const btn = document.getElementById('confirmBulkUnlockBtn');
+      btn.disabled = true;
+      btn.textContent = `กำลังปลดล็อก ${targets.length} ตอน...`;
+      try {
+        if (state.isLive) {
+          for (const ch of targets) {
+            const { error } = await sb.rpc('unlock_chapter', { p_chapter_id: ch.id });
+            if (error) throw error;
+          }
+          await loadLiveData();
+        } else {
+          targets.forEach(ch => {
+            state.user.coin_balance = roundCoins(state.user.coin_balance - Number(ch.price_coins));
+            if (!state.unlockedIds.includes(ch.id)) state.unlockedIds.push(ch.id);
+          });
+          state.transactions.unshift({
+            id: 'tx-' + Date.now(),
+            type: 'unlock',
+            coins_delta: -totalCost,
+            note: `ปลดล็อกเหมา ${targets.length} ตอน`,
+            status: 'approved'
+          });
+          saveDemo();
+        }
+        closeBulkUnlockModal();
+        render();
+        showToast(`ปลดล็อกสำเร็จทั้งหมด ${targets.length} ตอน อ่านยาวๆ ได้เลย!`);
+      } catch (err) {
+        btn.disabled = false;
+        renderBulkUnlockList();
+        showToast('ปลดล็อกไม่สำเร็จ: ' + err.message);
+      }
+    });
+
+    document.getElementById('sideReaderPreviewBtn').addEventListener('click', () => {
+      state.previewAsReader = true;
+      if (state.view === 'admin') state.view = 'home';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      render();
+      showToast('สลับเป็นมุมมองนักอ่านแล้ว');
+    });
+
+    document.getElementById('exitReaderPreviewBtn').addEventListener('click', () => {
+      state.previewAsReader = false;
+      render();
+      showToast('กลับสู่มุมมองเจ้าของเว็บ (Admin) แล้ว');
     });
 
     (async function init() {
