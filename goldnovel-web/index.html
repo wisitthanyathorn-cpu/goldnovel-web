@@ -968,26 +968,46 @@
             const cur = slides[safeIdx] || slides[0];
             return `
               <section id="heroCarousel" class="select-none">
-                <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border min-h-[210px] sm:min-h-[285px] flex items-center hero-placeholder shadow-lg" style="border-color: var(--border-subtle);">
-                  ${cur.img ? `<img src="${cur.img}" alt="${cur.title}" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500">` : ''}
-                  <div class="absolute inset-0 bg-gradient-to-r from-[#0B0D14]/94 via-[#0B0D14]/70 to-[#0B0D14]/20"></div>
-                  <div class="relative z-10 p-5 sm:p-10 max-w-xl fade-in">
-                    <span class="inline-block text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-2" style="background-color: rgba(232,197,123,0.18); color: #F3D999; border: 1px solid rgba(232,197,123,0.35);">${cur.badge}</span>
-                    <h1 class="font-display-thai text-xl sm:text-4xl font-extrabold leading-tight hero-text-gradient mb-2">${cur.title}</h1>
-                    <p class="text-xs sm:text-sm text-neutral-200/90 mb-4 leading-relaxed line-clamp-2">${cur.tagline}</p>
-                    <div class="flex flex-wrap gap-2">
-                      ${cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" class="px-5 py-2 rounded-full text-xs sm:text-sm btn-gold">อ่านเลย →</button>` : ''}
-                      ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="px-3.5 py-2 rounded-full text-xs font-medium bg-white/10 text-amber-200 border border-amber-300/30 hover:bg-white/15">แก้ไขแบนเนอร์</button>` : ''}
+                ${(() => {
+                  const isPureGraphic = !!cur.img && !String(cur.title || '').trim();
+                  if (isPureGraphic) {
+                    return `
+                      <div class="relative rounded-2xl overflow-hidden border shadow-lg hero-placeholder" style="border-color: var(--border-soft);">
+                        <img src="${cur.img}" alt="GoldNovel Banner" class="w-full h-auto block object-contain">
+                        ${safeIdx === 0 ? `
+                          <button type="button" id="heroPureTopupBtn" aria-label="เติมเหรียญเลยวันนี้" title="คลิกเพื่อเติมเหรียญ" class="absolute z-10 rounded-lg cursor-pointer transition-all hover:bg-amber-300/15 active:scale-[0.98] focus:outline-none" style="left: 17%; bottom: 0%; width: 28%; height: 22%;"></button>
+                        ` : (cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" aria-label="เปิดอ่านนิยาย" class="absolute inset-0 z-10 cursor-pointer focus:outline-none"></button>` : '')}
+                        ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-black/65 text-amber-200 border border-amber-300/30 hover:bg-black/85 backdrop-blur-xs">แก้ไขแบนเนอร์</button>` : ''}
+                        ${slides.length > 1 ? `
+                          <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">‹</button>
+                          <button type="button" id="heroNextBtn" aria-label="สไลด์ถัดไป" class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">›</button>
+                        ` : ''}
+                      </div>
+                    `;
+                  }
+                  return `
+                    <div class="relative rounded-2xl overflow-hidden border aspect-[16/6] sm:aspect-[16/5] min-h-[190px] flex items-center hero-placeholder shadow-lg" style="border-color: var(--border-soft);">
+                      ${cur.img ? `<img src="${cur.img}" alt="${cur.title}" class="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500">` : ''}
+                      <div class="absolute inset-0 bg-gradient-to-r from-[#0A0B0F]/92 via-[#0A0B0F]/65 to-[#0A0B0F]/15"></div>
+                      <div class="relative z-10 p-5 sm:p-9 max-w-xl fade-in">
+                        <span class="inline-block text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2" style="background-color: rgba(234,184,84,0.16); color: #F3D999; border: 1px solid rgba(234,184,84,0.3);">${cur.badge}</span>
+                        <h1 class="font-display-thai text-xl sm:text-3xl font-bold leading-tight hero-text-gradient mb-1.5">${cur.title}</h1>
+                        <p class="text-xs sm:text-sm text-neutral-300/90 mb-4 leading-relaxed line-clamp-2">${cur.tagline}</p>
+                        <div class="flex flex-wrap gap-2">
+                          ${cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" class="px-5 py-2 rounded-lg text-xs sm:text-sm btn-gold">อ่านเลย →</button>` : ''}
+                          ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="px-3.5 py-2 rounded-lg text-xs font-medium bg-white/10 text-amber-200 border border-amber-300/25 hover:bg-white/15">แก้ไขแบนเนอร์</button>` : ''}
+                        </div>
+                      </div>
+                      ${slides.length > 1 ? `
+                        <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">‹</button>
+                        <button type="button" id="heroNextBtn" aria-label="สไลด์ถัดไป" class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">›</button>
+                      ` : ''}
                     </div>
-                  </div>
-                  ${slides.length > 1 ? `
-                    <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">‹</button>
-                    <button type="button" id="heroNextBtn" aria-label="สไลด์ถัดไป" class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">›</button>
-                  ` : ''}
-                </div>
+                  `;
+                })()}
                 ${slides.length > 1 ? `
                   <div class="flex items-center justify-center gap-1.5 mt-3">
-                    ${slides.map((_, i) => `<button type="button" data-hero-dot="${i}" aria-label="สไลด์ที่ ${i + 1}" class="h-1.5 rounded-full transition-all duration-300 ${i === safeIdx ? 'w-7' : 'w-1.5 bg-white/25 hover:bg-white/50'}" style="${i === safeIdx ? 'background: linear-gradient(90deg, #F3D999, #D4A857);' : ''}"></button>`).join('')}
+                    ${slides.map((_, i) => `<button type="button" data-hero-dot="${i}" aria-label="สไลด์ที่ ${i + 1}" class="h-1.5 rounded-full transition-all duration-300 ${i === safeIdx ? 'w-7' : 'w-1.5 bg-white/25 hover:bg-white/50'}" style="${i === safeIdx ? 'background: linear-gradient(90deg, #F3D17C, #C9922B);' : ''}"></button>`).join('')}
                   </div>
                 ` : ''}
               </section>
@@ -2608,6 +2628,8 @@
       const clearBtn = document.getElementById('clearFilterBtn');
       if (clearBtn) clearBtn.addEventListener('click', () => { state.activeCategory = null; state.searchQuery = ''; document.getElementById('searchInput').value = ''; render(); });
 
+      const heroPureTopupBtn = document.getElementById('heroPureTopupBtn');
+      if (heroPureTopupBtn) heroPureTopupBtn.addEventListener('click', () => openTopup());
       const promoBtn = document.getElementById('promoTopupBtn');
       if (promoBtn) promoBtn.addEventListener('click', () => openTopup());
 
