@@ -6,6 +6,7 @@
   <title>GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -284,8 +285,11 @@
       </div>
 
       <div id="topupStep1">
-        <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">1. เลือกจำนวนเงิน</div>
-        <div id="pkgGrid" class="grid grid-cols-3 gap-2.5 mb-5"></div>
+        <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">1. เลือกจำนวนเงิน (ล็อกยอดบน QR อัตโนมัติ)</div>
+        <div id="pkgGrid" class="grid grid-cols-3 gap-2.5 mb-3"></div>
+        <div class="mb-5">
+          <input id="customBahtInput" type="number" min="1" step="1" placeholder="หรือกรอกจำนวนเงินเอง (บาท) เช่น 20, 75, 500" class="w-full px-3.5 py-2 rounded-xl text-xs focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
+        </div>
 
         <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">2. เลือกช่องทางชำระเงิน</div>
         <div class="grid grid-cols-2 gap-2.5 mb-5">
@@ -303,9 +307,19 @@
 
       <div id="topupStep2" class="hidden space-y-4">
         <div class="rounded-2xl p-4 text-center" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">
-          <div id="payChannelLabel" class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: var(--gold-1);">PromptPay</div>
-          <div id="payAccountDetail" class="text-sm font-medium mb-2"></div>
-          <div id="payBahtText" class="text-2xl font-bold">100 บาท</div>
+          <div id="payChannelLabel" class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: var(--gold-1);">PromptPay QR (ล็อกยอดอัตโนมัติ)</div>
+          <div id="payAccountDetail" class="text-xs mb-3" style="color: var(--text-sub);"></div>
+
+          <div id="qrBoxWrap" class="flex flex-col items-center justify-center mb-3">
+            <div class="bg-white p-3 rounded-2xl shadow-md inline-block">
+              <div class="text-[11px] font-bold text-[#113566] tracking-wide mb-1.5">THAI QR PAYMENT · PROMPTPAY</div>
+              <div id="promptpayQrCanvas" class="w-44 h-44 flex items-center justify-center"></div>
+            </div>
+            <button type="button" id="downloadQrBtn" class="mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">💾 บันทึกรูป QR ไว้สแกนในแอปธนาคาร</button>
+          </div>
+
+          <div id="payPlaceholderWarn" class="hidden text-[11px] text-amber-300 bg-amber-500/10 border border-amber-400/25 rounded-lg px-3 py-1.5 mb-2">⚠️ กรุณาเปลี่ยนเบอร์พร้อมเพย์จริงของคุณในไฟล์ config.js ก่อนเปิดรับเงินจริง</div>
+          <div id="payBahtText" class="text-2xl font-bold">100.00 บาท</div>
           <div id="payCoinText" class="text-xs mt-1" style="color: var(--gold-1);">รับ 120 เหรียญ</div>
         </div>
 
@@ -1352,6 +1366,72 @@
       return Math.round(baht * (1 + Number(CFG.topupBonusPercent || 0) / 100));
     }
 
+    // Official Thai PromptPay EMVCo QR Payload Generator (Amount-Locked)
+    function tlv(tag, value) {
+      const len = String(value.length).padStart(2, '0');
+      return `${tag}${len}${value}`;
+    }
+
+    function crc16Ccitt(str) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= (str.charCodeAt(i) << 8);
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+          crc &= 0xFFFF;
+        }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    function buildPromptPayPayload(targetRaw, amount) {
+      const digits = String(targetRaw || '').replace(/\D/g, '');
+      let accTag = '01';
+      let accVal = '';
+      if (digits.length === 15) {
+        accTag = '03';
+        accVal = digits;
+      } else if (digits.length === 13) {
+        accTag = '02';
+        accVal = digits;
+      } else {
+        // 10-digit Thai mobile number -> 0066 + 9 digits
+        const mobile = digits.startsWith('0') ? ('0066' + digits.slice(1)) : digits;
+        accTag = '01';
+        accVal = mobile.padStart(13, '0').slice(-13);
+      }
+
+      const merchantInfo = tlv('00', 'A000000677010111') + tlv(accTag, accVal);
+      const amtStr = Number(amount || 0).toFixed(2);
+      const body =
+        tlv('00', '01') +
+        tlv('01', Number(amount) > 0 ? '12' : '11') +
+        tlv('29', merchantInfo) +
+        tlv('58', 'TH') +
+        tlv('53', '764') +
+        (Number(amount) > 0 ? tlv('54', amtStr) : '') +
+        '6304';
+
+      return body + crc16Ccitt(body);
+    }
+
+    function renderPromptPayQR(targetRaw, amount) {
+      const container = document.getElementById('promptpayQrCanvas');
+      if (!container) return;
+      container.innerHTML = '';
+      const payload = buildPromptPayPayload(targetRaw, amount);
+      if (window.QRCode) {
+        new window.QRCode(container, {
+          text: payload,
+          width: 176,
+          height: 176,
+          colorDark: '#0F172A',
+          colorLight: '#FFFFFF',
+          correctLevel: window.QRCode.CorrectLevel.M
+        });
+      }
+    }
+
     function renderPackages() {
       const grid = document.getElementById('pkgGrid');
       grid.innerHTML = PACKAGES.map(baht => {
@@ -2080,16 +2160,54 @@
       btn.addEventListener('click', () => { state.selectedPay = btn.getAttribute('data-pay'); renderPayOpts(); });
     });
 
+    document.getElementById('customBahtInput').addEventListener('input', (e) => {
+      const v = Number(e.target.value);
+      if (v > 0) {
+        state.selectedBaht = Math.floor(v);
+        renderPackages();
+      }
+    });
+
     document.getElementById('goPayStepBtn').addEventListener('click', () => {
-      const coins = calcCoins(state.selectedBaht);
-      document.getElementById('payChannelLabel').textContent = state.selectedPay === 'promptpay' ? 'PromptPay (พร้อมเพย์)' : 'TrueMoney Wallet';
-      document.getElementById('payAccountDetail').textContent = state.selectedPay === 'promptpay'
-        ? `${CFG.promptpayNumber} (${CFG.promptpayAccountName})`
-        : `เบอร์วอลเล็ท: ${CFG.truemoneyPhone}`;
-      document.getElementById('payBahtText').textContent = `${state.selectedBaht} บาท`;
-      document.getElementById('payCoinText').textContent = `รับ ${coins} เหรียญ`;
+      const customVal = Number(document.getElementById('customBahtInput').value);
+      if (customVal > 0) state.selectedBaht = Math.floor(customVal);
+      const baht = Math.max(1, Number(state.selectedBaht || 100));
+      state.selectedBaht = baht;
+      const coins = calcCoins(baht);
+
+      const isPP = state.selectedPay === 'promptpay';
+      const targetNum = isPP ? CFG.promptpayNumber : CFG.truemoneyPhone;
+      const isPlaceholder = !targetNum || /X/i.test(targetNum) || targetNum.replace(/\D/g, '').length < 10;
+
+      document.getElementById('payChannelLabel').textContent = isPP ? 'PromptPay QR (ล็อกยอดเงินอัตโนมัติ)' : 'TrueMoney Wallet';
+      document.getElementById('payAccountDetail').textContent = isPP
+        ? `พร้อมเพย์: ${CFG.promptpayNumber} (${CFG.promptpayAccountName})`
+        : `เบอร์วอลเล็ท: ${CFG.truemoneyPhone} (${CFG.promptpayAccountName})`;
+      document.getElementById('payBahtText').textContent = `${baht.toFixed(2)} บาท`;
+      document.getElementById('payCoinText').textContent = `รับ ${coins.toLocaleString()} เหรียญ`;
+      document.getElementById('payPlaceholderWarn').classList.toggle('hidden', !isPlaceholder);
+
+      const qrWrap = document.getElementById('qrBoxWrap');
+      qrWrap.classList.toggle('hidden', !isPP);
+      if (isPP) {
+        renderPromptPayQR(isPlaceholder ? '0812345678' : targetNum, baht);
+      }
+
       document.getElementById('topupStep1').classList.add('hidden');
       document.getElementById('topupStep2').classList.remove('hidden');
+    });
+
+    document.getElementById('downloadQrBtn').addEventListener('click', () => {
+      const box = document.getElementById('promptpayQrCanvas');
+      const canvas = box?.querySelector('canvas');
+      const img = box?.querySelector('img');
+      const dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
+      if (!dataUrl) { showToast('ไม่สามารถบันทึกรูป QR ได้'); return; }
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `GoldNovel-PromptPay-${state.selectedBaht}THB.png`;
+      a.click();
+      showToast('บันทึกรูป QR ลงเครื่องแล้ว');
     });
 
     document.getElementById('backPayBtn').addEventListener('click', () => {
