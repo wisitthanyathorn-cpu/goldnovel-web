@@ -606,6 +606,8 @@
       autoContinuousNovelId: null,
       autoContinuousInfoOpen: true,
       autoUnlockBusy: false,
+      tocSortDesc: false,
+      tocOpenGroups: {},
       bulkSelectedIds: [],
       selectedBaht: 100,
       selectedPay: 'promptpay',
@@ -1129,6 +1131,27 @@
       `;
     }
 
+    function buildChapterGroups(chapters, chunkSize = 50, desc = false) {
+      const sorted = chapters.slice().sort((a, b) => a.chapter_number - b.chapter_number);
+      const groups = [];
+      for (let i = 0; i < sorted.length; i += chunkSize) {
+        const slice = sorted.slice(i, i + chunkSize);
+        const startNum = slice[0].chapter_number;
+        const endNum = slice[slice.length - 1].chapter_number;
+        groups.push({
+          idx: groups.length,
+          label: startNum === endNum ? `ตอนที่ ${startNum}` : `${startNum} – ${endNum}`,
+          count: slice.length,
+          items: desc ? slice.slice().reverse() : slice
+        });
+      }
+      return desc ? groups.reverse() : groups;
+    }
+
+    function isTocGroupOpen(key, defaultOpen) {
+      return Object.prototype.hasOwnProperty.call(state.tocOpenGroups, key) ? !!state.tocOpenGroups[key] : !!defaultOpen;
+    }
+
     function renderNovelDetail() {
       const novel = getNovel(state.activeNovelId);
       if (!novel) return `<div class="p-8 text-center">ไม่พบนิยาย</div>`;
@@ -1165,30 +1188,60 @@
             </div>
           </div>
 
-          <div class="card-panel rounded-2xl overflow-hidden">
-            <div class="px-5 py-4 border-b flex flex-wrap items-center justify-between gap-2" style="border-color: var(--border-soft);">
-              <span class="font-bold text-sm">สารบัญตอน (${chapters.length} ตอน)</span>
-              ${chapters.some(c => !isAccessible(c)) ? `<button type="button" id="detailBulkUnlockBtn" class="px-3.5 py-1.5 rounded-full text-xs btn-gold">⚡ ปลดล็อกหลายตอนพร้อมกัน</button>` : ''}
+          <div class="space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+              <div class="flex items-center gap-2.5">
+                <span class="section-accent-bar"></span>
+                <span class="font-bold text-base">สารบัญ</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2.5">
+                <span class="text-xs" style="color: var(--text-muted);">${chapters.length} ตอน</span>
+                ${chapters.length > 1 ? `<button type="button" id="toggleTocSortBtn" class="text-xs font-semibold hover:underline" style="color: var(--gold-1);">${state.tocSortDesc ? '↓ เรียงจากตอนล่าสุด' : '↑ เรียงจากตอนแรก'}</button>` : ''}
+                ${chapters.some(c => !isAccessible(c)) ? `<button type="button" id="detailBulkUnlockBtn" class="px-3.5 py-1.5 rounded-full text-xs btn-gold">⚡ ปลดล็อกหลายตอน</button>` : ''}
+              </div>
             </div>
-            <div>
-              ${chapters.length === 0 ? `<div class="p-8 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยาย เพิ่มตอนได้ในหน้า "หลังบ้านนักเขียน"</div>` :
-                chapters.map(ch => {
-                  const open = isAccessible(ch);
-                  const badge = ch.price_coins === 0
-                    ? `<span class="text-xs px-2.5 py-1 rounded-full" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">อ่านฟรี</span>`
-                    : open
-                      ? `<span class="text-xs px-2.5 py-1 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">✓ ปลดล็อกแล้ว</span>`
-                      : `<span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background-color: var(--bg-input); color: var(--gold-1);">🔒 ${ch.price_coins} เหรียญ</span>`;
+
+            <div class="card-panel rounded-2xl overflow-hidden">
+              ${chapters.length === 0 ? `<div class="p-8 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยาย เพิ่มตอนได้ในหน้า "หลังบ้านนักเขียน"</div>` : (() => {
+                const groups = buildChapterGroups(chapters, 50, state.tocSortDesc);
+                const multiGroup = groups.length > 1;
+                return groups.map(g => {
+                  const gKey = `reader:${novel.id}:${g.idx}`;
+                  const isOpen = isTocGroupOpen(gKey, !multiGroup);
                   return `
-                    <button type="button" data-open-ch="${ch.id}" class="w-full text-left px-5 py-3.5 flex items-center justify-between gap-3 border-b last:border-b-0 hover:bg-white/5" style="border-color: var(--border-soft);">
-                      <div class="flex items-center gap-3 min-w-0">
-                        <span class="text-xs w-14 shrink-0" style="color: var(--text-muted);">ตอนที่ ${ch.chapter_number}</span>
-                        <span class="text-sm font-medium truncate">${ch.title}</span>
-                      </div>
-                      ${badge}
-                    </button>
+                    <div class="border-b last:border-b-0" style="border-color: var(--border-soft);">
+                      <button type="button" data-toggle-toc="${gKey}" class="w-full px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-white/[0.04] transition-colors">
+                        <div class="flex items-center gap-2.5">
+                          <span class="text-sm font-semibold">${g.label}</span>
+                          <span class="text-[11px]" style="color: var(--text-muted);">(${g.count} ตอน)</span>
+                        </div>
+                        <span class="text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}" style="color: var(--text-sub);">⌄</span>
+                      </button>
+                      ${isOpen ? `
+                        <div class="border-t" style="border-color: var(--border-soft); background-color: color-mix(in srgb, var(--bg-app) 40%, transparent);">
+                          ${g.items.map(ch => {
+                            const open = isAccessible(ch);
+                            const badge = ch.price_coins === 0
+                              ? `<span class="text-xs px-2.5 py-1 rounded-full shrink-0" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">อ่านฟรี</span>`
+                              : open
+                                ? `<span class="text-xs px-2.5 py-1 rounded-full shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">✓ ปลดล็อกแล้ว</span>`
+                                : `<span class="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0" style="background-color: var(--bg-input); color: var(--gold-1);">🔒 ${ch.price_coins} เหรียญ</span>`;
+                            return `
+                              <button type="button" data-open-ch="${ch.id}" class="w-full text-left px-5 py-3 flex items-center justify-between gap-3 border-b last:border-b-0 hover:bg-white/5" style="border-color: var(--border-soft);">
+                                <div class="flex items-center gap-3 min-w-0">
+                                  <span class="text-xs w-14 shrink-0" style="color: var(--text-muted);">ตอนที่ ${ch.chapter_number}</span>
+                                  <span class="text-sm font-medium truncate">${ch.title}</span>
+                                </div>
+                                ${badge}
+                              </button>
+                            `;
+                          }).join('')}
+                        </div>
+                      ` : ''}
+                    </div>
                   `;
-                }).join('')}
+                }).join('');
+              })()}
             </div>
           </div>
 
@@ -1586,41 +1639,66 @@
                       </div>
                     </div>
                     <div>
-                      ${chList.length === 0 ? `<div class="p-10 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยายในเรื่องนี้ กดปุ่ม <strong>+ เพิ่มตอนใหม่</strong> หรือ <strong>✂️ แยกตอนจาก 1 ไฟล์ .txt</strong> ด้านบนได้เลยครับ</div>` :
-                        chList.map((c, idx) => {
-                          const isScheduled = c.status !== 'draft' && c.publish_at && new Date(c.publish_at).getTime() > Date.now();
-                          let stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">เผยแพร่แล้ว</span>`;
-                          if (c.status === 'draft') {
-                            stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(148,163,184,0.16); color: #94A3B8;">แบบร่าง</span>`;
-                          } else if (isScheduled) {
-                            const dt = new Date(c.publish_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                            stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">⏰ ตั้งเวลา ${dt}</span>`;
-                          }
+                      ${chList.length === 0 ? `<div class="p-10 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยายในเรื่องนี้ กดปุ่ม <strong>+ เพิ่มตอนใหม่</strong> หรือ <strong>✂️ แยกตอนจาก 1 ไฟล์ .txt</strong> ด้านบนได้เลยครับ</div>` : (() => {
+                        const adminGroups = buildChapterGroups(chList, 50, false);
+                        const lastGIdx = adminGroups.length - 1;
+                        return adminGroups.map(g => {
+                          const gKey = `admin:${targetNovel.id}:${g.idx}`;
+                          const isOpen = isTocGroupOpen(gKey, g.idx === lastGIdx);
                           return `
-                            <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors" style="border-color: var(--border-soft);">
-                              <button type="button" data-edit-ch="${c.id}" class="min-w-0 flex-1 text-left focus:outline-none">
-                                <div class="flex flex-wrap items-center gap-2 mb-0.5">
-                                  <span class="text-xs font-bold" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
-                                  <span class="text-sm font-semibold truncate hover:underline">${c.title}</span>
+                            <div class="border-b last:border-b-0" style="border-color: var(--border-soft);">
+                              ${adminGroups.length > 1 ? `
+                                <button type="button" data-toggle-toc="${gKey}" class="w-full px-5 py-3 flex items-center justify-between gap-3 text-left hover:bg-white/[0.04] transition-colors" style="background-color: color-mix(in srgb, var(--bg-input) 55%, transparent);">
+                                  <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold" style="color: var(--gold-1);">ช่วงตอน ${g.label}</span>
+                                    <span class="text-[11px]" style="color: var(--text-muted);">(${g.count} ตอน)</span>
+                                  </div>
+                                  <span class="text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}" style="color: var(--text-sub);">⌄</span>
+                                </button>
+                              ` : ''}
+                              ${isOpen ? `
+                                <div>
+                                  ${g.items.map(c => {
+                                    const idx = chList.findIndex(x => x.id === c.id);
+                                    const isScheduled = c.status !== 'draft' && c.publish_at && new Date(c.publish_at).getTime() > Date.now();
+                                    let stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">เผยแพร่แล้ว</span>`;
+                                    if (c.status === 'draft') {
+                                      stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: rgba(148,163,184,0.16); color: #94A3B8;">แบบร่าง</span>`;
+                                    } else if (isScheduled) {
+                                      const dt = new Date(c.publish_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                                      stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">⏰ ตั้งเวลา ${dt}</span>`;
+                                    }
+                                    return `
+                                      <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors" style="border-color: var(--border-soft);">
+                                        <button type="button" data-edit-ch="${c.id}" class="min-w-0 flex-1 text-left focus:outline-none">
+                                          <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                                            <span class="text-xs font-bold" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
+                                            <span class="text-sm font-semibold truncate hover:underline">${c.title}</span>
+                                          </div>
+                                          <div class="flex flex-wrap items-center gap-2 text-[11px]" style="color: var(--text-muted);">
+                                            ${stBadge}
+                                            <span>${c.price_coins === 0 ? 'อ่านฟรี' : `🔒 ${c.price_coins} เหรียญ`}</span>
+                                          </div>
+                                        </button>
+                                        <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                                          <div class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="แก้ราคาเหรียญของตอนนี้ทันที (0 = ฟรี)">
+                                            <span class="text-[11px]" style="color: var(--text-muted);">🪙</span>
+                                            <input type="number" min="0" step="0.5" value="${c.price_coins}" data-quick-price="${c.id}" class="w-11 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price_coins === 0 ? '#4ADE80' : 'var(--gold-1)'};">
+                                          </div>
+                                          <button type="button" data-move-ch="${c.id}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} title="เลื่อนขึ้น" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↑</button>
+                                          <button type="button" data-move-ch="${c.id}" data-dir="1" ${idx === chList.length - 1 ? 'disabled' : ''} title="เลื่อนลง" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↓</button>
+                                          <button type="button" data-edit-ch="${c.id}" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">แก้ไข</button>
+                                          <button type="button" data-del-ch="${c.id}" class="px-2.5 py-1.5 rounded-lg text-xs text-rose-400" style="background-color: rgba(244,63,94,0.12);">ลบ</button>
+                                        </div>
+                                      </div>
+                                    `;
+                                  }).join('')}
                                 </div>
-                                <div class="flex flex-wrap items-center gap-2 text-[11px]" style="color: var(--text-muted);">
-                                  ${stBadge}
-                                  <span>${c.price_coins === 0 ? 'อ่านฟรี' : `🔒 ${c.price_coins} เหรียญ`}</span>
-                                </div>
-                              </button>
-                              <div class="flex flex-wrap items-center gap-1.5 shrink-0">
-                                <div class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="แก้ราคาเหรียญของตอนนี้ทันที (0 = ฟรี)">
-                                  <span class="text-[11px]" style="color: var(--text-muted);">🪙</span>
-                                  <input type="number" min="0" step="0.5" value="${c.price_coins}" data-quick-price="${c.id}" class="w-11 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price_coins === 0 ? '#4ADE80' : 'var(--gold-1)'};">
-                                </div>
-                                <button type="button" data-move-ch="${c.id}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} title="เลื่อนขึ้น" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↑</button>
-                                <button type="button" data-move-ch="${c.id}" data-dir="1" ${idx === chList.length - 1 ? 'disabled' : ''} title="เลื่อนลง" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↓</button>
-                                <button type="button" data-edit-ch="${c.id}" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">แก้ไข</button>
-                                <button type="button" data-del-ch="${c.id}" class="px-2.5 py-1.5 rounded-lg text-xs text-rose-400" style="background-color: rgba(244,63,94,0.12);">ลบ</button>
-                              </div>
+                              ` : ''}
                             </div>
                           `;
-                        }).join('')}
+                        }).join('');
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -2458,7 +2536,22 @@
       const libTopup = document.getElementById('libTopupBtn');
       if (libTopup) libTopup.addEventListener('click', () => openTopup());
 
-            const settingsDisplayNameForm = document.getElementById('settingsDisplayNameForm');
+                  document.querySelectorAll('[data-toggle-toc]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-toggle-toc');
+          const curOpen = btn.querySelector('.rotate-180') !== null;
+          state.tocOpenGroups[key] = !curOpen;
+          render();
+        });
+      });
+
+      const toggleTocSortBtn = document.getElementById('toggleTocSortBtn');
+      if (toggleTocSortBtn) toggleTocSortBtn.addEventListener('click', () => {
+        state.tocSortDesc = !state.tocSortDesc;
+        render();
+      });
+
+      const settingsDisplayNameForm = document.getElementById('settingsDisplayNameForm');
       if (settingsDisplayNameForm) settingsDisplayNameForm.addEventListener('submit', (e) => {
         e.preventDefault();
         saveUserDisplayName(document.getElementById('settingsDisplayNameInput').value, settingsDisplayNameForm.querySelector('button[type="submit"]'));
