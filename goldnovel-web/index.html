@@ -333,6 +333,23 @@
     </div>
   </div>
 
+  <!-- Delete Confirm Modal (Prevents accidental deletion) -->
+  <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+    <div class="card-panel rounded-2xl max-w-md w-full p-6 shadow-2xl fade-in" style="border-color: rgba(244,63,94,0.45);">
+      <div class="text-xs font-bold uppercase tracking-wider text-rose-400 mb-1">⚠️ ยืนยันการลบข้อมูลถาวร</div>
+      <h3 id="deleteModalTitle" class="text-lg font-bold mb-2">ยืนยันการลบ</h3>
+      <p id="deleteModalDesc" class="text-xs sm:text-sm leading-relaxed mb-4" style="color: var(--text-sub);"></p>
+      <div id="deleteTypeConfirmWrap" class="hidden mb-4">
+        <label class="block text-xs mb-1.5" style="color: var(--text-sub);">พิมพ์ชื่อเรื่อง <strong id="deleteExpectedText" class="text-rose-300"></strong> เพื่อยืนยัน:</label>
+        <input id="deleteConfirmInput" type="text" autocomplete="off" placeholder="พิมพ์ชื่อเรื่องให้ตรงเป๊ะ..." class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid rgba(244,63,94,0.4); color: var(--text-main);">
+      </div>
+      <div class="flex gap-2.5">
+        <button type="button" id="cancelDeleteBtn" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background-color: var(--bg-input);">ยกเลิก</button>
+        <button type="button" id="confirmDeleteBtn" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-35 disabled:cursor-not-allowed">ยืนยันการลบถาวร</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl shadow-2xl text-sm font-medium fade-in" style="background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410;"></div>
 
@@ -408,6 +425,7 @@
       selectedBaht: 100,
       selectedPay: 'promptpay',
       pendingUnlock: null,
+      pendingDelete: null, // { type: 'novel'|'chapter', id, title }
       user: sb ? null : { id: 'demo-admin', email: 'owner@goldnovel.demo', display_name: 'เจ้าของเว็บ (โหมดทดลอง)', role: 'admin', coin_balance: 0 },
       settings: {
         hero_title: 'มรรคาเหนือหล้า มหาปราชญ์แห่งยุทธภพ',
@@ -1376,6 +1394,39 @@
       m.classList.remove('flex');
     }
 
+    function openDeleteModal(type, id, title) {
+      state.pendingDelete = { type, id, title };
+      const isNovel = type === 'novel';
+      document.getElementById('deleteModalTitle').textContent = isNovel ? `ลบนิยายเรื่อง "${title}"?` : `ลบตอน "${title}"?`;
+      document.getElementById('deleteModalDesc').innerHTML = isNovel
+        ? 'การลบนิยายทั้งเรื่องจะลบ <strong>ทุกตอนและสิทธิ์ปลดล็อกของผู้อ่านทุกคน</strong> อย่างถาวร ไม่สามารถกู้คืนได้<br><br>หากแค่อยากซ่อนชั่วคราว แนะนำให้เปลี่ยนสถานะตอนเป็น <strong>แบบร่าง</strong> แทนการลบครับ'
+        : 'การลบตอนนี้จะลบเนื้อหาและสิทธิ์ปลดล็อกของผู้อ่านที่ซื้อตอนนี้ไปแล้วอย่างถาวร (หากแค่อยากซ่อน แนะนำเปลี่ยนเป็น <strong>แบบร่าง</strong> แทน)';
+
+      const typeWrap = document.getElementById('deleteTypeConfirmWrap');
+      const input = document.getElementById('deleteConfirmInput');
+      const confirmBtn = document.getElementById('confirmDeleteBtn');
+      if (isNovel) {
+        typeWrap.classList.remove('hidden');
+        document.getElementById('deleteExpectedText').textContent = title;
+        input.value = '';
+        confirmBtn.disabled = true;
+      } else {
+        typeWrap.classList.add('hidden');
+        input.value = '';
+        confirmBtn.disabled = false;
+      }
+      const m = document.getElementById('deleteModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+      state.pendingDelete = null;
+      const m = document.getElementById('deleteModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
     function openChapter(chId) {
       const novel = getNovel(state.activeNovelId);
       const ch = (novel?.chapters || []).find(c => c.id === chId);
@@ -1562,19 +1613,12 @@
         });
       });
 
-      // Admin: Delete Novel
+      // Admin: Delete Novel (Safe Confirmation)
       document.querySelectorAll('[data-del-novel]').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
           const nid = btn.getAttribute('data-del-novel');
-          if (state.isLive) {
-            await sb.from('novels').delete().eq('id', nid);
-            await loadLiveData();
-          } else {
-            state.novels = state.novels.filter(n => n.id !== nid);
-            saveDemo();
-          }
-          render();
-          showToast('ลบนิยายเรียบร้อย');
+          const target = state.novels.find(n => n.id === nid);
+          if (target) openDeleteModal('novel', nid, target.title);
         });
       });
 
@@ -1729,22 +1773,11 @@
       });
 
       document.querySelectorAll('[data-del-ch]').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
           const cid = btn.getAttribute('data-del-ch');
-          try {
-            if (state.isLive) {
-              const { error } = await sb.from('chapters').delete().eq('id', cid);
-              if (error) throw error;
-              await loadLiveData();
-            } else {
-              const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
-              if (novel) novel.chapters = novel.chapters.filter(c => c.id !== cid);
-              saveDemo();
-            }
-            if (state.editingChapterId === cid) state.editingChapterId = null;
-            render();
-            showToast('ลบตอนนิยายเรียบร้อย');
-          } catch (err) { showToast('ลบไม่สำเร็จ: ' + err.message); }
+          const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+          const ch = novel?.chapters?.find(c => c.id === cid);
+          if (ch) openDeleteModal('chapter', cid, `ตอนที่ ${ch.chapter_number}: ${ch.title}`);
         });
       });
 
@@ -2067,6 +2100,52 @@
         render();
         showToast(`ปลดล็อกตอนที่ ${ch.chapter_number} สำเร็จ!`);
       } catch (err) { showToast('ปลดล็อกไม่สำเร็จ: ' + err.message); }
+    });
+
+    // Delete confirmation modal listeners
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('deleteConfirmInput').addEventListener('input', (e) => {
+      if (!state.pendingDelete || state.pendingDelete.type !== 'novel') return;
+      document.getElementById('confirmDeleteBtn').disabled = e.target.value.trim() !== state.pendingDelete.title.trim();
+    });
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+      if (!state.pendingDelete) return;
+      const { type, id } = state.pendingDelete;
+      try {
+        if (type === 'novel') {
+          if (state.isLive) {
+            const { error } = await sb.from('novels').delete().eq('id', id);
+            if (error) throw error;
+            await loadLiveData();
+          } else {
+            state.novels = state.novels.filter(n => n.id !== id);
+            saveDemo();
+          }
+          if (state.adminSelectedNovelId === id) state.adminSelectedNovelId = null;
+          closeDeleteModal();
+          render();
+          showToast('ลบนิยายเรียบร้อยแล้ว');
+        } else {
+          if (state.isLive) {
+            const { error } = await sb.from('chapters').delete().eq('id', id);
+            if (error) throw error;
+            await loadLiveData();
+          } else {
+            const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+            if (novel) novel.chapters = novel.chapters.filter(c => c.id !== id);
+            saveDemo();
+          }
+          if (state.editingChapterId === id) {
+            state.editingChapterId = null;
+            state.adminShowChapterForm = false;
+          }
+          closeDeleteModal();
+          render();
+          showToast('ลบตอนนิยายเรียบร้อยแล้ว');
+        }
+      } catch (err) {
+        showToast('ลบไม่สำเร็จ: ' + err.message);
+      }
     });
 
     (async function init() {
