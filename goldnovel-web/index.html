@@ -673,6 +673,10 @@
 
       const { data: novels } = await sb.from('novels').select('*').order('created_at', { ascending: false });
       const { data: chMeta } = await sb.from('chapters_public').select('*').order('chapter_number', { ascending: true });
+      try {
+        const { data: cmRows, error: cmErr } = await sb.from('comments').select('*').order('created_at', { ascending: false }).limit(300);
+        if (!cmErr && cmRows) state.comments = cmRows;
+      } catch {}
       if (novels) {
         const byNovel = {};
         (chMeta || []).forEach(c => {
@@ -1021,6 +1025,83 @@
       `;
     }
 
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatCommentTime(iso) {
+      if (!iso) return 'เมื่อสักครู่';
+      const diff = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+      if (diff < 60) return 'เมื่อสักครู่';
+      if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`;
+      return new Date(iso).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+    }
+
+    function getCommentsFor(novelId, chapterId = null) {
+      return (state.comments || []).filter(c => c.novel_id === novelId && (chapterId ? c.chapter_id === chapterId : !c.chapter_id));
+    }
+
+    function renderCommentsSection(novelId, chapterId = null, heading = 'ความคิดเห็นนักอ่าน') {
+      const list = getCommentsFor(novelId, chapterId);
+      const formId = chapterId ? 'chapterCommentForm' : 'novelCommentForm';
+      const inputId = chapterId ? 'chapterCommentInput' : 'novelCommentInput';
+      return `
+        <section id="commentsSection" class="mt-8 pt-6 border-t space-y-4" style="border-color: var(--border-soft);">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold flex items-center gap-2.5">
+              <span class="section-accent-bar"></span>
+              <span>💬 ${heading} (${list.length})</span>
+            </h3>
+          </div>
+
+          ${state.user ? `
+            <form id="${formId}" data-cm-novel="${novelId}" data-cm-chapter="${chapterId || ''}" class="card-panel rounded-2xl p-3.5 space-y-2.5">
+              <textarea id="${inputId}" rows="2" maxlength="1000" required placeholder="${chapterId ? 'อ่านตอนนี้แล้วเป็นยังไงบ้าง? แสดงความคิดเห็นหรือให้กำลังใจนักเขียนได้เลย...' : 'เขียนรีวิวหรือพูดคุยเกี่ยวกับนิยายเรื่องนี้...'}" class="w-full rounded-xl p-3 text-sm focus:outline-none resize-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);"></textarea>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px]" style="color: var(--text-muted);">แสดงความคิดเห็นในชื่อ <strong style="color: var(--gold-1);">${escapeHtml(state.user.display_name || state.user.email || 'สมาชิก')}</strong>${isAdmin() ? ' (นักเขียน)' : ''}</span>
+                <button type="submit" class="px-4 py-1.5 rounded-full text-xs font-bold btn-gold">ส่งคอมเมนต์</button>
+              </div>
+            </form>
+          ` : `
+            <div class="card-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+              <span class="text-xs sm:text-sm" style="color: var(--text-sub);">เข้าสู่ระบบเพื่อร่วมพูดคุยและแสดงความคิดเห็นกับนักเขียน</span>
+              <button type="button" data-open-auth-cm="1" class="px-4 py-1.5 rounded-full text-xs font-bold btn-gold">เข้าสู่ระบบ</button>
+            </div>
+          `}
+
+          <div class="space-y-3">
+            ${list.length === 0 ? `
+              <div class="text-center py-6 text-xs rounded-2xl" style="background-color: var(--bg-card); border: 1px dashed var(--border-soft); color: var(--text-muted);">
+                ยังไม่มีความคิดเห็น เป็นคนแรกที่เริ่มพูดคุยได้เลย!
+              </div>
+            ` : list.map(c => {
+              const initial = (c.author_name || 'U').trim().charAt(0).toUpperCase();
+              const canDelete = isAdmin() || (state.user && state.user.id === c.user_id);
+              return `
+                <div class="card-panel rounded-2xl p-4 flex gap-3">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style="background: ${c.is_author_reply ? 'linear-gradient(135deg, #F3D999, #D4A857)' : 'var(--bg-input)'}; color: ${c.is_author_reply ? '#161410' : 'var(--gold-1)'}; border: 1px solid var(--border-subtle);">
+                    ${escapeHtml(initial)}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-xs sm:text-sm font-bold">${escapeHtml(c.author_name || 'ผู้อ่าน')}</span>
+                        ${c.is_author_reply ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold" style="background-color: var(--gold-soft); color: var(--gold-1);">✍️ นักเขียน</span>` : ''}
+                        <span class="text-[11px]" style="color: var(--text-muted);">· ${formatCommentTime(c.created_at)}</span>
+                      </div>
+                      ${canDelete ? `<button type="button" data-del-comment="${c.id}" class="text-[11px] text-rose-400 hover:underline shrink-0">ลบ</button>` : ''}
+                    </div>
+                    <p class="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words" style="color: var(--text-main);">${escapeHtml(c.content)}</p>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      `;
+    }
+
     function renderNovelDetail() {
       const novel = getNovel(state.activeNovelId);
       if (!novel) return `<div class="p-8 text-center">ไม่พบนิยาย</div>`;
@@ -1083,6 +1164,8 @@
                 }).join('')}
             </div>
           </div>
+
+          ${renderCommentsSection(novel.id, null, 'ความคิดเห็น & รีวิวนิยาย')}
         </div>
       `;
     }
@@ -1108,6 +1191,7 @@
       const prevCh = firstIdx > 0 ? chapters[firstIdx - 1] : null;
       const nextCh = lastIdx >= 0 && lastIdx < chapters.length - 1 ? chapters[lastIdx + 1] : null;
       const lockedRemaining = chapters.slice(lastIdx + 1).filter(c => !isAccessible(c)).length;
+      const chapterCommentsCount = getCommentsFor(novel.id, lastLoaded.id).length;
 
       const sheetsHtml = loadedChapters.map((ch, idx) => {
         const paras = String(ch.content || '').split(/\n+/).filter(Boolean).map(p => `<p>${p}</p>`).join('');
@@ -1204,6 +1288,7 @@
           ${sheetsHtml}
           ${nextSectionHtml}
           ${autoCardHtml}
+          ${renderCommentsSection(novel.id, lastLoaded.id, `ความคิดเห็นท้ายตอนที่ ${lastLoaded.chapter_number}`)}
 
           <!-- Fixed Bottom Reader Toolbar -->
           <div id="readerBottomBar" class="fixed bottom-0 inset-x-0 z-30 mobile-bottom-nav backdrop-blur-md">
@@ -1212,9 +1297,9 @@
                 <span class="text-lg leading-none">☰</span>
                 <span class="text-[10px]">สารบัญ</span>
               </button>
-              <button type="button" id="barBulkUnlockBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${lockedRemaining > 0 ? 'hover:text-amber-300' : 'opacity-40 cursor-default'}" style="color: ${lockedRemaining > 0 ? 'var(--text-sub)' : 'var(--text-muted)'};" title="ปลดล็อกหลายตอน">
-                <span class="text-base leading-none">🔓</span>
-                <span class="text-[10px]">${lockedRemaining > 0 ? `เหมา (${lockedRemaining})` : 'ปลดครบ'}</span>
+              <button type="button" id="barCommentsBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors hover:text-amber-300" style="color: var(--text-sub);" title="ความคิดเห็นท้ายตอน">
+                <span class="relative text-base leading-none">💬${chapterCommentsCount > 0 ? `<span class="ml-0.5 text-[10px] font-bold" style="color: var(--gold-1);">${chapterCommentsCount}</span>` : ''}</span>
+                <span class="text-[10px]">คอมเมนต์</span>
               </button>
               <button type="button" id="barAutoToggleBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors" style="color: ${state.autoContinuousMode ? 'var(--gold-1)' : 'var(--text-sub)'};" title="เปิด/ปิด โหมดอ่านต่อเนื่อง">
                 <span class="text-lg leading-none">${state.autoContinuousMode ? '⚡' : '∞'}</span>
@@ -2189,10 +2274,74 @@
         render();
       });
 
-      const barBulkUnlockBtn = document.getElementById('barBulkUnlockBtn');
-      if (barBulkUnlockBtn) barBulkUnlockBtn.addEventListener('click', () => {
-        if (getLockedChaptersForActiveNovel().length > 0) openBulkUnlockModal();
+      
+      const barCommentsBtn = document.getElementById('barCommentsBtn');
+      if (barCommentsBtn) barCommentsBtn.addEventListener('click', () => {
+        const cmSec = document.getElementById('commentsSection');
+        if (cmSec) cmSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
+
+      document.querySelectorAll('[data-open-auth-cm]').forEach(btn => {
+        btn.addEventListener('click', () => openAuth());
+      });
+
+      ['novelCommentForm', 'chapterCommentForm'].forEach(fid => {
+        const form = document.getElementById(fid);
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!state.user) { openAuth(); return; }
+          const ta = form.querySelector('textarea');
+          const text = (ta?.value || '').trim();
+          if (!text) return;
+          const novelId = form.getAttribute('data-cm-novel');
+          const chapterId = form.getAttribute('data-cm-chapter') || null;
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'กำลังส่ง...'; }
+          const payload = {
+            novel_id: novelId,
+            chapter_id: chapterId,
+            user_id: state.user.id,
+            author_name: state.user.display_name || (state.user.email ? state.user.email.split('@')[0] : 'สมาชิก'),
+            is_author_reply: isAdmin(),
+            content: text
+          };
+          try {
+            if (state.isLive) {
+              const { data, error } = await sb.from('comments').insert(payload).select().single();
+              if (error) throw error;
+              state.comments.unshift(data);
+            } else {
+              state.comments.unshift({ ...payload, id: 'cm-' + Date.now(), created_at: new Date().toISOString() });
+              saveDemo();
+            }
+            render();
+            showToast('ส่งความคิดเห็นเรียบร้อยแล้ว!');
+          } catch (err) {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'ส่งคอมเมนต์'; }
+            showToast('ส่งคอมเมนต์ไม่สำเร็จ (กรุณารัน supabase_comments_patch.sql ใน Supabase ก่อน): ' + err.message);
+          }
+        });
+      });
+
+      document.querySelectorAll('[data-del-comment]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const cid = btn.getAttribute('data-del-comment');
+          try {
+            if (state.isLive) {
+              const { error } = await sb.from('comments').delete().eq('id', cid);
+              if (error) throw error;
+            }
+            state.comments = state.comments.filter(c => c.id !== cid);
+            if (!state.isLive) saveDemo();
+            render();
+            showToast('ลบความคิดเห็นแล้ว');
+          } catch (err) {
+            showToast('ลบไม่สำเร็จ: ' + err.message);
+          }
+        });
+      });
+
 
       const barPrevChBtn = document.getElementById('barPrevChBtn');
       if (barPrevChBtn && !barPrevChBtn.disabled) barPrevChBtn.addEventListener('click', async () => {
