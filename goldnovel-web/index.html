@@ -347,6 +347,58 @@
     </div>
   </div>
 
+  <!-- Smart Single-File Chapter Splitter Modal -->
+  <div id="splitModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+    <div class="card-panel rounded-2xl max-w-2xl w-full p-6 shadow-2xl fade-in max-h-[90vh] overflow-y-auto space-y-4">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <span class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-1" style="background-color: var(--gold-soft); color: var(--gold-1);">ประหยัดเวลาลงนิยาย</span>
+          <h3 class="text-lg font-bold">✂️ แยกหลายตอนจาก 1 ไฟล์ .txt อัตโนมัติ</h3>
+          <p class="text-xs mt-0.5" style="color: var(--text-sub);">ระบบจะตรวจจับบรรทัดที่ขึ้นต้นด้วย "ตอนที่ ...", "บทที่ ...", "Chapter ..." หรือ "===" เพื่อแยกตอนให้อัตโนมัติ</p>
+        </div>
+        <button type="button" id="closeSplitModalBtn" class="w-8 h-8 rounded-full text-sm shrink-0" style="background-color: var(--bg-input);">✕</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs mb-1" style="color: var(--text-sub);">1. เลือกไฟล์ .txt รวมตอน</label>
+          <input id="splitFileInput" type="file" accept=".txt,.md" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+        </div>
+        <div>
+          <label class="block text-xs mb-1" style="color: var(--text-sub);">2. รูปแบบการจับหัวข้อตอน</label>
+          <select id="splitRuleSelect" class="w-full px-3 py-2 rounded-xl text-xs sm:text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+            <option value="numbered">ขึ้นต้นด้วย "ตอนที่ 1", "บทที่ 1", "Chapter 1" (ต้องมีตัวเลข)</option>
+            <option value="separator">คั่นตอนด้วยเครื่องหมาย === เท่านั้น (แม่นยำ 100%)</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs mb-1" style="color: var(--text-sub);">ค่าเริ่มต้น: ฟรีกี่ตอนแรก (แก้รายตอนด้านล่างได้)</label>
+          <input id="splitFreeCount" type="number" min="0" value="2" class="w-full px-3 py-2 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+        </div>
+        <div>
+          <label class="block text-xs mb-1" style="color: var(--text-sub);">ค่าเริ่มต้น: ราคาตอนติดเหรียญ</label>
+          <input id="splitPaidPrice" type="number" min="0" value="1" class="w-full px-3 py-2 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+        </div>
+      </div>
+
+      <div class="rounded-xl p-3.5" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+        <div class="flex items-center justify-between mb-2">
+          <span id="splitPreviewHeader" class="text-xs font-semibold" style="color: var(--gold-1);">ตัวอย่างตอนที่ตรวจพบ (เลือกไฟล์ด้านบนเพื่อดูตัวอย่าง)</span>
+        </div>
+        <div id="splitPreviewList" class="max-h-56 overflow-y-auto space-y-1.5 text-xs" style="color: var(--text-sub);">
+          <div class="py-6 text-center opacity-70">ตัวอย่างรูปแบบในไฟล์ .txt:<br>ตอนที่ 1 จุดเริ่มต้น<br>เนื้อหาตอนที่ 1...<br><br>ตอนที่ 2 การเดินทาง<br>เนื้อหาตอนที่ 2...</div>
+        </div>
+      </div>
+
+      <div class="flex gap-2.5 pt-1">
+        <button type="button" id="cancelSplitBtn" class="px-5 py-2.5 rounded-xl text-sm font-medium" style="background-color: var(--bg-input);">ยกเลิก</button>
+        <button type="button" id="confirmSplitImportBtn" disabled class="flex-1 py-2.5 rounded-xl text-sm btn-gold disabled:opacity-35 disabled:cursor-not-allowed">นำเข้าทั้งหมดทันที</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Delete Confirm Modal (Prevents accidental deletion) -->
   <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
     <div class="card-panel rounded-2xl max-w-md w-full p-6 shadow-2xl fade-in" style="border-color: rgba(244,63,94,0.45);">
@@ -1142,6 +1194,9 @@
                       ${missingNums.length ? `<div class="text-xs mt-1 text-amber-400">⚠️ พบเลขตอนที่ข้ามไป: ตอนที่ ${missingNums.slice(0, 6).join(', ')}${missingNums.length > 6 ? '...' : ''}</div>` : `<div class="text-xs mt-0.5" style="color: var(--text-muted);">คลิก "แก้ไข" เพื่อปรับเนื้อหา ราคา หรือตั้งเวลาลง · กด ↑ ↓ เพื่อสลับตอน</div>`}
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
+                      <button type="button" id="openSplitModalBtn" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background-color: var(--gold-soft); border: 1px solid var(--border-subtle); color: var(--gold-1);">
+                        ✂️ แยกตอนจาก 1 ไฟล์ .txt
+                      </button>
                       <label class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-main);">
                         📚 นำเข้าหลายไฟล์ .txt
                         <input id="bulkImportTxtInput" type="file" accept=".txt,.md" multiple class="hidden">
@@ -1173,7 +1228,11 @@
                                 <span>· ${(c.content || '').length.toLocaleString()} ตัวอักษร</span>
                               </div>
                             </div>
-                            <div class="flex items-center gap-1.5 shrink-0">
+                            <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                              <div class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="แก้ราคาเหรียญของตอนนี้ทันที (0 = ฟรี)">
+                                <span class="text-[11px]" style="color: var(--text-muted);">🪙</span>
+                                <input type="number" min="0" value="${c.price_coins}" data-quick-price="${c.id}" class="w-11 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price_coins === 0 ? '#4ADE80' : 'var(--gold-1)'};">
+                              </div>
                               <button type="button" data-move-ch="${c.id}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} title="เลื่อนขึ้น" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↑</button>
                               <button type="button" data-move-ch="${c.id}" data-dir="1" ${idx === chList.length - 1 ? 'disabled' : ''} title="เลื่อนลง" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↓</button>
                               <button type="button" data-edit-ch="${c.id}" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">แก้ไข</button>
@@ -1985,6 +2044,31 @@
         });
       });
 
+      document.querySelectorAll('[data-quick-price]').forEach(input => {
+        input.addEventListener('change', async () => {
+          const cid = input.getAttribute('data-quick-price');
+          const newPrice = Math.max(0, Math.floor(Number(input.value || 0)));
+          input.value = newPrice;
+          try {
+            if (state.isLive) {
+              const { error } = await sb.from('chapters').update({ price_coins: newPrice }).eq('id', cid);
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+              const ch = novel?.chapters?.find(c => c.id === cid);
+              if (ch) ch.price_coins = newPrice;
+              saveDemo();
+            }
+            render();
+            showToast(newPrice === 0 ? 'เปลี่ยนเป็นอ่านฟรีแล้ว' : `อัปเดตราคาเป็น ${newPrice} เหรียญแล้ว`);
+          } catch (err) { showToast('เปลี่ยนราคาไม่สำเร็จ: ' + err.message); }
+        });
+      });
+
+      const openSplitBtn = document.getElementById('openSplitModalBtn');
+      if (openSplitBtn) openSplitBtn.addEventListener('click', openSplitModal);
+
       const renumBtn = document.getElementById('renumberChaptersBtn');
       if (renumBtn) renumBtn.addEventListener('click', async () => {
         const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
@@ -2360,6 +2444,224 @@
         }
       } catch (err) {
         showToast('ลบไม่สำเร็จ: ' + err.message);
+      }
+    });
+
+    // Smart Single-File Chapter Splitter (Strict Parser + Per-Chapter Custom Pricing)
+    let parsedSplitChapters = [];
+    let splitRawText = '';
+
+    function parseChaptersFromSingleText(rawText, ruleMode) {
+      const normalized = String(rawText || '').replace(/\r\n/g, '\n');
+      const lines = normalized.split('\n');
+      // Strict header regex: MUST have a chapter number (\d+) right after ตอนที่/บทที่/Chapter/Ep and line <= 120 chars
+      const numberedRe = /^\s*(?:===\s*)?(?:ตอนที่|บทที่|Chapter|Ep\.?|Episode)\s*(\d+)\s*(?:[:.\-–—\s]+(.*?))?(?:\s*===)?\s*$/i;
+      const sepOnlyRe = /^\s*={3,}\s*(.*?)\s*={0,}\s*$/;
+
+      const chunks = [];
+      let current = null;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        let isHeader = false;
+        let detectedTitle = '';
+
+        if (ruleMode === 'separator') {
+          const ms = line.match(sepOnlyRe);
+          if (ms && trimmed.startsWith('===')) {
+            isHeader = true;
+            detectedTitle = (ms[1] || '').replace(/=+$/, '').trim();
+          }
+        } else {
+          const mn = trimmed.length <= 120 ? line.match(numberedRe) : null;
+          if (mn) {
+            isHeader = true;
+            const num = mn[1];
+            const sub = (mn[2] || '').trim();
+            detectedTitle = sub ? sub : `ตอนที่ ${num}`;
+          }
+        }
+
+        if (isHeader) {
+          if (current && current.contentLines.join('\n').trim()) {
+            chunks.push(current);
+          }
+          current = { title: detectedTitle, contentLines: [] };
+        } else {
+          if (!current) {
+            if (!trimmed) continue;
+            current = { title: '', contentLines: [line] };
+          } else {
+            current.contentLines.push(line);
+          }
+        }
+      }
+      if (current && current.contentLines.join('\n').trim()) {
+        chunks.push(current);
+      }
+
+      return chunks.map((c, idx) => {
+        const content = c.contentLines.join('\n').trim();
+        const title = c.title || `ตอนที่ ${idx + 1}`;
+        return { title, content, customPrice: null };
+      }).filter(c => c.content.length > 0);
+    }
+
+    function renderSplitPreviewRows() {
+      const header = document.getElementById('splitPreviewHeader');
+      const listEl = document.getElementById('splitPreviewList');
+      const btn = document.getElementById('confirmSplitImportBtn');
+      const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+      const existing = novel?.chapters || [];
+      const startNum = existing.length ? Math.max(...existing.map(c => c.chapter_number)) + 1 : 1;
+
+      if (parsedSplitChapters.length === 0) {
+        header.textContent = 'ไม่พบหัวข้อตอนในไฟล์นี้';
+        listEl.innerHTML = `<div class="py-5 text-center text-rose-400">ไม่พบหัวข้อตอนตามเงื่อนไขที่เลือก ลองสลับ "รูปแบบการจับหัวข้อตอน" ด้านบน หรือคั่นแต่ละตอนด้วย "===" ครับ</div>`;
+        btn.disabled = true;
+        return;
+      }
+
+      header.textContent = `ตรวจพบ ${parsedSplitChapters.length} ตอน (แก้ไขชื่อตอนและราคาเหรียญแยกทีละตอนได้ด้านล่าง)`;
+      listEl.innerHTML = parsedSplitChapters.map((c, idx) => {
+        const chNum = startNum + idx;
+        return `
+          <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-3 py-2 rounded-lg" style="background-color: var(--bg-card); border: 1px solid var(--border-soft);">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <span class="font-bold shrink-0" style="color: var(--gold-1);">ตอนที่ ${chNum}</span>
+              <input type="text" value="${c.title.replace(/"/g, '&quot;')}" data-split-title="${idx}" class="w-full min-w-0 px-2 py-1 rounded text-xs focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
+            </div>
+            <div class="shrink-0 flex items-center gap-2 text-[11px]">
+              <label class="flex items-center gap-1 px-2 py-1 rounded" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                <span>🪙</span>
+                <input type="number" min="0" value="${c.price}" data-split-price="${idx}" class="w-10 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price === 0 ? '#4ADE80' : 'var(--gold-1)'};">
+                <span style="color: var(--text-muted);">${c.price === 0 ? 'ฟรี' : 'เหรียญ'}</span>
+              </label>
+              <span style="color: var(--text-muted);">${c.content.length.toLocaleString()} อักษร</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('[data-split-title]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const i = Number(inp.getAttribute('data-split-title'));
+          if (parsedSplitChapters[i]) parsedSplitChapters[i].title = inp.value;
+        });
+      });
+
+      listEl.querySelectorAll('[data-split-price]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const i = Number(inp.getAttribute('data-split-price'));
+          const val = Math.max(0, Math.floor(Number(inp.value || 0)));
+          if (parsedSplitChapters[i]) {
+            parsedSplitChapters[i].price = val;
+            parsedSplitChapters[i].customPrice = val;
+          }
+          inp.style.color = val === 0 ? '#4ADE80' : 'var(--gold-1)';
+          const lbl = inp.nextElementSibling;
+          if (lbl) lbl.textContent = val === 0 ? 'ฟรี' : 'เหรียญ';
+        });
+      });
+
+      btn.disabled = false;
+      btn.textContent = `นำเข้าทั้งหมด ${parsedSplitChapters.length} ตอนทันที`;
+    }
+
+    function refreshSplitPreview(reparse = true) {
+      const freeCount = Math.max(0, Number(document.getElementById('splitFreeCount').value || 0));
+      const paidPrice = Math.max(0, Number(document.getElementById('splitPaidPrice').value || 0));
+      const ruleMode = document.getElementById('splitRuleSelect').value;
+
+      if (!splitRawText.trim()) {
+        parsedSplitChapters = [];
+        document.getElementById('confirmSplitImportBtn').disabled = true;
+        return;
+      }
+
+      if (reparse) {
+        parsedSplitChapters = parseChaptersFromSingleText(splitRawText, ruleMode);
+      }
+      parsedSplitChapters.forEach((c, idx) => {
+        if (c.customPrice === null || reparse) {
+          c.price = idx < freeCount ? 0 : paidPrice;
+          c.customPrice = null;
+        }
+      });
+      renderSplitPreviewRows();
+    }
+
+    function openSplitModal() {
+      splitRawText = '';
+      parsedSplitChapters = [];
+      document.getElementById('splitFileInput').value = '';
+      document.getElementById('splitPreviewHeader').textContent = 'ตัวอย่างตอนที่ตรวจพบ (เลือกไฟล์ด้านบนเพื่อดูตัวอย่าง)';
+      document.getElementById('splitPreviewList').innerHTML = `<div class="py-6 text-center opacity-70">ตัวอย่างรูปแบบในไฟล์ .txt:<br>ตอนที่ 1 จุดเริ่มต้น<br>เนื้อหาตอนที่ 1...<br><br>ตอนที่ 2 การเดินทาง<br>เนื้อหาตอนที่ 2...</div>`;
+      document.getElementById('confirmSplitImportBtn').disabled = true;
+      document.getElementById('confirmSplitImportBtn').textContent = 'นำเข้าทั้งหมดทันที';
+      const m = document.getElementById('splitModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeSplitModal() {
+      const m = document.getElementById('splitModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    document.getElementById('closeSplitModalBtn').addEventListener('click', closeSplitModal);
+    document.getElementById('cancelSplitBtn').addEventListener('click', closeSplitModal);
+    document.getElementById('splitRuleSelect').addEventListener('change', () => refreshSplitPreview(true));
+    document.getElementById('splitFreeCount').addEventListener('input', () => refreshSplitPreview(false));
+    document.getElementById('splitPaidPrice').addEventListener('input', () => refreshSplitPreview(false));
+
+    document.getElementById('splitFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      splitRawText = await file.text();
+      refreshSplitPreview(true);
+    });
+
+    document.getElementById('confirmSplitImportBtn').addEventListener('click', async () => {
+      if (!parsedSplitChapters.length || !state.adminSelectedNovelId) return;
+      const btn = document.getElementById('confirmSplitImportBtn');
+      const nid = state.adminSelectedNovelId;
+      const novel = state.novels.find(n => n.id === nid);
+      const existing = novel?.chapters || [];
+      let nextN = existing.length ? Math.max(...existing.map(c => c.chapter_number)) + 1 : 1;
+      const nowIso = new Date().toISOString();
+
+      const rows = parsedSplitChapters.map((c, idx) => ({
+        novel_id: nid,
+        chapter_number: nextN + idx,
+        title: (c.title || `ตอนที่ ${nextN + idx}`).trim(),
+        price_coins: Math.max(0, Number(c.price || 0)),
+        content: c.content,
+        status: 'published',
+        publish_at: nowIso
+      }));
+
+      btn.disabled = true;
+      btn.textContent = 'กำลังนำเข้าตอนนิยาย...';
+      try {
+        if (state.isLive) {
+          const { error } = await sb.from('chapters').insert(rows);
+          if (error) throw error;
+          await loadLiveData();
+        } else if (novel) {
+          rows.forEach((r, idx) => novel.chapters.push({ ...r, id: 'ch-' + Date.now() + '-' + idx }));
+          novel.chapters.sort((a, b) => a.chapter_number - b.chapter_number);
+          saveDemo();
+        }
+        closeSplitModal();
+        render();
+        showToast(`แยกและนำเข้าสำเร็จทั้งหมด ${rows.length} ตอน!`);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = `นำเข้าทั้งหมด ${rows.length} ตอนทันที`;
+        showToast('นำเข้าไม่สำเร็จ: ' + err.message);
       }
     });
 
