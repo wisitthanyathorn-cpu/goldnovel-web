@@ -9,109 +9,113 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-app: #0D0F15;
-      --bg-sidebar: #12151E;
-      --bg-card: #171B26;
-      --bg-input: #1C202D;
-      --border-subtle: rgba(232, 197, 123, 0.16);
-      --border-soft: rgba(255, 255, 255, 0.08);
-      --text-main: #F3EFE6;
-      --text-sub: #A7AAB6;
-      --text-muted: #767A8A;
-      --gold-1: #F3D999;
-      --gold-2: #D4A857;
-      --gold-soft: rgba(232, 197, 123, 0.14);
-      --gold-glow: rgba(212, 168, 87, 0.25);
+      --bg-app: #0A0B0F;
+      --bg-sidebar: #0F1117;
+      --bg-card: #141720;
+      --bg-input: #1B1F2B;
+      --border-subtle: rgba(255, 255, 255, 0.10);
+      --border-soft: rgba(255, 255, 255, 0.06);
+      --text-main: #F2F4F8;
+      --text-sub: #9AA2B1;
+      --text-muted: #687082;
+      --gold-1: #EAB854;
+      --gold-2: #C9922B;
+      --gold-soft: rgba(234, 184, 84, 0.13);
+      --gold-glow: rgba(234, 184, 84, 0.18);
     }
 
     body[data-mode="light"] {
-      --bg-app: #F6F2EA;
-      --bg-sidebar: #EFE9DD;
+      --bg-app: #F8F8F9;
+      --bg-sidebar: #FFFFFF;
       --bg-card: #FFFFFF;
-      --bg-input: #F4EFE5;
-      --border-subtle: rgba(156, 114, 43, 0.22);
-      --border-soft: rgba(43, 40, 37, 0.1);
-      --text-main: #25221E;
-      --text-sub: #5E584F;
-      --text-muted: #8C8478;
-      --gold-1: #B88635;
-      --gold-2: #8E6320;
-      --gold-soft: rgba(184, 134, 53, 0.14);
-      --gold-glow: rgba(184, 134, 53, 0.2);
+      --bg-input: #F1F2F6;
+      --border-subtle: rgba(15, 23, 42, 0.12);
+      --border-soft: rgba(15, 23, 42, 0.07);
+      --text-main: #111827;
+      --text-sub: #4B5563;
+      --text-muted: #9CA3AF;
+      --gold-1: #B8801C;
+      --gold-2: #8E6010;
+      --gold-soft: rgba(184, 128, 28, 0.11);
+      --gold-glow: rgba(184, 128, 28, 0.14);
     }
 
     body {
-      font-family: 'Prompt', 'Inter', sans-serif;
+      font-family: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg-app);
       color: var(--text-main);
-      transition: background-color 0.25s ease, color 0.25s ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.005em;
+      transition: background-color 0.2s ease, color 0.2s ease;
       overflow-x: hidden;
     }
 
-    .font-display-thai { font-family: 'Noto Serif Thai', 'Prompt', serif; }
+    .font-display-thai { font-family: 'IBM Plex Sans Thai', sans-serif; letter-spacing: -0.02em; }
 
     .card-panel {
       background-color: var(--bg-card);
-      border: 1px solid var(--border-subtle);
+      border: 1px solid var(--border-soft);
     }
 
     .btn-gold {
-      background: linear-gradient(135deg, #F3D999 0%, #D4A857 100%);
-      color: #161410;
+      background: linear-gradient(135deg, #F0C466 0%, #CE9631 100%);
+      color: #120F0A;
       font-weight: 600;
-      box-shadow: 0 4px 16px var(--gold-glow);
+      box-shadow: 0 2px 10px var(--gold-glow);
       transition: transform 0.15s ease, filter 0.15s ease;
     }
-    .btn-gold:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .btn-gold:hover { filter: brightness(1.06); transform: translateY(-0.5px); }
 
     .sidebar-item-active {
-      background: linear-gradient(90deg, rgba(232, 197, 123, 0.22) 0%, rgba(212, 168, 87, 0.06) 100%);
-      border: 1px solid rgba(232, 197, 123, 0.35);
+      background-color: var(--gold-soft);
       color: var(--gold-1);
+      font-weight: 600;
     }
 
     .cover-placeholder {
-      background: radial-gradient(circle at 30% 20%, rgba(232, 197, 123, 0.18), transparent 60%),
-                  linear-gradient(160deg, #1E2436 0%, #11141D 100%);
+      background: radial-gradient(circle at 30% 20%, rgba(234, 184, 84, 0.14), transparent 60%),
+                  linear-gradient(160deg, #1B2030 0%, #10131C 100%);
     }
 
     .hero-placeholder {
-      background: radial-gradient(circle at 80% 30%, rgba(232, 197, 123, 0.2), transparent 55%),
-                  radial-gradient(circle at 15% 80%, rgba(79, 108, 170, 0.18), transparent 55%),
-                  linear-gradient(135deg, #141926 0%, #0D1018 100%);
+      background: radial-gradient(circle at 80% 25%, rgba(234, 184, 84, 0.16), transparent 55%),
+                  radial-gradient(circle at 15% 85%, rgba(56, 86, 150, 0.16), transparent 55%),
+                  linear-gradient(135deg, #141824 0%, #0B0D13 100%);
     }
 
     .promo-placeholder {
-      background: radial-gradient(circle at 85% 50%, rgba(243, 217, 153, 0.26), transparent 55%),
-                  linear-gradient(135deg, #211B13 0%, #14161F 100%);
+      background: radial-gradient(circle at 88% 50%, rgba(234, 184, 84, 0.18), transparent 55%),
+                  linear-gradient(135deg, #191612 0%, #12151E 100%);
     }
 
     .hero-text-gradient {
-      background: linear-gradient(180deg, #FFF4D2 0%, #E7BF6D 65%, #C6933C 100%);
+      background: linear-gradient(180deg, #FFFFFF 20%, #F3D999 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .rank-1 { background: linear-gradient(135deg, #F6DC93, #C58F33); color: #1A1408; }
-    .rank-2 { background: linear-gradient(135deg, #E2E8F0, #94A3B8); color: #0F172A; }
-    .rank-3 { background: linear-gradient(135deg, #E5A978, #A86333); color: #1F1108; }
-    .rank-n { background: rgba(15, 17, 23, 0.85); color: #E2E8F0; border: 1px solid rgba(255,255,255,0.16); }
+    .rank-1 { background: linear-gradient(135deg, #F5D27B, #C88F29); color: #161108; }
+    .rank-2 { background: linear-gradient(135deg, #E5E7EB, #9CA3AF); color: #0F172A; }
+    .rank-3 { background: linear-gradient(135deg, #E5A978, #A86333); color: #1A0F07; }
+    .rank-n { background: rgba(10, 11, 15, 0.82); color: #E5E7EB; border: 1px solid rgba(255,255,255,0.14); }
 
-    .reading-sheet[data-read-theme="dark"] { background-color: #151821; color: #E5E1D8; border-color: rgba(232, 197, 123, 0.14); }
-    .reading-sheet[data-read-theme="warm"] { background-color: #FAF6EE; color: #2B2620; border-color: #E6DDD0; }
-    .reading-sheet[data-read-theme="sepia"] { background-color: #F2E7D0; color: #362C20; border-color: #DECDB0; }
+    .reading-sheet[data-read-theme="dark"] { background-color: #111318; color: #DCDEE4; border-color: rgba(255, 255, 255, 0.05); }
+    .reading-sheet[data-read-theme="warm"] { background-color: #FAF6EE; color: #26221C; border-color: #E6DDD0; }
+    .reading-sheet[data-read-theme="sepia"] { background-color: #F2E7D0; color: #32281D; border-color: #DECDB0; }
 
-    .reading-prose p { margin-bottom: 1.45em; text-indent: 1.8em; line-height: 1.95; }
-    .fade-in { animation: fadeIn 0.2s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .reading-prose { font-family: 'Sarabun', 'IBM Plex Sans Thai', sans-serif; }
+    .reading-prose p { margin-bottom: 1.4em; text-indent: 1.75em; line-height: 1.92; }
+    .fade-in { animation: fadeIn 0.18s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .section-accent-bar { width: 4px; height: 20px; border-radius: 9999px; background: linear-gradient(180deg, #F3D999, #D4A857); display: inline-block; flex-shrink: 0; }
-    .mobile-bottom-nav { background-color: color-mix(in srgb, var(--bg-sidebar) 94%, transparent); border-top: 1px solid var(--border-soft); }
+    .section-accent-bar { width: 3.5px; height: 18px; border-radius: 9999px; background: linear-gradient(180deg, #F3D17C, #C9922B); display: inline-block; flex-shrink: 0; }
+    .mobile-bottom-nav { background-color: color-mix(in srgb, var(--bg-sidebar) 95%, transparent); border-top: 1px solid var(--border-soft); }
 
     .reader-protected {
       user-select: none !important;
@@ -137,50 +141,50 @@
 <body data-mode="dark" class="min-h-screen flex">
 
   <!-- Left Sidebar (Desktop) -->
-  <aside class="hidden lg:flex flex-col w-56 shrink-0 sticky top-0 h-screen border-r px-3.5 py-5 justify-between z-30" style="background-color: var(--bg-sidebar); border-color: var(--border-soft);">
+  <aside class="hidden lg:flex flex-col w-[212px] shrink-0 sticky top-0 h-screen border-r px-3 py-4 justify-between z-30" style="background-color: var(--bg-sidebar); border-color: var(--border-soft);">
     <div>
-      <button type="button" data-view="home" class="w-full flex items-center gap-2.5 px-2 mb-7 text-left focus:outline-none">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: radial-gradient(circle at top, rgba(243,217,153,0.22), rgba(212,168,87,0.05)); border: 1px solid var(--border-subtle);">
-          <svg viewBox="0 0 36 36" class="w-7 h-7" fill="none" aria-hidden="true">
-            <path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#E8C57B" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M18 11V27" stroke="#E8C57B" stroke-width="1.8"/>
+      <button type="button" data-view="home" class="w-full flex items-center gap-2.5 px-2.5 mb-6 text-left focus:outline-none">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.28);">
+          <svg viewBox="0 0 36 36" class="w-5 h-5" fill="none" aria-hidden="true">
+            <path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#EAB854" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M18 11V27" stroke="#EAB854" stroke-width="1.8"/>
             <path d="M18 5L19.2 7.8L22 9L19.2 10.2L18 13L16.8 10.2L14 9L16.8 7.8L18 5Z" fill="#F3D999"/>
           </svg>
         </div>
         <div>
-          <div id="brandNameSide" class="text-base font-bold tracking-wide" style="color: var(--gold-1);">GoldNovel</div>
-          <div id="modeBadgeSide" class="text-[10px] tracking-widest uppercase" style="color: var(--text-muted);">Online Novels</div>
+          <div id="brandNameSide" class="text-[15px] font-bold tracking-tight leading-tight" style="color: var(--text-main);">Gold<span style="color: var(--gold-1);">Novel</span></div>
+          <div id="modeBadgeSide" class="text-[9px] tracking-[0.18em] uppercase font-medium" style="color: var(--text-muted);">Online Novels</div>
         </div>
       </button>
 
-      <nav class="space-y-1.5">
-        <button type="button" data-view="home" class="side-nav w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all">
-          <span>🏠</span><span>หน้าหลัก</span>
+      <nav class="space-y-0.5">
+        <button type="button" data-view="home" class="side-nav w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors hover:bg-white/[0.04]">
+          <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4.5v-6h3v6H18a1 1 0 0 0 1-1V9.5"/></svg><span>หน้าหลัก</span>
         </button>
-        <button type="button" data-view="library" class="side-nav w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all">
-          <span>📚</span><span>คลังของฉัน</span>
+        <button type="button" data-view="library" class="side-nav w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors hover:bg-white/[0.04]">
+          <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>ชั้นหนังสือ</span>
         </button>
-        <button type="button" id="sideTopupBtn" class="side-nav w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all">
-          <span>💳</span><span>การเติมเงิน</span>
+        <button type="button" id="sideTopupBtn" class="side-nav w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors hover:bg-white/[0.04]">
+          <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h.01"/><path d="M2 10h20"/></svg><span>เติมเหรียญ</span>
         </button>
-        <button type="button" data-view="settings" class="side-nav w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all">
-          <span>⚙️</span><span>ตั้งค่า</span>
+        <button type="button" data-view="settings" class="side-nav w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors hover:bg-white/[0.04]">
+          <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>โปรไฟล์ &amp; ตั้งค่า</span>
         </button>
         <div class="pt-3 mt-3 border-t" style="border-color: var(--border-soft);">
-          <button type="button" id="sideAdminBtn" data-view="admin" class="side-nav w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all">
-            <span>✍️</span><span>หลังบ้านนักเขียน</span>
+          <button type="button" id="sideAdminBtn" data-view="admin" class="side-nav w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-semibold transition-colors hover:bg-white/[0.04]">
+            <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg><span>หลังบ้านนักเขียน</span>
           </button>
-          <button type="button" id="sideReaderPreviewBtn" class="hidden w-full flex items-center gap-3 px-3.5 py-2 mt-1 rounded-xl text-xs font-medium transition-all" style="background-color: var(--bg-input); color: var(--gold-1); border: 1px solid var(--border-subtle);">
-            <span>👁️</span><span>สลับเป็นมุมมองนักอ่าน</span>
+          <button type="button" id="sideReaderPreviewBtn" class="hidden w-full flex items-center gap-2 px-3 py-1.5 mt-1.5 rounded-lg text-[11px] font-medium transition-colors" style="background-color: var(--bg-input); color: var(--gold-1); border: 1px solid var(--border-soft);">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>สลับเป็นมุมมองนักอ่าน</span>
           </button>
         </div>
       </nav>
     </div>
 
-    <div class="pt-4 border-t" style="border-color: var(--border-soft);">
-      <div class="flex items-center justify-between p-1 rounded-full" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-        <button type="button" data-set-mode="light" class="mode-pill flex-1 py-1.5 rounded-full text-xs font-medium">☀️ สว่าง</button>
-        <button type="button" data-set-mode="dark" class="mode-pill flex-1 py-1.5 rounded-full text-xs font-medium">🌙 มืด</button>
+    <div class="pt-3 border-t" style="border-color: var(--border-soft);">
+      <div class="flex items-center justify-between p-0.5 rounded-lg" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+        <button type="button" data-set-mode="light" class="mode-pill flex-1 py-1.5 rounded-md text-[11px] font-medium flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg><span>สว่าง</span></button>
+        <button type="button" data-set-mode="dark" class="mode-pill flex-1 py-1.5 rounded-md text-[11px] font-medium flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span>มืด</span></button>
       </div>
     </div>
   </aside>
@@ -193,89 +197,88 @@
       <button type="button" id="exitReaderPreviewBtn" class="px-3.5 py-1 rounded-full text-xs font-bold bg-[#161410] text-amber-200 hover:opacity-90">กลับสู่มุมมองเจ้าของเว็บ (Admin)</button>
     </div>
     <!-- Top Header -->
-    <header class="sticky top-0 z-20 backdrop-blur-md border-b px-3.5 sm:px-6 h-16 flex items-center justify-between gap-2.5" style="background-color: color-mix(in srgb, var(--bg-app) 90%, transparent); border-color: var(--border-soft);">
+    <header class="sticky top-0 z-20 backdrop-blur-md border-b px-3.5 sm:px-6 h-14 flex items-center justify-between gap-2.5" style="background-color: color-mix(in srgb, var(--bg-app) 92%, transparent); border-color: var(--border-soft);">
       <div class="flex items-center gap-2.5 lg:gap-5 min-w-0">
-        <button type="button" id="mobileMenuBtn" class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0" style="background-color: var(--bg-card); border: 1px solid var(--border-soft);" aria-label="เปิดเมนู">☰</button>
+        <button type="button" id="mobileMenuBtn" class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="color: var(--text-sub); background-color: var(--bg-card); border: 1px solid var(--border-soft);" aria-label="เปิดเมนู"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
         <button type="button" data-view="home" class="lg:hidden flex items-center gap-2 text-left shrink-0 focus:outline-none">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background: radial-gradient(circle at top, rgba(243,217,153,0.22), rgba(212,168,87,0.06)); border: 1px solid var(--border-subtle);">
-            <svg viewBox="0 0 36 36" class="w-5 h-5" fill="none" aria-hidden="true">
-              <path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#E8C57B" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M18 11V27" stroke="#E8C57B" stroke-width="1.8"/>
-              <path d="M18 5L19.2 7.8L22 9L19.2 10.2L18 13L16.8 10.2L14 9L16.8 7.8L18 5Z" fill="#F3D999"/>
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.3);">
+            <svg viewBox="0 0 36 36" class="w-4 h-4" fill="none" aria-hidden="true">
+              <path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#EAB854" stroke-width="2.2" stroke-linejoin="round"/>
+              <path d="M18 11V27" stroke="#EAB854" stroke-width="1.8"/>
             </svg>
           </div>
-          <span class="text-sm font-bold tracking-wide" style="color: var(--gold-1);">GoldNovel</span>
+          <span class="text-[14px] font-bold tracking-tight" style="color: var(--text-main);">Gold<span style="color: var(--gold-1);">Novel</span></span>
         </button>
-        <nav class="hidden lg:flex items-center gap-6 text-sm font-medium">
-          <button type="button" data-top-tab="home" class="top-tab py-5 border-b-2 transition-colors">หน้าหลัก</button>
-          <button type="button" data-top-tab="ranking" class="top-tab py-5 border-b-2 transition-colors">นิยายประจำสัปดาห์</button>
-          <button type="button" data-top-tab="categories" class="top-tab py-5 border-b-2 transition-colors">คลังนิยาย</button>
-          <button type="button" data-top-tab="promo" class="top-tab py-5 border-b-2 transition-colors">โปรโมชั่น</button>
+        <nav class="hidden lg:flex items-center gap-6 text-[13px] font-medium">
+          <button type="button" data-top-tab="home" class="top-tab py-4 border-b-2 transition-colors">หน้าหลัก</button>
+          <button type="button" data-top-tab="ranking" class="top-tab py-4 border-b-2 transition-colors">นิยายประจำสัปดาห์</button>
+          <button type="button" data-top-tab="categories" class="top-tab py-4 border-b-2 transition-colors">คลังนิยาย</button>
+          <button type="button" data-top-tab="promo" class="top-tab py-4 border-b-2 transition-colors">โปรโมชั่น</button>
         </nav>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-2.5">
-        <div class="relative hidden sm:block w-48 md:w-60">
-          <input id="searchInput" type="text" placeholder="ค้นหานิยาย ชื่อเรื่อง..." class="w-full rounded-full pl-3.5 pr-8 py-1.5 text-xs sm:text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style="color: var(--text-muted);">🔍</span>
+      <div class="flex items-center gap-2">
+        <div class="relative hidden sm:block w-52 md:w-64">
+          <input id="searchInput" type="text" placeholder="ค้นหาชื่อเรื่อง หรือนามปากกา..." class="w-full rounded-lg pl-3 pr-8 py-1.5 text-xs focus:outline-none transition-colors" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
+          <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style="color: var(--text-muted);"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
         </div>
 
-        <button type="button" id="headerTopupBtn" class="flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full text-xs sm:text-sm font-bold shrink-0 transition-transform hover:scale-[1.02]" style="background-color: var(--bg-card); border: 1px solid rgba(232,197,123,0.45); color: var(--gold-1);" title="เติมเหรียญ">
-          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px]" style="background-color: rgba(232,197,123,0.16);">🪙</span>
-          <span id="coinBalanceText" class="px-0.5 tabular-nums">0</span>
-          <span class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-black leading-none" style="background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410;">+</span>
+        <button type="button" id="headerTopupBtn" class="flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-full text-xs font-semibold shrink-0 transition-transform hover:scale-[1.02]" style="background-color: var(--bg-card); border: 1px solid rgba(234,184,84,0.38); color: var(--gold-1);" title="เติมเหรียญ">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#gnCoinGrad)"/><text x="12" y="15.5" text-anchor="middle" font-size="10" font-weight="800" fill="#1A1408" font-family="sans-serif">G</text><defs><linearGradient id="gnCoinGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#F7DF9B"/><stop offset="1" stop-color="#C9922B"/></linearGradient></defs></svg>
+          <span id="coinBalanceText" class="px-0.5 tabular-nums text-[12px]">0</span>
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold leading-none" style="background: linear-gradient(135deg, #F3D17C, #C9922B); color: #120F0A;">+</span>
         </button>
 
-        <button type="button" id="authHeaderBtn" class="px-3 py-1.5 rounded-full text-xs font-semibold shrink-0" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main);">เข้าสู่ระบบ</button>
+        <button type="button" id="authHeaderBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-main);">เข้าสู่ระบบ</button>
       </div>
     </header>
 
     <!-- Mobile Drawer -->
     <div id="mobileDrawer" class="fixed inset-0 z-40 hidden lg:hidden">
-      <div id="mobileBackdrop" class="absolute inset-0 bg-black/60"></div>
-      <div class="relative w-64 h-full p-5 flex flex-col justify-between" style="background-color: var(--bg-sidebar);">
+      <div id="mobileBackdrop" class="absolute inset-0 bg-black/65 backdrop-blur-xs"></div>
+      <div class="relative w-64 h-full p-4 flex flex-col justify-between border-r" style="background-color: var(--bg-sidebar); border-color: var(--border-soft);">
         <div>
-          <div class="flex items-center justify-between mb-6">
-            <span class="text-lg font-bold" style="color: var(--gold-1);">GoldNovel</span>
-            <button type="button" id="closeDrawerBtn" class="w-8 h-8 rounded-lg" style="background-color: var(--bg-card);">✕</button>
+          <div class="flex items-center justify-between mb-5 px-1">
+            <span class="text-base font-bold" style="color: var(--text-main);">Gold<span style="color: var(--gold-1);">Novel</span></span>
+            <button type="button" id="closeDrawerBtn" class="w-7 h-7 rounded-lg text-xs" style="background-color: var(--bg-input); color: var(--text-sub);">✕</button>
           </div>
-          <nav class="space-y-1.5">
-            <button type="button" data-mview="home" class="w-full text-left px-3.5 py-2.5 rounded-xl text-sm flex items-center gap-3"><span>🏠</span>หน้าหลัก</button>
-            <button type="button" data-mview="library" class="w-full text-left px-3.5 py-2.5 rounded-xl text-sm flex items-center gap-3"><span>📚</span>คลังของฉัน</button>
-            <button type="button" id="mobileTopupBtn" class="w-full text-left px-3.5 py-2.5 rounded-xl text-sm flex items-center gap-3"><span>💳</span>การเติมเงิน</button>
-            <button type="button" data-mview="settings" class="w-full text-left px-3.5 py-2.5 rounded-xl text-sm flex items-center gap-3"><span>⚙️</span>ตั้งค่า</button>
-            <button type="button" id="mobileAdminBtn" data-mview="admin" class="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3" style="color: var(--gold-1);"><span>✍️</span>หลังบ้านนักเขียน</button>
+          <nav class="space-y-1">
+            <button type="button" data-mview="home" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4.5v-6h3v6H18a1 1 0 0 0 1-1V9.5"/></svg><span>หน้าหลัก</span></button>
+            <button type="button" data-mview="library" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>ชั้นหนังสือ</span></button>
+            <button type="button" id="mobileTopupBtn" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h.01"/><path d="M2 10h20"/></svg><span>เติมเหรียญ</span></button>
+            <button type="button" data-mview="settings" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>โปรไฟล์ &amp; ตั้งค่า</span></button>
+            <button type="button" id="mobileAdminBtn" data-mview="admin" class="w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold flex items-center gap-2.5 mt-2 pt-2 border-t" style="color: var(--gold-1); border-color: var(--border-soft);"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg><span>หลังบ้านนักเขียน</span></button>
           </nav>
         </div>
-        <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-soft);">
-          <button type="button" data-set-mode="light" class="mode-pill flex-1 py-2 rounded-lg text-xs">☀️ สว่าง</button>
-          <button type="button" data-set-mode="dark" class="mode-pill flex-1 py-2 rounded-lg text-xs">🌙 มืด</button>
+        <div class="flex gap-1.5 pt-3 border-t" style="border-color: var(--border-soft);">
+          <button type="button" data-set-mode="light" class="mode-pill flex-1 py-1.5 rounded-lg text-[11px] flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg><span>สว่าง</span></button>
+          <button type="button" data-set-mode="dark" class="mode-pill flex-1 py-1.5 rounded-lg text-[11px] flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span>มืด</span></button>
         </div>
       </div>
     </div>
 
     <main id="mainContent" class="flex-1 px-4 pt-4 pb-24 sm:p-6 lg:pb-10 max-w-[1280px] w-full mx-auto"></main>
 
-    <!-- Mobile Bottom Navigation Bar (Clean App-Style) -->
-    <nav id="mobileBottomNav" class="lg:hidden fixed bottom-0 inset-x-0 z-30 mobile-bottom-nav backdrop-blur-md px-2 pt-1.5 pb-2 grid grid-cols-5 items-end">
-      <button type="button" data-bnav="home" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium">
-        <span class="text-lg leading-none">🏠</span>
+    <!-- Mobile Bottom Navigation Bar (Commercial App-Style SVG) -->
+    <nav id="mobileBottomNav" class="lg:hidden fixed bottom-0 inset-x-0 z-30 mobile-bottom-nav backdrop-blur-md px-1 pt-1.5 pb-2 grid grid-cols-5 items-end">
+      <button type="button" data-bnav="home" class="bnav-btn flex flex-col items-center justify-center gap-1 py-0.5 text-[10px] font-medium">
+        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4.5v-6h3v6H18a1 1 0 0 0 1-1V9.5"/></svg>
         <span>หน้าหลัก</span>
       </button>
-      <button type="button" data-bnav="browse" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium">
-        <span class="text-lg leading-none">📖</span>
+      <button type="button" data-bnav="browse" class="bnav-btn flex flex-col items-center justify-center gap-1 py-0.5 text-[10px] font-medium">
+        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A2.5 2.5 0 0 1 4.5 3H12v17H4.5A2.5 2.5 0 0 0 2 22.5z"/><path d="M22 5.5A2.5 2.5 0 0 0 19.5 3H12v17h7.5a2.5 2.5 0 0 1 2.5 2.5z"/></svg>
         <span>นิยาย</span>
       </button>
       <button type="button" id="bnavTopupBtn" class="flex flex-col items-center justify-center gap-1 -mt-5">
-        <span class="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-4" style="background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410; border-color: var(--bg-app);">+</span>
+        <span class="w-11 h-11 rounded-full flex items-center justify-center text-2xl font-semibold shadow-lg border-[3px]" style="background: linear-gradient(135deg, #F3D17C, #C9922B); color: #120F0A; border-color: var(--bg-app);">+</span>
         <span class="text-[10px] font-semibold" style="color: var(--gold-1);">เติมเหรียญ</span>
       </button>
-      <button type="button" data-bnav="library" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium">
-        <span class="text-lg leading-none">📚</span>
+      <button type="button" data-bnav="library" class="bnav-btn flex flex-col items-center justify-center gap-1 py-0.5 text-[10px] font-medium">
+        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         <span>ชั้นหนังสือ</span>
       </button>
-      <button type="button" data-bnav="profile" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium">
-        <span class="text-lg leading-none">👤</span>
+      <button type="button" data-bnav="profile" class="bnav-btn flex flex-col items-center justify-center gap-1 py-0.5 text-[10px] font-medium">
+        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
         <span>โปรไฟล์</span>
       </button>
     </nav>
@@ -363,8 +366,13 @@
       <div id="topupStep1">
         <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">1. เลือกจำนวนเงิน (ล็อกยอดบน QR อัตโนมัติ)</div>
         <div id="pkgGrid" class="grid grid-cols-3 gap-2.5 mb-3"></div>
-        <div class="mb-5">
-          <input id="customBahtInput" type="number" min="1" step="1" placeholder="หรือกรอกจำนวนเงินเอง (บาท) เช่น 20, 75, 500" class="w-full px-3.5 py-2 rounded-xl text-xs focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
+        <div class="mb-4 space-y-2">
+          <label class="block text-[11px]" style="color: var(--text-sub);">หรือกรอกจำนวนเงินที่ต้องการโอนเอง (กี่บาทก็ได้ เช่น 10, 20, 30, 75 บาท)</label>
+          <input id="customBahtInput" type="number" min="1" step="1" placeholder="พิมพ์จำนวนเงิน (บาท) เช่น 10, 20, 30" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
+          <div id="topupLiveSummary" class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">
+            <span>ยอดโอนที่เลือก: 100 บาท</span>
+            <span>ได้รับ 120 เหรียญ</span>
+          </div>
         </div>
 
         <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">2. เลือกช่องทางชำระเงิน</div>
@@ -725,11 +733,20 @@
         const { data: bms } = await sb.from('bookmarks_progress').select('novel_id').eq('user_id', state.user.id).eq('is_bookmarked', true);
         state.bookmarks = (bms || []).map(b => b.novel_id);
 
-        const txQuery = state.user.role === 'admin'
-          ? sb.from('transactions').select('*').order('created_at', { ascending: false }).limit(50)
-          : sb.from('transactions').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(30);
-        const { data: txs } = await txQuery;
-        state.transactions = txs || [];
+        let txs = [];
+        if (state.user.role === 'admin') {
+          const res = await sb.from('transactions').select('*, profiles(display_name, email)').order('created_at', { ascending: false }).limit(60);
+          if (res.error) {
+            const fb = await sb.from('transactions').select('*').order('created_at', { ascending: false }).limit(60);
+            txs = fb.data || [];
+          } else {
+            txs = res.data || [];
+          }
+        } else {
+          const res = await sb.from('transactions').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(30);
+          txs = res.data || [];
+        }
+        state.transactions = txs;
       } else {
         state.unlockedIds = [];
         state.bookmarks = [];
@@ -842,23 +859,23 @@
       const chCount = (n.chapters || []).filter(c => isAdmin() || isChapterPublished(c)).length;
       const catText = (n.categories && n.categories.length) ? n.categories.slice(0, 2).join(' / ') : 'นิยาย';
       const badgeHtml = opts.rank
-        ? `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-extrabold shadow ${opts.rank === 1 ? 'rank-1' : opts.rank === 2 ? 'rank-2' : opts.rank === 3 ? 'rank-3' : 'bg-black/75 text-amber-200'}">#${opts.rank}</span>`
+        ? `<span class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow ${opts.rank === 1 ? 'rank-1' : opts.rank === 2 ? 'rank-2' : opts.rank === 3 ? 'rank-3' : 'rank-n'}">#${opts.rank}</span>`
         : (opts.progressLabel
-          ? `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-400 text-[#161410] shadow">${opts.progressLabel}</span>`
-          : (n.status === 'จบแล้ว' ? `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/90 text-white shadow">จบแล้ว</span>` : ''));
+          ? `<span class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-[#120F0A] shadow">${opts.progressLabel}</span>`
+          : (n.status === 'จบแล้ว' ? `<span class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-600/90 text-white shadow">จบแล้ว</span>` : ''));
 
       return `
-        <button type="button" data-open-novel="${n.id}" class="group text-left flex flex-col focus:outline-none ${opts.shelf ? 'w-[136px] sm:w-[160px] lg:w-auto shrink-0 snap-start' : 'w-full'}">
-          <div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden border transition-transform duration-200 group-hover:-translate-y-1 shadow-md" style="border-color: var(--border-soft); background-color: var(--bg-card);">
-            ${renderCoverBox(n)}
+        <button type="button" data-open-novel="${n.id}" class="group text-left flex flex-col focus:outline-none ${opts.shelf ? 'w-[126px] sm:w-[152px] lg:w-auto shrink-0 snap-start' : 'w-full'}">
+          <div class="relative w-full aspect-[3/4] rounded-lg overflow-hidden border transition-all duration-200 shadow-sm group-hover:shadow-lg" style="border-color: var(--border-soft); background-color: var(--bg-card);">
+            <div class="w-full h-full transition-transform duration-300 group-hover:scale-[1.03]">${renderCoverBox(n)}</div>
             ${badgeHtml}
           </div>
-          <div class="mt-2.5 px-0.5">
-            <div class="text-[13px] sm:text-sm font-bold leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors" style="color: var(--text-main);">${n.title}</div>
-            <div class="text-[11px] line-clamp-1 mt-1" style="color: var(--text-sub);">${n.author || 'GoldNovel'} · ${catText}</div>
+          <div class="mt-2 px-0.5">
+            <div class="text-[13px] font-semibold leading-[1.35] line-clamp-2 group-hover:text-amber-300 transition-colors" style="color: var(--text-main);">${n.title}</div>
+            <div class="text-[11px] line-clamp-1 mt-0.5" style="color: var(--text-sub);">${n.author || 'GoldNovel'} · ${catText}</div>
             <div class="flex items-center gap-2.5 text-[11px] mt-1" style="color: var(--text-muted);">
-              <span>📖 ${chCount} ตอน</span>
-              <span>👁 ${(n.views || 0).toLocaleString()}</span>
+              <span class="inline-flex items-center gap-1"><svg class="w-3 h-3 shrink-0 opacity-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6a2 2 0 0 1 2-2h7v16H4a2 2 0 0 0-2 2z"/><path d="M22 6a2 2 0 0 0-2-2h-7v16h7a2 2 0 0 1 2 2z"/></svg>${chCount} ตอน</span>
+              <span class="inline-flex items-center gap-1"><svg class="w-3 h-3 shrink-0 opacity-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>${(n.views || 0).toLocaleString()}</span>
             </div>
           </div>
         </button>
@@ -926,7 +943,7 @@
           <!-- Mobile Search Bar (Clean & Compact) -->
           <div class="sm:hidden relative">
             <input id="mobileSearchInput" type="text" value="${state.searchQuery}" placeholder="ค้นหานิยาย ชื่อเรื่อง หรือผู้แต่ง..." class="w-full rounded-full pl-4 pr-10 py-2 text-xs focus:outline-none" style="background-color: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-main);">
-            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style="color: var(--text-muted);">🔍</span>
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color: var(--text-muted);"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
           </div>
 
           <!-- Auto-Sliding Hero Banner Carousel -->
@@ -1162,8 +1179,10 @@
       return `
         <div class="fade-in max-w-4xl mx-auto space-y-6">
           <button type="button" data-view="home" class="text-xs sm:text-sm font-medium hover:underline" style="color: var(--gold-1);">← กลับหน้าหลัก</button>
-          <div class="card-panel rounded-3xl p-5 sm:p-7 flex flex-col sm:flex-row gap-6">
-            <div class="w-40 sm:w-48 mx-auto sm:mx-0 shrink-0 rounded-2xl overflow-hidden aspect-[3/4] border" style="border-color: var(--border-subtle);">${renderCoverBox(novel)}</div>
+          <div class="relative card-panel rounded-2xl overflow-hidden">
+            ${novel.cover_url ? `<img src="${novel.cover_url}" alt="" aria-hidden="true" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-2xl scale-110 pointer-events-none">` : ''}
+            <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row gap-6" style="background: linear-gradient(180deg, rgba(10,11,15,0.45) 0%, rgba(10,11,15,0.88) 100%);">
+            <div class="w-36 sm:w-44 mx-auto sm:mx-0 shrink-0 rounded-xl overflow-hidden aspect-[3/4] shadow-xl border" style="border-color: rgba(255,255,255,0.12);">${renderCoverBox(novel)}</div>
             <div class="flex-1 flex flex-col justify-between">
               <div>
                 <div class="flex flex-wrap gap-1.5 mb-2">
@@ -1185,6 +1204,7 @@
                   <button type="button" data-toggle-bm="${novel.id}" class="px-4 py-2.5 rounded-full text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">${state.bookmarks.includes(novel.id) ? '🔖 อยู่ในคลังแล้ว' : '📑 เพิ่มเข้าคลัง'}</button>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 
@@ -1215,7 +1235,7 @@
                           <span class="text-sm font-semibold">${g.label}</span>
                           <span class="text-[11px]" style="color: var(--text-muted);">(${g.count} ตอน)</span>
                         </div>
-                        <span class="text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}" style="color: var(--text-sub);">⌄</span>
+                        <span class="inline-flex transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}" style="color: var(--text-sub);"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
                       </button>
                       ${isOpen ? `
                         <div class="border-t" style="border-color: var(--border-soft); background-color: color-mix(in srgb, var(--bg-app) 40%, transparent);">
@@ -1276,7 +1296,7 @@
       const sheetsHtml = loadedChapters.map((ch, idx) => {
         const paras = String(ch.content || '').split(/\n+/).filter(Boolean).map(p => `<p>${p}</p>`).join('');
         return `
-          <article class="reading-sheet rounded-3xl p-6 sm:p-10 border mb-6 fade-in" data-read-theme="${state.readTheme}">
+          <article class="reading-sheet rounded-xl p-5 sm:p-9 border mb-5 fade-in" data-read-theme="${state.readTheme}">
             <div class="text-center mb-7 pb-5 border-b" style="border-color: var(--border-soft);">
               <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">ตอนที่ ${ch.chapter_number}${idx > 0 ? ' · อ่านต่อเนื่อง' : ''}</div>
               <h1 class="text-xl sm:text-2xl font-bold">${ch.title}</h1>
@@ -1372,25 +1392,28 @@
 
           <!-- Fixed Bottom Reader Toolbar -->
           <div id="readerBottomBar" class="fixed bottom-0 inset-x-0 z-30 mobile-bottom-nav backdrop-blur-md">
-            <div class="max-w-2xl mx-auto px-3 h-14 grid grid-cols-5 items-center text-center">
+            <div class="max-w-2xl mx-auto px-2 h-13 py-1.5 grid grid-cols-5 items-center text-center">
               <button type="button" data-open-novel="${novel.id}" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors hover:text-amber-300" style="color: var(--text-sub);" title="สารบัญตอน">
-                <span class="text-lg leading-none">☰</span>
+                <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
                 <span class="text-[10px]">สารบัญ</span>
               </button>
               <button type="button" id="barCommentsBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors hover:text-amber-300" style="color: var(--text-sub);" title="ความคิดเห็นท้ายตอน">
-                <span class="relative text-base leading-none">💬${chapterCommentsCount > 0 ? `<span class="ml-0.5 text-[10px] font-bold" style="color: var(--gold-1);">${chapterCommentsCount}</span>` : ''}</span>
+                <span class="relative inline-flex items-center">
+                  <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  ${chapterCommentsCount > 0 ? `<span class="ml-0.5 text-[10px] font-bold" style="color: var(--gold-1);">${chapterCommentsCount}</span>` : ''}
+                </span>
                 <span class="text-[10px]">คอมเมนต์</span>
               </button>
               <button type="button" id="barAutoToggleBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors" style="color: ${state.autoContinuousMode ? 'var(--gold-1)' : 'var(--text-sub)'};" title="เปิด/ปิด โหมดอ่านต่อเนื่อง">
-                <span class="text-lg leading-none">${state.autoContinuousMode ? '⚡' : '∞'}</span>
-                <span class="text-[10px] font-semibold">${state.autoContinuousMode ? 'ต่อเนื่อง ON' : 'อ่านต่อเนื่อง'}</span>
+                <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
+                <span class="text-[10px] font-medium">${state.autoContinuousMode ? 'ต่อเนื่อง ON' : 'อ่านต่อเนื่อง'}</span>
               </button>
-              <button type="button" id="barPrevChBtn" ${prevCh ? `data-prev-ch="${prevCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${prevCh ? 'hover:text-amber-300' : 'opacity-30 cursor-not-allowed'}" style="color: var(--text-sub);" title="ตอนก่อนหน้า">
-                <span class="text-xl leading-none font-bold">‹</span>
+              <button type="button" id="barPrevChBtn" ${prevCh ? `data-prev-ch="${prevCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${prevCh ? 'hover:text-amber-300' : 'opacity-25 cursor-not-allowed'}" style="color: var(--text-sub);" title="ตอนก่อนหน้า">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 <span class="text-[10px]">ตอนก่อน</span>
               </button>
-              <button type="button" id="barNextChBtn" ${nextCh ? `data-next-ch="${nextCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${nextCh ? 'hover:text-amber-300' : 'opacity-30 cursor-not-allowed'}" style="color: ${nextCh ? 'var(--gold-1)' : 'var(--text-muted)'};" title="ตอนถัดไป">
-                <span class="text-xl leading-none font-bold">›</span>
+              <button type="button" id="barNextChBtn" ${nextCh ? `data-next-ch="${nextCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${nextCh ? 'hover:text-amber-300' : 'opacity-25 cursor-not-allowed'}" style="color: ${nextCh ? 'var(--gold-1)' : 'var(--text-muted)'};" title="ตอนถัดไป">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 <span class="text-[10px]">ตอนถัดไป</span>
               </button>
             </div>
@@ -1653,7 +1676,7 @@
                                     <span class="text-xs font-bold" style="color: var(--gold-1);">ช่วงตอน ${g.label}</span>
                                     <span class="text-[11px]" style="color: var(--text-muted);">(${g.count} ตอน)</span>
                                   </div>
-                                  <span class="text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}" style="color: var(--text-sub);">⌄</span>
+                                  <span class="inline-flex transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}" style="color: var(--text-sub);"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
                                 </button>
                               ` : ''}
                               ${isOpen ? `
@@ -1800,23 +1823,66 @@
           </form>
         `;
       } else {
-        const pending = state.transactions.filter(t => t.type === 'topup');
+        const topups = state.transactions.filter(t => t.type === 'topup');
+        const pendingCount = topups.filter(t => t.status === 'pending').length;
         body = `
           <div class="card-panel rounded-2xl overflow-hidden">
-            <div class="px-5 py-4 border-b font-bold text-sm" style="border-color: var(--border-soft);">รายการแจ้งเติมเงิน (${pending.length})</div>
+            <div class="px-5 py-4 border-b flex flex-wrap items-center justify-between gap-2" style="border-color: var(--border-soft);">
+              <span class="font-bold text-sm">รายการแจ้งเติมเงินทั้งหมด (${topups.length})</span>
+              ${pendingCount > 0 ? `<span class="text-xs px-2.5 py-0.5 rounded-full font-bold" style="background-color: var(--gold-soft); color: var(--gold-1);">รอตรวจสอบ ${pendingCount} รายการ</span>` : ''}
+            </div>
             <div>
-              ${pending.length === 0 ? `<div class="p-8 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีรายการแจ้งเติมเงิน</div>` :
-                pending.map(tx => `
-                  <div class="px-5 py-4 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3" style="border-color: var(--border-soft);">
-                    <div>
-                      <div class="text-sm font-semibold">${tx.note || 'แจ้งเติมเงิน'} (${tx.amount_baht} บาท → +${tx.coins_delta} เหรียญ)</div>
-                      <div class="text-xs" style="color: var(--text-muted);">ช่องทาง: ${tx.payment_method} · สถานะ: ${tx.status}</div>
+              ${topups.length === 0 ? `<div class="p-8 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีรายการแจ้งเติมเงิน</div>` :
+                topups.map(tx => {
+                  const prof = tx.profiles || {};
+                  const rawEmail = prof.email || (tx.user_id === state.user?.id ? state.user?.email : '') || '';
+                  const userHandle = rawEmail.endsWith('@goldnovel.app') ? '@' + rawEmail.replace('@goldnovel.app', '') : rawEmail;
+                  const readerName = prof.display_name || (tx.user_id === state.user?.id ? state.user?.display_name : '') || userHandle || (tx.user_id ? 'UID: ' + String(tx.user_id).slice(0, 8) : 'สมาชิก');
+                  const dtText = tx.created_at ? new Date(tx.created_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'เมื่อสักครู่';
+                  const stChip = tx.status === 'approved'
+                    ? `<span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">✓ อนุมัติแล้ว</span>`
+                    : tx.status === 'rejected'
+                      ? `<span class="text-xs px-2.5 py-1 rounded-full font-semibold text-rose-400" style="background-color: rgba(244,63,94,0.15);">✕ ปฏิเสธแล้ว</span>`
+                      : `<span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">⏳ รอตรวจสอบ</span>`;
+
+                  return `
+                    <div class="px-5 py-4 border-b last:border-b-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4" style="border-color: var(--border-soft);">
+                      <div class="flex items-start gap-3.5 min-w-0 flex-1">
+                        ${tx.slip_url ? `
+                          <a href="${tx.slip_url}" target="_blank" rel="noopener" class="w-14 h-20 rounded-xl overflow-hidden border shrink-0 block hover:opacity-85 transition-opacity" style="border-color: var(--border-subtle);" title="คลิกเพื่อดูรูปสลิปขนาดเต็ม">
+                            <img src="${tx.slip_url}" alt="สลิปการโอนเงิน" class="w-full h-full object-cover">
+                          </a>
+                        ` : `
+                          <div class="w-14 h-20 rounded-xl border shrink-0 flex items-center justify-center text-[10px] text-center p-1" style="border-color: var(--border-soft); background-color: var(--bg-input); color: var(--text-muted);">ไม่มีรูปสลิป</div>
+                        `}
+                        <div class="min-w-0 space-y-1">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm font-bold" style="color: var(--text-main);">👤 ${escapeHtml(readerName)}</span>
+                            ${userHandle && userHandle !== readerName ? `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: var(--bg-input); color: var(--text-sub);">${escapeHtml(userHandle)}</span>` : ''}
+                            ${stChip}
+                          </div>
+                          <div class="text-xs sm:text-sm font-semibold" style="color: var(--gold-1);">
+                            แจ้งโอน ${Number(tx.amount_baht || 0).toLocaleString()} บาท → +${Number(tx.coins_delta || 0).toLocaleString()} เหรียญ
+                          </div>
+                          <div class="text-[11px]" style="color: var(--text-muted);">
+                            ช่องทาง: ${tx.payment_method || '-'} · เวลา: ${dtText}${tx.slip_url ? ` · <a href="${tx.slip_url}" target="_blank" rel="noopener" class="underline" style="color: var(--gold-1);">เปิดดูสลิปเต็มจอ ↗</a>` : ''}
+                          </div>
+                        </div>
+                      </div>
+
+                      ${tx.status === 'pending' ? `
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                          <div class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="แก้จำนวนเหรียญให้ตรงกับยอดเงินในสลิปจริงได้">
+                            <span style="color: var(--text-muted);">🪙</span>
+                            <input type="number" min="0.5" step="0.5" value="${tx.coins_delta}" data-approve-coins="${tx.id}" class="w-14 bg-transparent text-center font-bold focus:outline-none" style="color: var(--gold-1);">
+                          </div>
+                          <button type="button" data-approve-tx="${tx.id}" class="px-4 py-2 rounded-xl text-xs font-bold btn-gold">✅ อนุมัติ</button>
+                          <button type="button" data-reject-tx="${tx.id}" class="px-3 py-2 rounded-xl text-xs font-semibold text-rose-400" style="background-color: rgba(244,63,94,0.14);">ปฏิเสธ</button>
+                        </div>
+                      ` : ''}
                     </div>
-                    ${tx.status === 'pending'
-                      ? `<button type="button" data-approve-tx="${tx.id}" class="px-4 py-1.5 rounded-lg text-xs btn-gold">อนุมัติ &amp; เติมเหรียญ</button>`
-                      : `<span class="text-xs px-2.5 py-1 rounded-full" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">อนุมัติแล้ว</span>`}
-                  </div>
-                `).join('')}
+                  `;
+                }).join('')}
             </div>
           </div>
         `;
@@ -1988,9 +2054,21 @@
       grid.querySelectorAll('[data-pkg]').forEach(btn => {
         btn.addEventListener('click', () => {
           state.selectedBaht = Number(btn.getAttribute('data-pkg'));
+          const ci = document.getElementById('customBahtInput');
+          if (ci) ci.value = '';
           renderPackages();
         });
       });
+      const sumEl = document.getElementById('topupLiveSummary');
+      const goBtn = document.getElementById('goPayStepBtn');
+      const curBaht = Math.max(1, Number(state.selectedBaht || 100));
+      const curCoins = calcCoins(curBaht);
+      if (sumEl) {
+        sumEl.innerHTML = `<span>ยอดโอนที่เลือก: ${curBaht.toLocaleString()} บาท</span><span>ได้รับ ${curCoins.toLocaleString()} เหรียญ</span>`;
+      }
+      if (goBtn) {
+        goBtn.textContent = `ดำเนินการชำระเงิน (${curBaht.toLocaleString()} บาท)`;
+      }
     }
 
     function renderPayOpts() {
@@ -2898,26 +2976,53 @@
         } catch (err) { showToast('อัปเดตไม่สำเร็จ: ' + err.message); }
       });
 
-      // Admin: Approve Top-Up
+      // Admin: Approve Top-Up (supports custom coin adjustment to match real slip)
       document.querySelectorAll('[data-approve-tx]').forEach(btn => {
         btn.addEventListener('click', async () => {
           const txId = btn.getAttribute('data-approve-tx');
+          const coinsInput = document.querySelector(`[data-approve-coins="${txId}"]`);
+          const customCoins = coinsInput ? roundCoins(coinsInput.value) : null;
           try {
             if (state.isLive) {
-              const { error } = await sb.rpc('approve_topup', { p_tx_id: txId });
-              if (error) throw error;
+              let res = await sb.rpc('approve_topup_custom', { p_tx_id: txId, p_coins: customCoins > 0 ? customCoins : null });
+              if (res.error && String(res.error.message || '').includes('approve_topup_custom')) {
+                res = await sb.rpc('approve_topup', { p_tx_id: txId });
+              }
+              if (res.error) throw res.error;
               await loadLiveData();
             } else {
               const tx = state.transactions.find(t => t.id === txId);
               if (tx && tx.status === 'pending') {
+                const credit = customCoins > 0 ? customCoins : tx.coins_delta;
+                tx.coins_delta = credit;
                 tx.status = 'approved';
-                state.user.coin_balance += tx.coins_delta;
+                state.user.coin_balance = roundCoins((state.user.coin_balance || 0) + credit);
               }
               saveDemo();
             }
             render();
-            showToast('อนุมัติและเติมเหรียญเข้าบัญชีแล้ว!');
+            showToast('อนุมัติและเติมเหรียญเข้าบัญชีนักอ่านแล้ว!');
           } catch (err) { showToast('อนุมัติไม่สำเร็จ: ' + err.message); }
+        });
+      });
+
+      // Admin: Reject Top-Up
+      document.querySelectorAll('[data-reject-tx]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const txId = btn.getAttribute('data-reject-tx');
+          try {
+            if (state.isLive) {
+              const { error } = await sb.rpc('reject_topup', { p_tx_id: txId });
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const tx = state.transactions.find(t => t.id === txId);
+              if (tx && tx.status === 'pending') tx.status = 'rejected';
+              saveDemo();
+            }
+            render();
+            showToast('ปฏิเสธรายการแจ้งโอนแล้ว');
+          } catch (err) { showToast('ปฏิเสธไม่สำเร็จ (กรุณารัน supabase_topup_admin_patch.sql ใน Supabase ก่อน): ' + err.message); }
         });
       });
     }
@@ -3229,8 +3334,14 @@
     document.getElementById('submitSlipBtn').addEventListener('click', async () => {
       const coins = calcCoins(state.selectedBaht);
       const slipFile = document.getElementById('slipFileInput').files[0];
+      if (!slipFile) {
+        showToast('กรุณาแนบรูปสลิปการโอนเงินก่อนกดยืนยัน');
+        return;
+      }
+      const btn = document.getElementById('submitSlipBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'กำลังอัปโหลดสลิป...'; }
       try {
-        const slipUrl = slipFile ? await uploadImageFile(slipFile, 'slips') : '';
+        const slipUrl = await uploadImageFile(slipFile, 'slips');
         if (state.isLive) {
           const { error } = await sb.from('transactions').insert({
             user_id: state.user.id,
@@ -3268,7 +3379,9 @@
             openUnlockModal(p.novelId, p.chId);
           }
         }
-      } catch (err) { showToast('ส่งสลิปไม่สำเร็จ: ' + err.message); }
+      } catch (err) { showToast('ส่งสลิปไม่สำเร็จ: ' + err.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'ยืนยันการโอนเงิน / ส่งสลิป'; } }
     });
 
     // Unlock confirm
