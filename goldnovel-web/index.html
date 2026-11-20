@@ -575,6 +575,10 @@
       activeNovelId: null,
       activeChapterId: null,
       loadedChapterIds: [],
+      autoContinuousMode: false,
+      autoContinuousNovelId: null,
+      autoContinuousInfoOpen: true,
+      autoUnlockBusy: false,
       bulkSelectedIds: [],
       selectedBaht: 100,
       selectedPay: 'promptpay',
@@ -1097,8 +1101,11 @@
       const loadedChapters = state.loadedChapterIds
         .map(id => chapters.find(c => c.id === id))
         .filter(Boolean);
+      const firstLoaded = loadedChapters[0];
       const lastLoaded = loadedChapters[loadedChapters.length - 1];
+      const firstIdx = chapters.findIndex(c => c.id === firstLoaded.id);
       const lastIdx = chapters.findIndex(c => c.id === lastLoaded.id);
+      const prevCh = firstIdx > 0 ? chapters[firstIdx - 1] : null;
       const nextCh = lastIdx >= 0 && lastIdx < chapters.length - 1 ? chapters[lastIdx + 1] : null;
       const lockedRemaining = chapters.slice(lastIdx + 1).filter(c => !isAccessible(c)).length;
 
@@ -1125,8 +1132,8 @@
         `;
       } else if (isAccessible(nextCh)) {
         nextSectionHtml = `
-          <div class="card-panel rounded-2xl p-6 text-center space-y-3">
-            <div class="text-xs" style="color: var(--text-muted);">ตอนถัดไปพร้อมให้อ่านต่อเนื่องด้านล่างนี้</div>
+          <div id="autoContinueSentinel" class="card-panel rounded-2xl p-6 text-center space-y-3">
+            <div class="text-xs" style="color: var(--text-muted);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่ — กำลังเตรียมโหลดตอนถัดไป...' : 'ตอนถัดไปพร้อมให้อ่านต่อเนื่องด้านล่างนี้'}</div>
             <div class="text-base font-bold">ตอนที่ ${nextCh.chapter_number}: ${nextCh.title}</div>
             <button type="button" id="appendNextFreeBtn" data-next-ch="${nextCh.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านตอนถัดไปต่อด้านล่าง ↓</button>
           </div>
@@ -1135,8 +1142,8 @@
         const bal = state.user?.coin_balance || 0;
         const canAfford = !!state.user && bal >= nextCh.price_coins;
         nextSectionHtml = `
-          <div class="card-panel rounded-3xl p-6 sm:p-8 text-center space-y-4" style="border-color: rgba(232,197,123,0.35);">
-            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">🔒 ตอนถัดไปติดเหรียญ</div>
+          <div id="autoContinueSentinel" class="card-panel rounded-3xl p-6 sm:p-8 text-center space-y-4" style="border-color: rgba(232,197,123,0.35);">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่' : '🔒 ตอนถัดไปติดเหรียญ'}</div>
             <div>
               <div class="text-lg font-bold">ตอนที่ ${nextCh.chapter_number}: ${nextCh.title}</div>
               <div class="text-xs mt-1" style="color: var(--text-sub);">ปลดล็อกเพื่อโหลดเนื้อหาต่อด้านล่างทันที · ยอดเหรียญของคุณ: <strong style="color: var(--gold-1);">${bal.toLocaleString()} เหรียญ</strong></div>
@@ -1151,10 +1158,38 @@
         `;
       }
 
+      const autoCardHtml = `
+        <div class="mt-6 pt-5 border-t" style="border-color: var(--border-soft);">
+          <div class="flex items-center justify-between gap-3 mb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="text-base" style="color: ${state.autoContinuousMode ? 'var(--gold-1)' : 'var(--text-sub)'};">⚡</span>
+              <span class="text-sm sm:text-base font-bold">โหมดอ่านต่อเนื่อง</span>
+            </div>
+            <button type="button" id="autoContinuousToggleBtn" role="switch" aria-checked="${state.autoContinuousMode ? 'true' : 'false'}" class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none" style="background: ${state.autoContinuousMode ? 'linear-gradient(135deg, #F3D999, #D4A857)' : 'var(--bg-input)'}; border: 1px solid ${state.autoContinuousMode ? 'rgba(232,197,123,0.6)' : 'var(--border-soft)'};">
+              <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${state.autoContinuousMode ? 'translate-x-6' : 'translate-x-1'}"></span>
+            </button>
+          </div>
+          ${state.autoContinuousInfoOpen ? `
+            <div class="space-y-2 text-xs leading-relaxed" style="color: var(--text-sub);">
+              <p class="font-semibold" style="color: var(--text-main);">เมื่อเข้าสู่หน้าอ่านที่ถูกล็อกด้วยเหรียญ ระบบจะใช้เหรียญปลดล็อกตอนต่อไปโดยอัตโนมัติ</p>
+              <ul class="space-y-1 pl-1" style="color: var(--text-muted);">
+                <li>• เมื่อเหรียญหมด สามารถเติมเงินแล้วอ่านต่อได้เลยไม่สะดุด</li>
+                <li>• โหมดอ่านต่อเนื่องจะเป็นการตั้งค่ารายเรื่อง และปิดโหมดอัตโนมัติเมื่อออกจากหน้าการอ่านนิยายเรื่องนั้น</li>
+              </ul>
+            </div>
+          ` : ''}
+          <div class="flex justify-end mt-2">
+            <button type="button" id="toggleAutoInfoBtn" class="text-xs font-semibold flex items-center gap-1 hover:underline" style="color: var(--gold-1);">
+              <span>${state.autoContinuousInfoOpen ? '⌃ อ่านน้อยลง' : '⌄ รายละเอียดโหมดอ่านต่อเนื่อง'}</span>
+            </button>
+          </div>
+        </div>
+      `;
+
       return `
-        <div class="fade-in max-w-2xl mx-auto">
+        <div class="fade-in max-w-2xl mx-auto pb-16">
           <div class="sticky top-16 z-10 py-3 mb-4 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 border-b" style="background-color: color-mix(in srgb, var(--bg-app) 90%, transparent); border-color: var(--border-soft);">
-            <button type="button" data-open-novel="${novel.id}" class="text-xs sm:text-sm font-medium hover:underline" style="color: var(--gold-1);">← สารบัญ ${novel.title}</button>
+            <button type="button" data-open-novel="${novel.id}" class="text-xs sm:text-sm font-medium hover:underline truncate max-w-[200px] sm:max-w-xs" style="color: var(--gold-1);">← ${novel.title}</button>
             <div class="flex items-center gap-2">
               <div class="flex gap-1 p-1 rounded-lg" style="background-color: var(--bg-input);">
                 <button type="button" data-rtheme="dark" class="px-2 py-1 rounded text-[11px]" style="${state.readTheme === 'dark' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">มืด</button>
@@ -1168,6 +1203,33 @@
 
           ${sheetsHtml}
           ${nextSectionHtml}
+          ${autoCardHtml}
+
+          <!-- Fixed Bottom Reader Toolbar -->
+          <div id="readerBottomBar" class="fixed bottom-0 inset-x-0 z-30 mobile-bottom-nav backdrop-blur-md">
+            <div class="max-w-2xl mx-auto px-3 h-14 grid grid-cols-5 items-center text-center">
+              <button type="button" data-open-novel="${novel.id}" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors hover:text-amber-300" style="color: var(--text-sub);" title="สารบัญตอน">
+                <span class="text-lg leading-none">☰</span>
+                <span class="text-[10px]">สารบัญ</span>
+              </button>
+              <button type="button" id="barBulkUnlockBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${lockedRemaining > 0 ? 'hover:text-amber-300' : 'opacity-40 cursor-default'}" style="color: ${lockedRemaining > 0 ? 'var(--text-sub)' : 'var(--text-muted)'};" title="ปลดล็อกหลายตอน">
+                <span class="text-base leading-none">🔓</span>
+                <span class="text-[10px]">${lockedRemaining > 0 ? `เหมา (${lockedRemaining})` : 'ปลดครบ'}</span>
+              </button>
+              <button type="button" id="barAutoToggleBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors" style="color: ${state.autoContinuousMode ? 'var(--gold-1)' : 'var(--text-sub)'};" title="เปิด/ปิด โหมดอ่านต่อเนื่อง">
+                <span class="text-lg leading-none">${state.autoContinuousMode ? '⚡' : '∞'}</span>
+                <span class="text-[10px] font-semibold">${state.autoContinuousMode ? 'ต่อเนื่อง ON' : 'อ่านต่อเนื่อง'}</span>
+              </button>
+              <button type="button" id="barPrevChBtn" ${prevCh ? `data-prev-ch="${prevCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${prevCh ? 'hover:text-amber-300' : 'opacity-30 cursor-not-allowed'}" style="color: var(--text-sub);" title="ตอนก่อนหน้า">
+                <span class="text-xl leading-none font-bold">‹</span>
+                <span class="text-[10px]">ตอนก่อน</span>
+              </button>
+              <button type="button" id="barNextChBtn" ${nextCh ? `data-next-ch="${nextCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${nextCh ? 'hover:text-amber-300' : 'opacity-30 cursor-not-allowed'}" style="color: ${nextCh ? 'var(--gold-1)' : 'var(--text-muted)'};" title="ตอนถัดไป">
+                <span class="text-xl leading-none font-bold">›</span>
+                <span class="text-[10px]">ตอนถัดไป</span>
+              </button>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -1588,6 +1650,12 @@
     }
 
     function render() {
+      if (state.view !== 'reader' || state.activeNovelId !== state.autoContinuousNovelId) {
+        state.autoContinuousMode = false;
+        state.autoContinuousNovelId = null;
+      }
+      const mNav = document.getElementById('mobileBottomNav');
+      if (mNav) mNav.classList.toggle('hidden', state.view === 'reader');
       if (heroAutoTimer) { clearInterval(heroAutoTimer); heroAutoTimer = null; }
       applyChrome();
       const el = document.getElementById('mainContent');
@@ -2030,6 +2098,148 @@
           showToast('ปลดล็อกไม่สำเร็จ: ' + err.message);
         }
       });
+
+      
+      // Reader: Auto-Continuous Mode & Bottom Reader Toolbar
+      async function triggerAutoNextChapter() {
+        if (state.autoUnlockBusy || state.view !== 'reader') return;
+        const novel = getNovel(state.activeNovelId);
+        const chapters = (novel?.chapters || []).filter(c => isAdmin() || isChapterPublished(c));
+        const lastId = state.loadedChapterIds[state.loadedChapterIds.length - 1];
+        const lastIdx = chapters.findIndex(c => c.id === lastId);
+        const nextCh = lastIdx >= 0 && lastIdx < chapters.length - 1 ? chapters[lastIdx + 1] : null;
+        if (!nextCh) return;
+
+        if (isAccessible(nextCh)) {
+          state.autoUnlockBusy = true;
+          try {
+            await fetchChapterContentIfNeeded(nextCh);
+            if (!state.loadedChapterIds.includes(nextCh.id)) state.loadedChapterIds.push(nextCh.id);
+            state.activeChapterId = nextCh.id;
+            recordLocalRead(novel.id, nextCh);
+            render();
+          } finally {
+            state.autoUnlockBusy = false;
+          }
+          return;
+        }
+
+        if (!state.user) {
+          state.autoContinuousMode = false;
+          openAuth();
+          showToast('กรุณาเข้าสู่ระบบเพื่อปลดล็อกตอนต่อเนื่อง');
+          return;
+        }
+        if ((state.user.coin_balance || 0) < nextCh.price_coins) {
+          state.autoContinuousMode = false;
+          render();
+          openTopup(`เหรียญไม่พอสำหรับตอนที่ ${nextCh.chapter_number} (ใช้ ${nextCh.price_coins} เหรียญ)`);
+          return;
+        }
+
+        state.autoUnlockBusy = true;
+        try {
+          if (state.isLive) {
+            const { error } = await sb.rpc('unlock_chapter', { p_chapter_id: nextCh.id });
+            if (error) throw error;
+            await loadLiveData();
+          } else {
+            state.user.coin_balance = roundCoins(state.user.coin_balance - Number(nextCh.price_coins));
+            if (!state.unlockedIds.includes(nextCh.id)) state.unlockedIds.push(nextCh.id);
+            state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'unlock', coins_delta: -nextCh.price_coins, note: `ปลดล็อกอัตโนมัติ: ${nextCh.title}`, status: 'approved' });
+            saveDemo();
+          }
+          const freshNovel = getNovel(novel.id);
+          const freshCh = (freshNovel?.chapters || []).find(c => c.id === nextCh.id);
+          if (freshCh) await fetchChapterContentIfNeeded(freshCh);
+          if (!state.loadedChapterIds.includes(nextCh.id)) state.loadedChapterIds.push(nextCh.id);
+          state.activeChapterId = nextCh.id;
+          recordLocalRead(novel.id, nextCh);
+          render();
+          showToast(`⚡ ปลดล็อกตอนที่ ${nextCh.chapter_number} อัตโนมัติแล้ว (-${nextCh.price_coins} เหรียญ)`);
+        } catch (err) {
+          state.autoContinuousMode = false;
+          render();
+          showToast('ปลดล็อกอัตโนมัติไม่สำเร็จ: ' + err.message);
+        } finally {
+          state.autoUnlockBusy = false;
+        }
+      }
+
+      const handleToggleAutoContinuous = () => {
+        if (!state.autoContinuousMode && !state.user) {
+          openAuth();
+          showToast('กรุณาเข้าสู่ระบบก่อนเปิดโหมดอ่านต่อเนื่อง');
+          return;
+        }
+        state.autoContinuousMode = !state.autoContinuousMode;
+        state.autoContinuousNovelId = state.autoContinuousMode ? state.activeNovelId : null;
+        render();
+        showToast(state.autoContinuousMode ? '⚡ เปิดโหมดอ่านต่อเนื่องแล้ว (ปลดล็อกตอนถัดไปอัตโนมัติ)' : 'ปิดโหมดอ่านต่อเนื่องแล้ว');
+      };
+
+      const autoToggleBtn = document.getElementById('autoContinuousToggleBtn');
+      if (autoToggleBtn) autoToggleBtn.addEventListener('click', handleToggleAutoContinuous);
+      const barAutoToggleBtn = document.getElementById('barAutoToggleBtn');
+      if (barAutoToggleBtn) barAutoToggleBtn.addEventListener('click', handleToggleAutoContinuous);
+
+      const toggleAutoInfoBtn = document.getElementById('toggleAutoInfoBtn');
+      if (toggleAutoInfoBtn) toggleAutoInfoBtn.addEventListener('click', () => {
+        state.autoContinuousInfoOpen = !state.autoContinuousInfoOpen;
+        render();
+      });
+
+      const barBulkUnlockBtn = document.getElementById('barBulkUnlockBtn');
+      if (barBulkUnlockBtn) barBulkUnlockBtn.addEventListener('click', () => {
+        if (getLockedChaptersForActiveNovel().length > 0) openBulkUnlockModal();
+      });
+
+      const barPrevChBtn = document.getElementById('barPrevChBtn');
+      if (barPrevChBtn && !barPrevChBtn.disabled) barPrevChBtn.addEventListener('click', async () => {
+        const cid = barPrevChBtn.getAttribute('data-prev-ch');
+        const novel = getNovel(state.activeNovelId);
+        const ch = (novel?.chapters || []).find(c => c.id === cid);
+        if (!ch) return;
+        if (isAccessible(ch)) {
+          await fetchChapterContentIfNeeded(ch);
+          state.activeChapterId = ch.id;
+          state.loadedChapterIds = [ch.id];
+          recordLocalRead(novel.id, ch);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          render();
+        } else {
+          openUnlock(ch);
+        }
+      });
+
+      const barNextChBtn = document.getElementById('barNextChBtn');
+      if (barNextChBtn && !barNextChBtn.disabled) barNextChBtn.addEventListener('click', async () => {
+        const cid = barNextChBtn.getAttribute('data-next-ch');
+        const novel = getNovel(state.activeNovelId);
+        const ch = (novel?.chapters || []).find(c => c.id === cid);
+        if (!ch) return;
+        if (state.autoContinuousMode || isAccessible(ch)) {
+          await triggerAutoNextChapter();
+        } else {
+          const inlineBtn = document.getElementById('inlineUnlockNextBtn');
+          if (inlineBtn) inlineBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          else openUnlock(ch);
+        }
+      });
+
+      if (window._goldAutoObserver) {
+        window._goldAutoObserver.disconnect();
+        window._goldAutoObserver = null;
+      }
+      const autoSentinel = document.getElementById('autoContinueSentinel');
+      if (state.view === 'reader' && state.autoContinuousMode && autoSentinel && 'IntersectionObserver' in window) {
+        window._goldAutoObserver = new IntersectionObserver((entries) => {
+          if (entries.some(e => e.isIntersecting) && state.autoContinuousMode && !state.autoUnlockBusy) {
+            triggerAutoNextChapter();
+          }
+        }, { rootMargin: '0px 0px 80px 0px', threshold: 0.25 });
+        window._goldAutoObserver.observe(autoSentinel);
+      }
 
       const mobileSearchInput = document.getElementById('mobileSearchInput');
       if (mobileSearchInput) {
