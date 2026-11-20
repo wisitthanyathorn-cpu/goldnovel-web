@@ -107,6 +107,11 @@
     .reading-prose p { margin-bottom: 1.45em; text-indent: 1.8em; line-height: 1.95; }
     .fade-in { animation: fadeIn 0.2s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .section-accent-bar { width: 4px; height: 20px; border-radius: 9999px; background: linear-gradient(180deg, #F3D999, #D4A857); display: inline-block; flex-shrink: 0; }
+    .mobile-bottom-nav { background-color: color-mix(in srgb, var(--bg-sidebar) 94%, transparent); border-top: 1px solid var(--border-soft); }
   </style>
   <script src="config.js"></script>
 </head>
@@ -169,28 +174,40 @@
       <button type="button" id="exitReaderPreviewBtn" class="px-3.5 py-1 rounded-full text-xs font-bold bg-[#161410] text-amber-200 hover:opacity-90">กลับสู่มุมมองเจ้าของเว็บ (Admin)</button>
     </div>
     <!-- Top Header -->
-    <header class="sticky top-0 z-20 backdrop-blur-md border-b px-4 sm:px-6 h-16 flex items-center justify-between gap-3" style="background-color: color-mix(in srgb, var(--bg-app) 88%, transparent); border-color: var(--border-soft);">
-      <div class="flex items-center gap-3 lg:gap-5 min-w-0">
-        <button type="button" id="mobileMenuBtn" class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-base" style="background-color: var(--bg-card); border: 1px solid var(--border-soft);">☰</button>
-        <nav class="hidden md:flex items-center gap-5 text-sm font-medium">
+    <header class="sticky top-0 z-20 backdrop-blur-md border-b px-3.5 sm:px-6 h-16 flex items-center justify-between gap-2.5" style="background-color: color-mix(in srgb, var(--bg-app) 90%, transparent); border-color: var(--border-soft);">
+      <div class="flex items-center gap-2.5 lg:gap-5 min-w-0">
+        <button type="button" id="mobileMenuBtn" class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0" style="background-color: var(--bg-card); border: 1px solid var(--border-soft);" aria-label="เปิดเมนู">☰</button>
+        <button type="button" data-view="home" class="lg:hidden flex items-center gap-2 text-left shrink-0 focus:outline-none">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background: radial-gradient(circle at top, rgba(243,217,153,0.22), rgba(212,168,87,0.06)); border: 1px solid var(--border-subtle);">
+            <svg viewBox="0 0 36 36" class="w-5 h-5" fill="none" aria-hidden="true">
+              <path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#E8C57B" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M18 11V27" stroke="#E8C57B" stroke-width="1.8"/>
+              <path d="M18 5L19.2 7.8L22 9L19.2 10.2L18 13L16.8 10.2L14 9L16.8 7.8L18 5Z" fill="#F3D999"/>
+            </svg>
+          </div>
+          <span class="text-sm font-bold tracking-wide" style="color: var(--gold-1);">GoldNovel</span>
+        </button>
+        <nav class="hidden lg:flex items-center gap-6 text-sm font-medium">
           <button type="button" data-top-tab="home" class="top-tab py-5 border-b-2 transition-colors">หน้าหลัก</button>
-          <button type="button" data-top-tab="categories" class="top-tab py-5 border-b-2 transition-colors">หมวดหมู่</button>
-          <button type="button" data-top-tab="ranking" class="top-tab py-5 border-b-2 transition-colors">อันดับยอดนิยม</button>
+          <button type="button" data-top-tab="ranking" class="top-tab py-5 border-b-2 transition-colors">นิยายประจำสัปดาห์</button>
+          <button type="button" data-top-tab="categories" class="top-tab py-5 border-b-2 transition-colors">คลังนิยาย</button>
           <button type="button" data-top-tab="promo" class="top-tab py-5 border-b-2 transition-colors">โปรโมชั่น</button>
         </nav>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-3">
-        <div class="relative w-36 sm:w-60">
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <div class="relative hidden sm:block w-48 md:w-60">
           <input id="searchInput" type="text" placeholder="ค้นหานิยาย ชื่อเรื่อง..." class="w-full rounded-full pl-3.5 pr-8 py-1.5 text-xs sm:text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style="color: var(--text-muted);">🔍</span>
         </div>
 
-        <button type="button" id="headerTopupBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold shrink-0" style="background-color: var(--gold-soft); border: 1px solid var(--border-subtle); color: var(--gold-1);">
-          <span>🪙</span><span id="coinBalanceText">0</span>
+        <button type="button" id="headerTopupBtn" class="flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full text-xs sm:text-sm font-bold shrink-0 transition-transform hover:scale-[1.02]" style="background-color: var(--bg-card); border: 1px solid rgba(232,197,123,0.45); color: var(--gold-1);" title="เติมเหรียญ">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px]" style="background-color: rgba(232,197,123,0.16);">🪙</span>
+          <span id="coinBalanceText" class="px-0.5 tabular-nums">0</span>
+          <span class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-black leading-none" style="background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410;">+</span>
         </button>
 
-        <button type="button" id="authHeaderBtn" class="px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main);">เข้าสู่ระบบ</button>
+        <button type="button" id="authHeaderBtn" class="px-3 py-1.5 rounded-full text-xs font-semibold shrink-0" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main);">เข้าสู่ระบบ</button>
       </div>
     </header>
 
@@ -218,7 +235,31 @@
       </div>
     </div>
 
-    <main id="mainContent" class="flex-1 p-4 sm:p-6 max-w-[1360px] w-full mx-auto"></main>
+    <main id="mainContent" class="flex-1 px-4 pt-4 pb-24 sm:p-6 lg:pb-10 max-w-[1280px] w-full mx-auto"></main>
+
+    <!-- Mobile Bottom Navigation Bar (Clean App-Style) -->
+    <nav id="mobileBottomNav" class="lg:hidden fixed bottom-0 inset-x-0 z-30 mobile-bottom-nav backdrop-blur-md px-2 pt-1.5 pb-2 grid grid-cols-5 items-end">
+      <button type="button" data-bnav="home" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium">
+        <span class="text-lg leading-none">🏠</span>
+        <span>หน้าหลัก</span>
+      </button>
+      <button type="button" data-bnav="browse" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium">
+        <span class="text-lg leading-none">📖</span>
+        <span>นิยาย</span>
+      </button>
+      <button type="button" id="bnavTopupBtn" class="flex flex-col items-center justify-center gap-1 -mt-5">
+        <span class="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-4" style="background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410; border-color: var(--bg-app);">+</span>
+        <span class="text-[10px] font-semibold" style="color: var(--gold-1);">เติมเหรียญ</span>
+      </button>
+      <button type="button" data-bnav="library" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium">
+        <span class="text-lg leading-none">📚</span>
+        <span>ชั้นหนังสือ</span>
+      </button>
+      <button type="button" data-bnav="profile" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium">
+        <span class="text-lg leading-none">👤</span>
+        <span>โปรไฟล์</span>
+      </button>
+    </nav>
   </div>
 
   <!-- Auth Modal -->
@@ -418,7 +459,7 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs mb-1" style="color: var(--text-sub);">ค่าเริ่มต้น: ฟรีกี่ตอนแรก (แก้รายตอนด้านล่างได้)</label>
-          <input id="splitFreeCount" type="number" min="0" value="2" class="w-full px-3 py-2 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+          <input id="splitFreeCount" type="number" min="0" value="0" class="w-full px-3 py-2 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
         </div>
         <div>
           <label class="block text-xs mb-1" style="color: var(--text-sub);">ค่าเริ่มต้น: ราคาตอนติดเหรียญ</label>
@@ -494,7 +535,7 @@
         is_featured: true,
         chapters: [
           { id: 'c1-1', chapter_number: 1, title: 'บทนำ: จุดเริ่มต้นแห่งตำนาน', price_coins: 0, content: 'นี่คือเนื้อหาตัวอย่างตอนที่ 1 (อ่านฟรี)\n\nคุณสามารถกดเข้าไปที่เมนู "หลังบ้านนักเขียน" ด้านซ้าย เพื่อทดลองอัปโหลดรูปปกนิยาย เปลี่ยนรูปแบนเนอร์ และเพิ่มตอนนิยายของคุณเองได้ทันทีครับ' },
-          { id: 'c1-2', chapter_number: 2, title: 'การตื่นรู้ของเส้นลมปราณ', price_coins: 1, content: 'ปลดล็อกตอนที่ 2 สำเร็จ!\n\nเมื่อเชื่อมกับ Supabase จริง ระบบจะบันทึกสิทธิ์การปลดล็อกนี้ผูกกับบัญชีสมาชิกของผู้อ่าน ทำให้กลับมาอ่านซ้ำได้ตลอดไปโดยไม่หักเหรียญซ้ำครับ' }
+          { id: 'c1-2', chapter_number: 2, title: 'การตื่นรู้ของเส้นลมปราณ', price_coins: 1.5, content: 'ปลดล็อกตอนที่ 2 สำเร็จ!\n\nเมื่อเชื่อมกับ Supabase จริง ระบบจะบันทึกสิทธิ์การปลดล็อกนี้ผูกกับบัญชีสมาชิกของผู้อ่าน ทำให้กลับมาอ่านซ้ำได้ตลอดไปโดยไม่หักเหรียญซ้ำครับ' }
         ]
       },
       {
@@ -510,7 +551,7 @@
         is_featured: false,
         chapters: [
           { id: 'c2-1', chapter_number: 1, title: 'ย้อนเวลาก่อนหิมะแรก 30 วัน', price_coins: 0, content: 'ตัวอย่างตอนที่ 1 สำหรับทดสอบระบบอ่านและการปรับขนาดตัวอักษร รวมถึงโหมดถนอมสายตา (มืด / กระดาษอุ่น / Sepia)' },
-          { id: 'c2-2', chapter_number: 2, title: 'คลังเสบียงมิติลับ', price_coins: 1, content: 'ปลดล็อกตอนที่ 2 เรียบร้อย! ระบบตัดเหรียญและเปิดเนื้อหาให้อ่านทันที' }
+          { id: 'c2-2', chapter_number: 2, title: 'คลังเสบียงมิติลับ', price_coins: 1.5, content: 'ปลดล็อกตอนที่ 2 เรียบร้อย! ระบบตัดเหรียญและเปิดเนื้อหาให้อ่านทันที' }
         ]
       }
     ];
@@ -723,6 +764,14 @@
         btn.style.color = active ? 'var(--gold-1)' : 'var(--text-muted)';
       });
 
+      document.querySelectorAll('[data-bnav]').forEach(btn => {
+        const b = btn.getAttribute('data-bnav');
+        const active = (b === 'home' && state.view === 'home') ||
+                       (b === 'library' && state.view === 'library') ||
+                       (b === 'profile' && (state.view === 'settings' || state.view === 'admin'));
+        btn.style.color = active ? 'var(--gold-1)' : 'var(--text-muted)';
+      });
+
       document.querySelectorAll('.side-nav').forEach(btn => {
         const v = btn.getAttribute('data-view');
         const active = v && (v === state.view || (v === 'home' && (state.view === 'novel' || state.view === 'reader')));
@@ -740,6 +789,45 @@
       });
     }
 
+    function getLocalReadHistory() {
+      try { return JSON.parse(localStorage.getItem('goldnovel_last_read_v1') || '{}'); } catch { return {}; }
+    }
+    function recordLocalRead(novelId, chapter) {
+      if (!novelId || !chapter) return;
+      try {
+        const hist = getLocalReadHistory();
+        hist[novelId] = { chapterId: chapter.id, chapterNumber: chapter.chapter_number, title: chapter.title, updatedAt: Date.now() };
+        localStorage.setItem('goldnovel_last_read_v1', JSON.stringify(hist));
+      } catch {}
+    }
+
+    function renderEditorialNovelCard(n, opts = {}) {
+      const chCount = (n.chapters || []).filter(c => isAdmin() || isChapterPublished(c)).length;
+      const catText = (n.categories && n.categories.length) ? n.categories.slice(0, 2).join(' / ') : 'นิยาย';
+      const badgeHtml = opts.rank
+        ? `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-extrabold shadow ${opts.rank === 1 ? 'rank-1' : opts.rank === 2 ? 'rank-2' : opts.rank === 3 ? 'rank-3' : 'bg-black/75 text-amber-200'}">#${opts.rank}</span>`
+        : (opts.progressLabel
+          ? `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-400 text-[#161410] shadow">${opts.progressLabel}</span>`
+          : (n.status === 'จบแล้ว' ? `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/90 text-white shadow">จบแล้ว</span>` : ''));
+
+      return `
+        <button type="button" data-open-novel="${n.id}" class="group text-left flex flex-col focus:outline-none ${opts.shelf ? 'w-[136px] sm:w-[160px] lg:w-auto shrink-0 snap-start' : 'w-full'}">
+          <div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden border transition-transform duration-200 group-hover:-translate-y-1 shadow-md" style="border-color: var(--border-soft); background-color: var(--bg-card);">
+            ${renderCoverBox(n)}
+            ${badgeHtml}
+          </div>
+          <div class="mt-2.5 px-0.5">
+            <div class="text-[13px] sm:text-sm font-bold leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors" style="color: var(--text-main);">${n.title}</div>
+            <div class="text-[11px] line-clamp-1 mt-1" style="color: var(--text-sub);">${n.author || 'GoldNovel'} · ${catText}</div>
+            <div class="flex items-center gap-2.5 text-[11px] mt-1" style="color: var(--text-muted);">
+              <span>📖 ${chCount} ตอน</span>
+              <span>👁 ${(n.views || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        </button>
+      `;
+    }
+
     function renderHome() {
       const q = state.searchQuery.trim().toLowerCase();
       const filtered = state.novels.filter(n => {
@@ -748,39 +836,62 @@
         return mQ && mC;
       });
 
-      if (q || state.activeCategory) {
+      if (q) {
         return `
-          <div class="fade-in">
-            <div class="flex items-center justify-between mb-5">
-              <div>
-                <h1 class="text-xl font-bold">${state.activeCategory ? `หมวดหมู่: ${state.activeCategory}` : `ผลการค้นหา: "${state.searchQuery}"`}</h1>
-                <p class="text-xs" style="color: var(--text-sub);">พบ ${filtered.length} เรื่อง</p>
+          <div class="fade-in space-y-5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="section-accent-bar"></span>
+                <div>
+                  <h1 class="text-lg sm:text-xl font-bold">ผลการค้นหา: "${state.searchQuery}"</h1>
+                  <p class="text-xs" style="color: var(--text-sub);">พบ ${filtered.length} เรื่อง</p>
+                </div>
               </div>
-              <button type="button" id="clearFilterBtn" class="px-4 py-2 rounded-xl text-xs font-medium card-panel">← กลับหน้าหลัก</button>
+              <button type="button" id="clearFilterBtn" class="px-3.5 py-1.5 rounded-full text-xs font-medium card-panel">← ล้างการค้นหา</button>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              ${filtered.length === 0 ? `<div class="col-span-full card-panel rounded-2xl p-10 text-center text-sm" style="color: var(--text-sub);">ยังไม่มีนิยายในหมวดนี้</div>` :
-                filtered.map(n => `
-                  <button type="button" data-open-novel="${n.id}" class="text-left rounded-2xl overflow-hidden relative aspect-[3/4.3] border hover:-translate-y-1 transition-transform" style="border-color: var(--border-subtle);">
-                    ${renderCoverBox(n)}
-                    <div class="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-                      <div class="text-xs font-semibold text-white line-clamp-2">${n.title}</div>
-                      <div class="text-[10px] text-amber-300 mt-1">🔥 ${(n.views || 0).toLocaleString()} · ${n.status}</div>
-                    </div>
-                  </button>
-                `).join('')}
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              ${filtered.length === 0 ? `<div class="col-span-full card-panel rounded-2xl p-10 text-center text-sm" style="color: var(--text-sub);">ไม่พบนิยายที่ตรงกับคำค้นหา</div>` :
+                filtered.map(n => renderEditorialNovelCard(n)).join('')}
             </div>
           </div>
         `;
       }
 
-      const top5 = state.novels.slice(0, 5);
-      const weekly = state.novels.filter(n => state.rankFilter === 'ทั้งหมด' || n.audience === state.rankFilter).slice(0, 5);
+      const weekly = [...state.novels].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10);
       const featured = state.novels.find(n => n.is_featured) || state.novels[0];
       const s = state.settings;
 
+      // Build "อ่านต่อเรื่องที่ค้างไว้" list from local reading history + bookmarks
+      const readHist = getLocalReadHistory();
+      const continueNovels = Object.entries(readHist)
+        .sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0))
+        .map(([nid, info]) => ({ novel: state.novels.find(n => n.id === nid), info }))
+        .filter(item => !!item.novel);
+
+      state.bookmarks.forEach(bid => {
+        if (!continueNovels.some(x => x.novel.id === bid)) {
+          const found = state.novels.find(n => n.id === bid);
+          if (found) continueNovels.push({ novel: found, info: null });
+        }
+      });
+
+      const hasContinue = continueNovels.length > 0;
+      const secondaryList = hasContinue
+        ? continueNovels.slice(0, 10)
+        : state.novels.slice(0, 10).map(n => ({ novel: n, info: null }));
+
+      const categoryNovels = state.activeCategory
+        ? state.novels.filter(n => (n.categories || []).includes(state.activeCategory))
+        : state.novels;
+
       return `
-        <div class="fade-in space-y-7">
+        <div class="fade-in space-y-8">
+          <!-- Mobile Search Bar (Clean & Compact) -->
+          <div class="sm:hidden relative">
+            <input id="mobileSearchInput" type="text" value="${state.searchQuery}" placeholder="ค้นหานิยาย ชื่อเรื่อง หรือผู้แต่ง..." class="w-full rounded-full pl-4 pr-10 py-2 text-xs focus:outline-none" style="background-color: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-main);">
+            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style="color: var(--text-muted);">🔍</span>
+          </div>
+
           <!-- Auto-Sliding Hero Banner Carousel -->
           ${(() => {
             const slides = [
@@ -791,7 +902,7 @@
                 novelId: featured ? featured.id : null,
                 badge: 'เรื่องเด่นประจำเว็บ'
               },
-              ...state.novels.filter(n => !featured || n.id !== featured.id).slice(0, 3).map(n => ({
+              ...state.novels.filter(n => !featured || n.id !== featured.id).slice(0, 4).map(n => ({
                 title: n.title,
                 tagline: n.synopsis || `โดย ${n.author} · ${(n.categories || []).join(' · ')}`,
                 img: n.cover_url || '',
@@ -802,130 +913,104 @@
             const safeIdx = slides.length ? (state.heroSlideIdx % slides.length) : 0;
             const cur = slides[safeIdx] || slides[0];
             return `
-              <section id="heroCarousel" class="relative rounded-3xl overflow-hidden border min-h-[250px] sm:min-h-[300px] flex items-center hero-placeholder select-none" style="border-color: var(--border-subtle);">
-                ${cur.img ? `<img src="${cur.img}" alt="${cur.title}" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500">` : ''}
-                <div class="absolute inset-0 bg-gradient-to-r from-[#0B0D14]/94 via-[#0B0D14]/70 to-[#0B0D14]/25"></div>
-                <div class="relative z-10 p-6 sm:p-10 max-w-xl fade-in">
-                  <span class="inline-block text-[11px] font-semibold px-3 py-0.5 rounded-full mb-2.5" style="background-color: rgba(232,197,123,0.18); color: #F3D999; border: 1px solid rgba(232,197,123,0.3);">${cur.badge}</span>
-                  <h1 class="font-display-thai text-2xl sm:text-4xl font-extrabold leading-tight hero-text-gradient mb-2.5">${cur.title}</h1>
-                  <p class="text-xs sm:text-sm text-neutral-200/90 mb-5 leading-relaxed line-clamp-2">${cur.tagline}</p>
-                  <div class="flex flex-wrap gap-2.5">
-                    ${cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านเลย →</button>` : ''}
-                    ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="px-4 py-2.5 rounded-full text-xs font-medium bg-white/10 text-amber-200 border border-amber-300/30 hover:bg-white/15">แก้ไข / อัปโหลดแบนเนอร์</button>` : ''}
+              <section id="heroCarousel" class="select-none">
+                <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border min-h-[210px] sm:min-h-[285px] flex items-center hero-placeholder shadow-lg" style="border-color: var(--border-subtle);">
+                  ${cur.img ? `<img src="${cur.img}" alt="${cur.title}" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500">` : ''}
+                  <div class="absolute inset-0 bg-gradient-to-r from-[#0B0D14]/94 via-[#0B0D14]/70 to-[#0B0D14]/20"></div>
+                  <div class="relative z-10 p-5 sm:p-10 max-w-xl fade-in">
+                    <span class="inline-block text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-2" style="background-color: rgba(232,197,123,0.18); color: #F3D999; border: 1px solid rgba(232,197,123,0.35);">${cur.badge}</span>
+                    <h1 class="font-display-thai text-xl sm:text-4xl font-extrabold leading-tight hero-text-gradient mb-2">${cur.title}</h1>
+                    <p class="text-xs sm:text-sm text-neutral-200/90 mb-4 leading-relaxed line-clamp-2">${cur.tagline}</p>
+                    <div class="flex flex-wrap gap-2">
+                      ${cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" class="px-5 py-2 rounded-full text-xs sm:text-sm btn-gold">อ่านเลย →</button>` : ''}
+                      ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="px-3.5 py-2 rounded-full text-xs font-medium bg-white/10 text-amber-200 border border-amber-300/30 hover:bg-white/15">แก้ไขแบนเนอร์</button>` : ''}
+                    </div>
                   </div>
+                  ${slides.length > 1 ? `
+                    <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">‹</button>
+                    <button type="button" id="heroNextBtn" aria-label="สไลด์ถัดไป" class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">›</button>
+                  ` : ''}
                 </div>
                 ${slides.length > 1 ? `
-                  <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white flex items-center justify-center hover:bg-black/75 transition-colors">‹</button>
-                  <button type="button" id="heroNextBtn" aria-label="สไลด์ถัดไป" class="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white flex items-center justify-center hover:bg-black/75 transition-colors">›</button>
-                  <div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5">
-                    ${slides.map((_, i) => `<button type="button" data-hero-dot="${i}" aria-label="สไลด์ที่ ${i + 1}" class="h-2 rounded-full transition-all duration-300 ${i === safeIdx ? 'w-7 bg-amber-300' : 'w-2 bg-white/40 hover:bg-white/70'}"></button>`).join('')}
+                  <div class="flex items-center justify-center gap-1.5 mt-3">
+                    ${slides.map((_, i) => `<button type="button" data-hero-dot="${i}" aria-label="สไลด์ที่ ${i + 1}" class="h-1.5 rounded-full transition-all duration-300 ${i === safeIdx ? 'w-7' : 'w-1.5 bg-white/25 hover:bg-white/50'}" style="${i === safeIdx ? 'background: linear-gradient(90deg, #F3D999, #D4A857);' : ''}"></button>`).join('')}
                   </div>
                 ` : ''}
               </section>
             `;
           })()}
 
-          <!-- Popular + Weekly Ranking -->
-          <section id="rankingSection" class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-            <div class="xl:col-span-8">
-              <div class="flex items-end justify-between mb-3.5">
-                <div>
-                  <h2 class="text-lg font-bold flex items-center gap-2"><span>🔥</span><span>นิยายยอดนิยม</span></h2>
-                  <p class="text-xs" style="color: var(--text-sub);">เรื่องที่คนอ่านมากที่สุดในตอนนี้</p>
-                </div>
-                ${isAdmin() ? `<button type="button" data-go-admin-tab="novels" class="text-xs font-medium hover:underline" style="color: var(--gold-1);">+ เพิ่มนิยายใหม่</button>` : ''}
-              </div>
-              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                ${top5.length === 0 ? `<div class="col-span-full card-panel rounded-2xl p-8 text-center text-sm" style="color: var(--text-sub);">ยังไม่มีนิยาย กดเข้าเมนู "หลังบ้านนักเขียน" เพื่อเพิ่มเรื่องแรกได้เลย</div>` :
-                  top5.map((n, idx) => {
-                    const rCls = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-n';
-                    return `
-                      <button type="button" data-open-novel="${n.id}" class="text-left rounded-2xl overflow-hidden relative aspect-[3/4.4] border hover:-translate-y-1 transition-transform" style="border-color: var(--border-subtle);">
-                        ${renderCoverBox(n)}
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#0B0D13] via-transparent to-transparent"></div>
-                        <span class="absolute top-2 left-2 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${rCls}">${idx + 1}</span>
-                        <div class="absolute bottom-0 inset-x-0 p-2.5">
-                          <div class="text-xs font-semibold text-white line-clamp-2 mb-1">${n.title}</div>
-                          <div class="flex items-center justify-between text-[10px]">
-                            <span class="text-amber-300">🔥 ${(n.views || 0).toLocaleString()}</span>
-                            <span class="px-1.5 py-0.5 rounded" style="background-color: ${n.status === 'จบแล้ว' ? 'rgba(34,197,94,0.22)' : 'rgba(232,197,123,0.2)'}; color: ${n.status === 'จบแล้ว' ? '#4ADE80' : '#F3D999'};">${n.status}</span>
-                          </div>
-                        </div>
-                      </button>
-                    `;
-                  }).join('')}
-              </div>
+          <!-- Section 1: นิยายประจำสัปดาห์ (รวมทุกเรื่อง ไม่มีแยกชาย-หญิง) -->
+          <section id="rankingSection">
+            <div class="flex items-center justify-between mb-3.5">
+              <h2 class="text-base sm:text-lg font-bold flex items-center gap-2.5">
+                <span class="section-accent-bar"></span>
+                <span>นิยายประจำสัปดาห์</span>
+              </h2>
+              ${isAdmin() ? `<button type="button" data-go-admin-tab="novels" class="text-xs font-medium hover:underline" style="color: var(--gold-1);">+ เพิ่มนิยายใหม่</button>` : `<span class="text-xs" style="color: var(--text-muted);">ยอดนิยมทั้งหมด</span>`}
             </div>
-
-            <div class="xl:col-span-4 card-panel rounded-2xl p-4">
-              <h2 class="text-base font-bold flex items-center gap-2 mb-3"><span>🏆</span><span>อันดับประจำสัปดาห์</span></h2>
-              <div class="grid grid-cols-3 gap-1.5 p-1 rounded-xl mb-3" style="background-color: var(--bg-input);">
-                ${['ทั้งหมด', 'ชาย', 'หญิง'].map(tab => `
-                  <button type="button" data-rank-filter="${tab}" class="py-1.5 rounded-lg text-xs font-semibold" style="${state.rankFilter === tab ? 'background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410;' : 'color: var(--text-sub);'}">${tab}</button>
-                `).join('')}
-              </div>
-              <div class="space-y-1.5">
-                ${weekly.map((n, i) => `
-                  <button type="button" data-open-novel="${n.id}" class="w-full flex items-center gap-3 p-2 rounded-xl text-left hover:bg-white/5">
-                    <span class="w-5 text-center text-sm font-bold" style="color: ${i < 3 ? 'var(--gold-1)' : 'var(--text-muted)'};">${i + 1}</span>
-                    <div class="w-10 h-12 rounded-lg overflow-hidden shrink-0 border" style="border-color: var(--border-subtle);">${renderCoverBox(n)}</div>
-                    <div class="min-w-0 flex-1">
-                      <div class="text-xs font-semibold line-clamp-2">${n.title}</div>
-                      <div class="text-[11px] text-amber-400">🔥 ${(n.views || 0).toLocaleString()}</div>
-                    </div>
-                  </button>
-                `).join('')}
-              </div>
-            </div>
+            ${weekly.length === 0
+              ? `<div class="card-panel rounded-2xl p-8 text-center text-sm" style="color: var(--text-sub);">ยังไม่มีนิยาย กดเข้าเมนู "หลังบ้านนักเขียน" เพื่อเพิ่มเรื่องแรกได้เลย</div>`
+              : `<div class="flex gap-3.5 overflow-x-auto pb-2 snap-x no-scrollbar lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-visible">
+                  ${weekly.map((n, idx) => renderEditorialNovelCard(n, { shelf: true, rank: idx < 5 ? idx + 1 : null })).join('')}
+                </div>`
+            }
           </section>
 
-          <!-- Recommended + Promo -->
-          <section id="promoSection" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            ${featured ? `
-              <div class="lg:col-span-7 flex flex-col">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-3"><span>⭐</span><span>แนะนำสำหรับคุณ</span></h2>
-                <div class="card-panel rounded-2xl overflow-hidden flex-1 grid grid-cols-1 sm:grid-cols-12">
-                  <div class="sm:col-span-5 min-h-[180px] relative">${renderCoverBox(featured)}</div>
-                  <div class="sm:col-span-7 p-5 flex flex-col justify-between">
-                    <div>
-                      <div class="flex flex-wrap gap-1.5 mb-2.5">
-                        ${(featured.categories || []).map(tag => `<span class="text-[11px] px-2.5 py-0.5 rounded-full" style="background-color: var(--bg-input); color: var(--text-sub);">${tag}</span>`).join('')}
-                      </div>
-                      <h3 class="text-base font-bold mb-2">${featured.title}</h3>
-                      <p class="text-xs leading-relaxed mb-4" style="color: var(--text-sub);">${featured.synopsis || ''}</p>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                      <button type="button" data-open-novel="${featured.id}" class="px-5 py-2 rounded-full text-xs sm:text-sm btn-gold">อ่านต่อ →</button>
-                      <button type="button" data-toggle-bm="${featured.id}" class="w-9 h-9 rounded-full flex items-center justify-center text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">${state.bookmarks.includes(featured.id) ? '🔖' : '📑'}</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ` : ''}
-
-            <div class="lg:col-span-5 flex flex-col">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-3"><span>🎁</span><span>กิจกรรม &amp; โปรโมชั่น</span></h2>
-              <div class="relative rounded-2xl overflow-hidden border flex-1 min-h-[195px] flex items-center promo-placeholder" style="border-color: var(--border-subtle);">
-                ${s.promo_banner_url ? `<img src="${s.promo_banner_url}" alt="Promo" class="absolute inset-0 w-full h-full object-cover">` : ''}
-                <div class="absolute inset-0 bg-gradient-to-r from-[#141210]/90 via-[#141210]/60 to-transparent"></div>
-                <div class="relative z-10 p-6">
-                  <div class="text-xl font-extrabold text-amber-200 leading-snug mb-1">${s.promo_title}</div>
-                  <div class="text-xs text-neutral-300 mb-4">${s.promo_subtitle}</div>
-                  <button type="button" id="promoTopupBtn" class="px-5 py-2 rounded-full text-xs sm:text-sm btn-gold">เติมเงินเลย</button>
-                </div>
-              </div>
+          <!-- Section 2: อ่านต่อเรื่องที่ค้างไว้ (หรือ อัปเดตล่าสุด) -->
+          <section id="continueSection">
+            <div class="flex items-center justify-between mb-3.5">
+              <h2 class="text-base sm:text-lg font-bold flex items-center gap-2.5">
+                <span class="section-accent-bar"></span>
+                <span>${hasContinue ? 'อ่านต่อเรื่องที่ค้างไว้' : 'อัปเดตล่าสุด'}</span>
+              </h2>
+              ${hasContinue ? `<button type="button" data-main-view="library" class="text-xs font-medium hover:underline" style="color: var(--gold-1);">ดูชั้นหนังสือ →</button>` : ''}
             </div>
+            ${secondaryList.length === 0
+              ? `<div class="card-panel rounded-2xl p-6 text-center text-xs" style="color: var(--text-sub);">ยังไม่มีประวัติการอ่าน</div>`
+              : `<div class="flex gap-3.5 overflow-x-auto pb-2 snap-x no-scrollbar lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-visible">
+                  ${secondaryList.map(({ novel, info }) => renderEditorialNovelCard(novel, {
+                    shelf: true,
+                    progressLabel: info ? `ตอนที่ ${info.chapterNumber}` : (hasContinue ? 'ในชั้นหนังสือ' : null)
+                  })).join('')}
+                </div>`
+            }
           </section>
 
-          <!-- Categories -->
+          <!-- Section 3: คลังนิยาย & หมวดหมู่ -->
           <section id="categoriesSection">
-            <h2 class="text-lg font-bold flex items-center gap-2 mb-3.5"><span>👑</span><span>หมวดหมู่ยอดนิยม</span></h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-base sm:text-lg font-bold flex items-center gap-2.5">
+                <span class="section-accent-bar"></span>
+                <span>คลังนิยายตามหมวดหมู่</span>
+              </h2>
+              <span class="text-xs" style="color: var(--text-muted);">${categoryNovels.length} เรื่อง</span>
+            </div>
+            <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-3 no-scrollbar">
+              <button type="button" data-cat="" class="px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all" style="${!state.activeCategory ? 'background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410;' : 'background-color: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-sub);'}">ทั้งหมด</button>
               ${CATEGORIES.map(c => `
-                <button type="button" data-cat="${c}" class="card-panel rounded-xl py-4 px-2 text-center hover:-translate-y-0.5 transition-transform">
-                  <div class="text-xs font-semibold" style="color: var(--gold-1);">${c}</div>
-                </button>
+                <button type="button" data-cat="${c}" class="px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all" style="${state.activeCategory === c ? 'background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410;' : 'background-color: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-sub);'}">${c}</button>
               `).join('')}
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              ${categoryNovels.length === 0
+                ? `<div class="col-span-full card-panel rounded-2xl p-8 text-center text-sm" style="color: var(--text-sub);">ยังไม่มีนิยายในหมวดหมู่ "${state.activeCategory}"</div>`
+                : categoryNovels.map(n => renderEditorialNovelCard(n)).join('')}
+            </div>
+          </section>
+
+          <!-- Section 4: กิจกรรม & โปรโมชั่น (กะทัดรัด เป็นระเบียบ) -->
+          <section id="promoSection">
+            <div class="relative rounded-2xl overflow-hidden border min-h-[155px] flex items-center promo-placeholder" style="border-color: var(--border-subtle);">
+              ${s.promo_banner_url ? `<img src="${s.promo_banner_url}" alt="Promo" class="absolute inset-0 w-full h-full object-cover">` : ''}
+              <div class="absolute inset-0 bg-gradient-to-r from-[#141210]/92 via-[#141210]/65 to-transparent"></div>
+              <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+                <div>
+                  <div class="text-lg sm:text-xl font-extrabold text-amber-200 leading-snug mb-1">${s.promo_title}</div>
+                  <div class="text-xs sm:text-sm text-neutral-300">${s.promo_subtitle}</div>
+                </div>
+                <button type="button" id="promoTopupBtn" class="px-5 py-2.5 rounded-full text-xs sm:text-sm btn-gold shrink-0 self-start sm:self-center">เติมเหรียญเลย</button>
+              </div>
             </div>
           </section>
         </div>
@@ -1231,7 +1316,7 @@
                       </div>
                       <div>
                         <label class="block text-xs mb-1" style="color: var(--text-sub);">ราคาเหรียญ (0 = ฟรี)</label>
-                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : 1}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : 1.5}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                       </div>
                     </div>
 
@@ -1371,14 +1456,9 @@
                   <input id="nAuthor" value="GoldNovel" placeholder="นามปากกา" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                 </div>
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <select id="nCategory" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                   ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
-                </select>
-                <select id="nAudience" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-                  <option value="ทั้งหมด">กลุ่มผู้อ่าน: ทั้งหมด</option>
-                  <option value="ชาย">ชาย</option>
-                  <option value="หญิง">หญิง</option>
                 </select>
                 <select id="nStatus" class="px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                   <option value="กำลังอัปเดต">กำลังอัปเดต</option>
@@ -1752,6 +1832,7 @@
           return;
         }
         state.activeChapterId = ch.id;
+      recordLocalRead(novel.id, ch);
         state.loadedChapterIds = [ch.id];
         state.view = 'reader';
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1868,7 +1949,7 @@
       });
 
       document.querySelectorAll('[data-cat]').forEach(btn => {
-        btn.addEventListener('click', () => { state.activeCategory = btn.getAttribute('data-cat'); window.scrollTo({ top: 0, behavior: 'smooth' }); render(); });
+        btn.addEventListener('click', () => { const c = btn.getAttribute('data-cat'); state.activeCategory = c || null; render(); });
       });
 
       document.querySelectorAll('[data-toggle-bm]').forEach(btn => {
@@ -1950,6 +2031,20 @@
         }
       });
 
+      const mobileSearchInput = document.getElementById('mobileSearchInput');
+      if (mobileSearchInput) {
+        mobileSearchInput.addEventListener('input', (e) => {
+          state.searchQuery = e.target.value;
+          const deskInp = document.getElementById('searchInput');
+          if (deskInp) deskInp.value = state.searchQuery;
+          render();
+          const refreshed = document.getElementById('mobileSearchInput');
+          if (refreshed) { refreshed.focus(); refreshed.setSelectionRange(refreshed.value.length, refreshed.value.length); }
+        });
+      }
+      document.querySelectorAll('[data-main-view]').forEach(btn => {
+        btn.addEventListener('click', () => { state.view = btn.getAttribute('data-main-view'); window.scrollTo({ top: 0, behavior: 'smooth' }); render(); });
+      });
       const clearBtn = document.getElementById('clearFilterBtn');
       if (clearBtn) clearBtn.addEventListener('click', () => { state.activeCategory = null; state.searchQuery = ''; document.getElementById('searchInput').value = ''; render(); });
 
@@ -1978,7 +2073,7 @@
             synopsis: document.getElementById('nSynopsis').value.trim(),
             cover_url: coverUrl,
             categories: [document.getElementById('nCategory').value],
-            audience: document.getElementById('nAudience').value,
+            audience: 'ทั้งหมด',
             status: document.getElementById('nStatus').value,
             views: 0,
             is_featured: false
@@ -2074,7 +2169,7 @@
         const files = Array.from(bulkImportInput.files || []).sort((a, b) => a.name.localeCompare(b.name, 'th', { numeric: true }));
         if (!files.length) return;
         const nid = state.adminSelectedNovelId;
-        const defaultPrice = Number(document.getElementById('chPrice')?.value || 1);
+        const defaultPrice = roundCoins(document.getElementById('chPrice')?.value ?? 1.5);
         const novel = state.novels.find(n => n.id === nid);
         const existing = novel?.chapters || [];
         let nextN = existing.length ? Math.max(...existing.map(c => c.chapter_number)) + 1 : 1;
@@ -2355,6 +2450,23 @@
     // Mobile drawer
     const drawer = document.getElementById('mobileDrawer');
     document.getElementById('mobileMenuBtn').addEventListener('click', () => drawer.classList.remove('hidden'));
+    const bnavTopupBtn = document.getElementById('bnavTopupBtn');
+    if (bnavTopupBtn) bnavTopupBtn.addEventListener('click', () => openTopup());
+    document.querySelectorAll('[data-bnav]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const b = btn.getAttribute('data-bnav');
+        if (b === 'home') { state.view = 'home'; state.activeCategory = null; window.scrollTo({ top: 0, behavior: 'smooth' }); render(); }
+        else if (b === 'browse') {
+          state.view = 'home'; render();
+          setTimeout(() => { const el = document.getElementById('categoriesSection'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 60);
+        }
+        else if (b === 'library') { state.view = 'library'; window.scrollTo({ top: 0, behavior: 'smooth' }); render(); }
+        else if (b === 'profile') {
+          if (!state.user) { openAuth(); }
+          else { state.view = isAdmin() ? 'admin' : 'settings'; window.scrollTo({ top: 0, behavior: 'smooth' }); render(); }
+        }
+      });
+    });
     document.getElementById('closeDrawerBtn').addEventListener('click', () => drawer.classList.add('hidden'));
     document.getElementById('mobileBackdrop').addEventListener('click', () => drawer.classList.add('hidden'));
     document.querySelectorAll('[data-mview]').forEach(btn => {
