@@ -412,6 +412,7 @@
       readTheme: 'dark',
       fontSize: 18,
       view: 'home', // home | novel | reader | library | settings | admin
+      heroSlideIdx: 0,
       adminTab: 'novels', // novels | banners | topups
       adminSelectedNovelId: null, // null = novel list view, id = inside that novel's workspace
       adminShowNewNovel: false,
@@ -647,19 +648,49 @@
 
       return `
         <div class="fade-in space-y-7">
-          <!-- Hero Banner -->
-          <section class="relative rounded-3xl overflow-hidden border min-h-[240px] sm:min-h-[285px] flex items-center hero-placeholder" style="border-color: var(--border-subtle);">
-            ${s.hero_banner_url ? `<img src="${s.hero_banner_url}" alt="Hero Banner" class="absolute inset-0 w-full h-full object-cover">` : ''}
-            <div class="absolute inset-0 bg-gradient-to-r from-[#0B0D14]/92 via-[#0B0D14]/65 to-transparent"></div>
-            <div class="relative z-10 p-6 sm:p-10 max-w-xl">
-              <h1 class="font-display-thai text-2xl sm:text-4xl font-extrabold leading-tight hero-text-gradient mb-2.5">${s.hero_title}</h1>
-              <p class="text-xs sm:text-sm text-neutral-200/90 mb-5 leading-relaxed">${s.hero_tagline}</p>
-              <div class="flex flex-wrap gap-2.5">
-                ${featured ? `<button type="button" data-open-novel="${featured.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านเลย →</button>` : ''}
-                ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="px-4 py-2.5 rounded-full text-xs font-medium bg-white/10 text-amber-200 border border-amber-300/30 hover:bg-white/15">แก้ไข / อัปโหลดแบนเนอร์</button>` : ''}
-              </div>
-            </div>
-          </section>
+          <!-- Auto-Sliding Hero Banner Carousel -->
+          ${(() => {
+            const slides = [
+              {
+                title: s.hero_title,
+                tagline: s.hero_tagline,
+                img: s.hero_banner_url || (featured ? featured.cover_url : ''),
+                novelId: featured ? featured.id : null,
+                badge: 'เรื่องเด่นประจำเว็บ'
+              },
+              ...state.novels.filter(n => !featured || n.id !== featured.id).slice(0, 3).map(n => ({
+                title: n.title,
+                tagline: n.synopsis || `โดย ${n.author} · ${(n.categories || []).join(' · ')}`,
+                img: n.cover_url || '',
+                novelId: n.id,
+                badge: (n.categories || [])[0] || 'นิยายแนะนำ'
+              }))
+            ];
+            const safeIdx = slides.length ? (state.heroSlideIdx % slides.length) : 0;
+            const cur = slides[safeIdx] || slides[0];
+            return `
+              <section id="heroCarousel" class="relative rounded-3xl overflow-hidden border min-h-[250px] sm:min-h-[300px] flex items-center hero-placeholder select-none" style="border-color: var(--border-subtle);">
+                ${cur.img ? `<img src="${cur.img}" alt="${cur.title}" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500">` : ''}
+                <div class="absolute inset-0 bg-gradient-to-r from-[#0B0D14]/94 via-[#0B0D14]/70 to-[#0B0D14]/25"></div>
+                <div class="relative z-10 p-6 sm:p-10 max-w-xl fade-in">
+                  <span class="inline-block text-[11px] font-semibold px-3 py-0.5 rounded-full mb-2.5" style="background-color: rgba(232,197,123,0.18); color: #F3D999; border: 1px solid rgba(232,197,123,0.3);">${cur.badge}</span>
+                  <h1 class="font-display-thai text-2xl sm:text-4xl font-extrabold leading-tight hero-text-gradient mb-2.5">${cur.title}</h1>
+                  <p class="text-xs sm:text-sm text-neutral-200/90 mb-5 leading-relaxed line-clamp-2">${cur.tagline}</p>
+                  <div class="flex flex-wrap gap-2.5">
+                    ${cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านเลย →</button>` : ''}
+                    ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="px-4 py-2.5 rounded-full text-xs font-medium bg-white/10 text-amber-200 border border-amber-300/30 hover:bg-white/15">แก้ไข / อัปโหลดแบนเนอร์</button>` : ''}
+                  </div>
+                </div>
+                ${slides.length > 1 ? `
+                  <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white flex items-center justify-center hover:bg-black/75 transition-colors">‹</button>
+                  <button type="button" id="heroNextBtn" aria-label="สไลด์ถัดไป" class="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white flex items-center justify-center hover:bg-black/75 transition-colors">›</button>
+                  <div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5">
+                    ${slides.map((_, i) => `<button type="button" data-hero-dot="${i}" aria-label="สไลด์ที่ ${i + 1}" class="h-2 rounded-full transition-all duration-300 ${i === safeIdx ? 'w-7 bg-amber-300' : 'w-2 bg-white/40 hover:bg-white/70'}"></button>`).join('')}
+                  </div>
+                ` : ''}
+              </section>
+            `;
+          })()}
 
           <!-- Popular + Weekly Ranking -->
           <section id="rankingSection" class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
@@ -1265,7 +1296,23 @@
       `;
     }
 
+    let heroAutoTimer = null;
+    let heroPaused = false;
+    function startHeroAutoSlide() {
+      if (heroAutoTimer) { clearInterval(heroAutoTimer); heroAutoTimer = null; }
+      const carousel = document.getElementById('heroCarousel');
+      if (!carousel || state.view !== 'home' || state.novels.length < 2) return;
+      const totalSlides = Math.min(4, state.novels.length);
+      heroAutoTimer = setInterval(() => {
+        if (!heroPaused && state.view === 'home' && !state.activeCategory && !state.searchQuery) {
+          state.heroSlideIdx = (state.heroSlideIdx + 1) % totalSlides;
+          render();
+        }
+      }, 5000);
+    }
+
     function render() {
+      if (heroAutoTimer) { clearInterval(heroAutoTimer); heroAutoTimer = null; }
       applyChrome();
       const el = document.getElementById('mainContent');
       if (state.view === 'home') el.innerHTML = renderHome();
@@ -1275,6 +1322,7 @@
       else if (state.view === 'settings') el.innerHTML = renderSettings();
       else if (state.view === 'admin') el.innerHTML = renderAdmin();
       bindDynamic();
+      startHeroAutoSlide();
     }
 
     function openTopup(msg) {
@@ -1442,6 +1490,28 @@
     }
 
     function bindDynamic() {
+      const carousel = document.getElementById('heroCarousel');
+      if (carousel) {
+        carousel.addEventListener('mouseenter', () => { heroPaused = true; });
+        carousel.addEventListener('mouseleave', () => { heroPaused = false; });
+      }
+      const totalSlides = Math.max(1, Math.min(4, state.novels.length));
+      const heroPrev = document.getElementById('heroPrevBtn');
+      if (heroPrev) heroPrev.addEventListener('click', () => {
+        state.heroSlideIdx = (state.heroSlideIdx - 1 + totalSlides) % totalSlides;
+        render();
+      });
+      const heroNext = document.getElementById('heroNextBtn');
+      if (heroNext) heroNext.addEventListener('click', () => {
+        state.heroSlideIdx = (state.heroSlideIdx + 1) % totalSlides;
+        render();
+      });
+      document.querySelectorAll('[data-hero-dot]').forEach(dot => {
+        dot.addEventListener('click', () => {
+          state.heroSlideIdx = Number(dot.getAttribute('data-hero-dot'));
+          render();
+        });
+      });
       document.querySelectorAll('[data-open-novel]').forEach(el => {
         el.addEventListener('click', () => {
           state.activeNovelId = el.getAttribute('data-open-novel');
