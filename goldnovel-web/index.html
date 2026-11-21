@@ -144,7 +144,7 @@
   <aside class="hidden lg:flex flex-col w-[212px] shrink-0 sticky top-0 h-screen border-r px-3 py-4 justify-between z-30" style="background-color: var(--bg-sidebar); border-color: var(--border-soft);">
     <div>
       <button type="button" data-view="home" class="w-full flex items-center gap-2.5 px-2.5 mb-6 text-left focus:outline-none">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.28);">
+        <div id="brandLogoSideWrap" class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.28);">
           <svg viewBox="0 0 36 36" class="w-5 h-5" fill="none" aria-hidden="true">
             <path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#EAB854" stroke-width="2" stroke-linejoin="round"/>
             <path d="M18 11V27" stroke="#EAB854" stroke-width="1.8"/>
@@ -204,7 +204,7 @@
       <div class="flex items-center gap-2.5 lg:gap-5 min-w-0">
         <button type="button" id="mobileMenuBtn" class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="color: var(--text-sub); background-color: var(--bg-card); border: 1px solid var(--border-soft);" aria-label="เปิดเมนู"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
         <button type="button" data-view="home" class="lg:hidden flex items-center gap-2 text-left shrink-0 focus:outline-none">
-          <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.3);">
+          <div id="brandLogoMobWrap" class="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.3);">
             <svg viewBox="0 0 36 36" class="w-4 h-4" fill="none" aria-hidden="true">
               <path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#EAB854" stroke-width="2.2" stroke-linejoin="round"/>
               <path d="M18 11V27" stroke="#EAB854" stroke-width="1.8"/>
@@ -864,6 +864,19 @@
         btn.style.backgroundColor = active ? 'var(--gold-soft)' : 'transparent';
         btn.style.color = active ? 'var(--gold-1)' : 'var(--text-muted)';
       });
+
+      
+      const customLogo = state.settings?.site_logo_url || '';
+      const defaultLogoSvg = '<svg viewBox="0 0 36 36" class="w-5 h-5" fill="none" aria-hidden="true"><path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#EAB854" stroke-width="2" stroke-linejoin="round"/><path d="M18 11V27" stroke="#EAB854" stroke-width="1.8"/><path d="M18 5L19.2 7.8L22 9L19.2 10.2L18 13L16.8 10.2L14 9L16.8 7.8L18 5Z" fill="#F3D999"/></svg>';
+      const sideLogoWrap = document.getElementById('brandLogoSideWrap');
+      const mobLogoWrap = document.getElementById('brandLogoMobWrap');
+      if (sideLogoWrap) sideLogoWrap.innerHTML = customLogo ? `<img src="${customLogo}" alt="Logo" class="w-full h-full object-cover">` : defaultLogoSvg;
+      if (mobLogoWrap) mobLogoWrap.innerHTML = customLogo ? `<img src="${customLogo}" alt="Logo" class="w-full h-full object-cover">` : defaultLogoSvg;
+      if (customLogo) {
+        let fav = document.querySelector('link[rel="icon"]');
+        if (!fav) { fav = document.createElement('link'); fav.rel = 'icon'; document.head.appendChild(fav); }
+        fav.href = customLogo;
+      }
 
       document.querySelectorAll('[data-bnav]').forEach(btn => {
         const b = btn.getAttribute('data-bnav');
@@ -1859,8 +1872,25 @@
       } else if (state.adminTab === 'banners') {
         const s = state.settings;
         body = `
-          <form id="bannerForm" class="card-panel rounded-2xl p-5 space-y-4">
-            <h3 class="font-bold text-base" style="color: var(--gold-1);">ปรับแต่งแบนเนอร์หน้าแรก &amp; ป้ายโปรโมชัน</h3>
+          <form id="bannerForm" class="card-panel rounded-2xl p-5 space-y-5">
+            <h3 class="font-bold text-base" style="color: var(--gold-1);">ปรับแต่งโลโก้เว็บ &amp; แบนเนอร์หน้าแรก</h3>
+            <div class="space-y-2.5 pb-4 border-b" style="border-color: var(--border-soft);">
+              <div class="flex items-center justify-between gap-2">
+                <label class="block text-xs font-semibold">โลโก้เว็บไซต์ (แสดงที่แถบเมนูและไอคอนแท็บเบราว์เซอร์)</label>
+                ${s.site_logo_url ? `<button type="button" id="clearLogoBtn" class="text-[11px] text-rose-400 hover:underline">ล้างโลโก้ (ใช้ไอคอนเดิม)</button>` : ''}
+              </div>
+              <div class="flex items-center gap-3.5">
+                <div class="w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border" style="background-color: var(--bg-input); border-color: var(--border-subtle);">
+                  ${s.site_logo_url
+                    ? `<img src="${s.site_logo_url}" alt="Logo Preview" class="w-full h-full object-cover">`
+                    : `<span class="text-[10px] text-center px-1" style="color: var(--text-muted);">โลโก้เริ่มต้น</span>`}
+                </div>
+                <div class="flex-1 min-w-0 space-y-1">
+                  <input id="bLogoFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+                  <div class="text-[11px]" style="color: var(--text-muted);">แนะนำรูปสี่เหลี่ยมจัตุรัส 1:1 (เช่น 512×512 px) ไฟล์ PNG พื้นหลังใส หรือ JPG/WEBP</div>
+                </div>
+              </div>
+            </div>
             <div class="space-y-2.5">
               <label class="block text-xs font-semibold">หัวข้อแบนเนอร์หลัก (Hero Banner)</label>
               <input id="bHeroTitle" value="${s.hero_title}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
@@ -3028,10 +3058,28 @@
       });
 
       // Admin: Update Banners
+
+      const clearLogoBtn = document.getElementById('clearLogoBtn');
+      if (clearLogoBtn) clearLogoBtn.addEventListener('click', async () => {
+        try {
+          if (state.isLive) {
+            const { error } = await sb.from('site_settings').update({ site_logo_url: '' }).eq('id', 'main');
+            if (error) throw error;
+            await loadLiveData();
+          } else {
+            state.settings.site_logo_url = '';
+            saveDemo();
+          }
+          render();
+          showToast('ล้างโลโก้และกลับไปใช้ไอคอนเดิมแล้ว');
+        } catch (err) { showToast('ล้างโลโก้ไม่สำเร็จ: ' + err.message); }
+      });
+
       const bannerForm = document.getElementById('bannerForm');
       if (bannerForm) bannerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
+          const logoFile = document.getElementById('bLogoFile')?.files[0];
           const heroFile = document.getElementById('bHeroFile').files[0];
           const promoFile = document.getElementById('bPromoFile').files[0];
           const nextSettings = {
@@ -3041,11 +3089,13 @@
             promo_title: document.getElementById('bPromoTitle').value.trim(),
             promo_subtitle: document.getElementById('bPromoSub').value.trim()
           };
+          if (logoFile) nextSettings.site_logo_url = await uploadImageFile(logoFile, 'media');
           if (heroFile) nextSettings.hero_banner_url = await uploadImageFile(heroFile, 'media');
           if (promoFile) nextSettings.promo_banner_url = await uploadImageFile(promoFile, 'media');
 
           if (state.isLive) {
-            await sb.from('site_settings').update(nextSettings).eq('id', 'main');
+            const { error } = await sb.from('site_settings').update(nextSettings).eq('id', 'main');
+            if (error) throw error;
             await loadLiveData();
           } else {
             state.settings = nextSettings;
