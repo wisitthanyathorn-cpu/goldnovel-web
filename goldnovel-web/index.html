@@ -389,14 +389,16 @@
             <div class="flex items-center justify-between gap-2">
               <div>
                 <div class="text-xs font-bold uppercase tracking-wider" style="color: var(--gold-1);">👑 GoldNovel VIP 30 วัน</div>
-                <div class="text-2xl font-extrabold mt-0.5">99 <span class="text-xs font-normal" style="color: var(--text-sub);">บาท / 30 วัน</span></div>
+                <div class="text-[11px] font-medium mt-0.5" style="color: var(--text-main);">(เหมาะสำหรับคนที่ต้องการอ่านจำนวนเยอะๆ)</div>
+                <div class="text-2xl font-extrabold mt-1">99 <span class="text-xs font-normal" style="color: var(--text-sub);">บาท / 30 วัน</span></div>
               </div>
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold" style="background: linear-gradient(135deg, #F0C466, #CE9631); color: #120F0A;">คุ้มที่สุด</span>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0" style="background: linear-gradient(135deg, #F0C466, #CE9631); color: #120F0A;">ลด 50% ทุกตอน</span>
             </div>
-            <ul class="text-xs space-y-1.5" style="color: var(--text-main);">
-              <li>✓ <strong>ลดราคาทุกตอน 50% ทันที</strong> (เช่น <span class="line-through opacity-60">1.5</span> → เหลือ <strong>0.75 เหรียญ</strong>) ใช้ได้ทั้งซื้อรายตอนและเหมาตอน</li>
-              <li>✓ หมดอายุอัตโนมัติเมื่อครบกำหนด ไม่ผูกบัตร ไม่หักเงินซ้ำ</li>
-              <li>✓ ต่ออายุก่อนหมด ระบบทบวันต่อจากวันเดิมให้ +30 วันเต็ม</li>
+            <ul class="text-xs space-y-1.5 leading-relaxed" style="color: var(--text-main);">
+              <li>✓ <strong>ลดราคาปลดล็อกทุกตอน 50% ทันที</strong> (จากปกติ <span class="line-through opacity-60">1.5</span> เหลือเพียง <strong>0.75 เหรียญ/ตอน</strong>)</li>
+              <li>✓ <strong>ยิ่งอ่านเยอะยิ่งคุ้ม!</strong> อ่านเกิน 132 ตอน/เดือน ประหยัดค่าเหรียญไปได้หลายร้อยบาท</li>
+              <li>✓ ใช้สิทธิ์ลด 50% ได้ครบทั้ง <strong>ซื้อรายตอน, โหมดอ่านต่อเนื่อง และปลดล็อกเหมาหลายตอน</strong></li>
+              <li>✓ หมดอายุอัตโนมัติเมื่อครบ 30 วัน ไม่ผูกบัตร ไม่หักเงินซ้ำ (ต่ออายุก่อนหมดระบบทบวันเดิมให้ +30 วัน)</li>
             </ul>
           </div>
         </div>
@@ -759,8 +761,15 @@
         const { data: unlocks } = await sb.from('unlocked_chapters').select('chapter_id').eq('user_id', state.user.id);
         state.unlockedIds = (unlocks || []).map(u => u.chapter_id);
 
-        const { data: bms } = await sb.from('bookmarks_progress').select('novel_id').eq('user_id', state.user.id).eq('is_bookmarked', true);
-        state.bookmarks = (bms || []).map(b => b.novel_id);
+        const { data: bms } = await sb.from('bookmarks_progress').select('novel_id, is_bookmarked, last_chapter_id, updated_at').eq('user_id', state.user.id);
+        state.bookmarks = (bms || []).filter(b => b.is_bookmarked).map(b => b.novel_id);
+        const cp = {};
+        (bms || []).forEach(b => {
+          if (b.last_chapter_id) {
+            cp[b.novel_id] = { chapterId: b.last_chapter_id, updatedAt: b.updated_at ? new Date(b.updated_at).getTime() : Date.now() };
+          }
+        });
+        state.cloudProgress = cp;
 
         let txs = [];
         if (state.user.role === 'admin') {
@@ -779,6 +788,7 @@
       } else {
         state.unlockedIds = [];
         state.bookmarks = [];
+        state.cloudProgress = {};
         state.transactions = [];
       }
     }
@@ -907,13 +917,46 @@
     function getLocalReadHistory() {
       try { return JSON.parse(localStorage.getItem('goldnovel_last_read_v1') || '{}'); } catch { return {}; }
     }
+    function getMergedReadHistory() {
+      const merged = { ...getLocalReadHistory() };
+      Object.entries(state.cloudProgress || {}).forEach(([nid, info]) => {
+        if (!info || !info.chapterId) return;
+        const novel = state.novels.find(n => n.id === nid);
+        const ch = (novel?.chapters || []).find(c => c.id === info.chapterId);
+        if (!ch) return;
+        const prev = merged[nid];
+        if (!prev || (info.updatedAt || 0) >= (prev.updatedAt || 0)) {
+          merged[nid] = { chapterId: ch.id, chapterNumber: ch.chapter_number, title: ch.title, updatedAt: info.updatedAt || Date.now() };
+        }
+      });
+      return merged;
+    }
+    function getReadingProgressForNovel(novel) {
+      if (!novel) return null;
+      const merged = getMergedReadHistory();
+      const info = merged[novel.id];
+      if (!info) return null;
+      const ch = (novel.chapters || []).find(c => c.id === info.chapterId);
+      return ch ? { chapter: ch, ...info } : null;
+    }
     function recordLocalRead(novelId, chapter) {
       if (!novelId || !chapter) return;
+      const nowMs = Date.now();
       try {
         const hist = getLocalReadHistory();
-        hist[novelId] = { chapterId: chapter.id, chapterNumber: chapter.chapter_number, title: chapter.title, updatedAt: Date.now() };
+        hist[novelId] = { chapterId: chapter.id, chapterNumber: chapter.chapter_number, title: chapter.title, updatedAt: nowMs };
         localStorage.setItem('goldnovel_last_read_v1', JSON.stringify(hist));
       } catch {}
+      state.cloudProgress[novelId] = { chapterId: chapter.id, updatedAt: nowMs };
+      if (state.isLive && state.user) {
+        sb.from('bookmarks_progress').upsert({
+          user_id: state.user.id,
+          novel_id: novelId,
+          is_bookmarked: state.bookmarks.includes(novelId),
+          last_chapter_id: chapter.id,
+          updated_at: new Date(nowMs).toISOString()
+        }).then(() => {}).catch(() => {});
+      }
     }
 
     function renderEditorialNovelCard(n, opts = {}) {
@@ -977,7 +1020,7 @@
       const s = state.settings;
 
       // Build "อ่านต่อเรื่องที่ค้างไว้" list from local reading history + bookmarks
-      const readHist = getLocalReadHistory();
+      const readHist = getMergedReadHistory();
       const continueNovels = Object.entries(readHist)
         .sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0))
         .map(([nid, info]) => ({ novel: state.novels.find(n => n.id === nid), info }))
@@ -1295,7 +1338,14 @@
                   <div class="h-full" style="width:${pct}%; background: linear-gradient(90deg, #D4A857, #F3D999);"></div>
                 </div>
                 <div class="flex flex-wrap gap-2.5">
-                  ${chapters.length ? `<button type="button" data-open-ch="${chapters[0].id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">เริ่มอ่านตอนที่ 1</button>` : ''}
+                  ${(() => {
+                    if (!chapters.length) return '';
+                    const prog = getReadingProgressForNovel(novel);
+                    if (prog && chapters.some(c => c.id === prog.chapter.id)) {
+                      return `<button type="button" data-open-ch="${prog.chapter.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านต่อตอนที่ ${prog.chapter.chapter_number} →</button>`;
+                    }
+                    return `<button type="button" data-open-ch="${chapters[0].id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">เริ่มอ่านตอนที่ ${chapters[0].chapter_number}</button>`;
+                  })()}
                   <button type="button" data-toggle-bm="${novel.id}" class="px-4 py-2.5 rounded-full text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">${state.bookmarks.includes(novel.id) ? '🔖 อยู่ในคลังแล้ว' : '📑 เพิ่มเข้าคลัง'}</button>
                 </div>
               </div>
@@ -1347,7 +1397,7 @@
                               <button type="button" data-open-ch="${ch.id}" class="w-full text-left px-5 py-3 flex items-center justify-between gap-3 border-b last:border-b-0 hover:bg-white/5" style="border-color: var(--border-soft);">
                                 <div class="flex items-center gap-3 min-w-0">
                                   <span class="text-xs w-14 shrink-0" style="color: var(--text-muted);">ตอนที่ ${ch.chapter_number}</span>
-                                  <span class="text-sm font-medium truncate">${ch.title}</span>
+                                  <span class="text-sm font-medium truncate">${ch.title}</span>${(getReadingProgressForNovel(novel)?.chapter?.id === ch.id) ? `<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">อ่านค้างไว้</span>` : ''}
                                 </div>
                                 ${badge}
                               </button>
@@ -1522,45 +1572,83 @@
 
     function renderLibrary() {
       const saved = state.novels.filter(n => state.bookmarks.includes(n.id));
+      const mergedHist = getMergedReadHistory();
+      const readingList = Object.entries(mergedHist)
+        .sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0))
+        .map(([nid, info]) => ({ novel: state.novels.find(n => n.id === nid), info }))
+        .filter(x => !!x.novel);
+      const isHistory = state.libraryTab === 'history';
+
       return `
         <div class="fade-in max-w-4xl mx-auto space-y-6">
-          <div class="card-panel rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div class="text-xs mb-1" style="color: var(--text-muted);">ยอดเหรียญคงเหลือ</div>
-              <div class="text-3xl font-bold" style="color: var(--gold-1);">${(state.user?.coin_balance || 0).toLocaleString()} <span class="text-sm font-normal" style="color: var(--text-sub);">เหรียญ</span></div>
-              ${isVipActive() ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">👑 บัญชี VIP · ลดราคาทุกตอน 50% ถึง ${formatVipExpiry()}</div>` : ''}
-            </div>
-            <button type="button" id="libTopupBtn" class="px-6 py-2.5 rounded-full text-sm btn-gold">+ เติมเหรียญ</button>
-          </div>
-
-          <div>
-            <h2 class="text-lg font-bold mb-3">คลังหนังสือที่บันทึกไว้ (${saved.length})</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              ${saved.length === 0 ? `<div class="col-span-full card-panel rounded-2xl p-8 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีนิยายในคลัง</div>` :
-                saved.map(n => `
-                  <button type="button" data-open-novel="${n.id}" class="text-left rounded-2xl overflow-hidden relative aspect-[3/4.2] border" style="border-color: var(--border-subtle);">
-                    ${renderCoverBox(n)}
-                    <div class="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/90 to-transparent text-xs font-semibold text-white">${n.title}</div>
-                  </button>
-                `).join('')}
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h1 class="text-lg sm:text-xl font-bold flex items-center gap-2.5">
+              <span class="section-accent-bar"></span>
+              <span>${isHistory ? 'ประวัติเหรียญ & การเติมเงิน' : 'ชั้นหนังสือของฉัน'}</span>
+            </h1>
+            <div class="inline-flex p-1 rounded-xl" style="background-color: var(--bg-card); border: 1px solid var(--border-soft);">
+              <button type="button" data-lib-tab="bookshelf" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all" style="${!isHistory ? 'background: linear-gradient(135deg, #F0C466, #CE9631); color: #120F0A;' : 'color: var(--text-sub);'}">ชั้นหนังสือ (${saved.length})</button>
+              <button type="button" data-lib-tab="history" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all" style="${isHistory ? 'background: linear-gradient(135deg, #F0C466, #CE9631); color: #120F0A;' : 'color: var(--text-sub);'}">ประวัติเหรียญ (${state.transactions.length})</button>
             </div>
           </div>
 
-          <div class="card-panel rounded-2xl overflow-hidden">
-            <div class="px-5 py-4 border-b font-bold text-sm" style="border-color: var(--border-soft);">ประวัติการเติมและใช้เหรียญ</div>
-            <div>
-              ${state.transactions.length === 0 ? `<div class="p-6 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีรายการ</div>` :
-                state.transactions.map(tx => `
-                  <div class="px-5 py-3 flex items-center justify-between border-b last:border-b-0 text-sm" style="border-color: var(--border-soft);">
-                    <div>
-                      <div class="font-medium">${tx.note || tx.type}</div>
-                      <div class="text-[11px]" style="color: var(--text-muted);">สถานะ: ${tx.status === 'approved' ? 'สำเร็จ' : tx.status === 'pending' ? 'รอตรวจสอบ' : tx.status}</div>
-                    </div>
-                    <span class="font-bold" style="color: ${tx.coins_delta > 0 ? '#4ADE80' : 'var(--gold-1)'};">${tx.coins_delta > 0 ? '+' : ''}${tx.coins_delta} เหรียญ</span>
+          ${!isHistory ? `
+            <div class="space-y-7">
+              ${readingList.length > 0 ? `
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold" style="color: var(--gold-1);">อ่านค้างไว้ล่าสุด (ซิงก์อัตโนมัติในบัญชี)</h2>
+                    <span class="text-[11px]" style="color: var(--text-muted);">${readingList.length} เรื่อง</span>
                   </div>
-                `).join('')}
+                  <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+                    ${readingList.map(({ novel, info }) => renderEditorialNovelCard(novel, { progressLabel: `ตอนที่ ${info.chapterNumber}` })).join('')}
+                  </div>
+                </div>
+              ` : ''}
+
+              <div>
+                <h2 class="text-sm font-bold mb-3">นิยายที่บันทึกไว้ในชั้นหนังสือ (${saved.length})</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+                  ${saved.length === 0 ? `<div class="col-span-full card-panel rounded-2xl p-8 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีนิยายในชั้นหนังสือ กดปุ่ม "เพิ่มเข้าคลัง" ที่หน้านิยายเพื่อเก็บไว้ตรงนี้ได้เลยครับ</div>` :
+                    saved.map(n => {
+                      const prog = getReadingProgressForNovel(n);
+                      return renderEditorialNovelCard(n, { progressLabel: prog ? `ตอนที่ ${prog.chapter.chapter_number}` : null });
+                    }).join('')}
+                </div>
+              </div>
             </div>
-          </div>
+          ` : `
+            <div class="space-y-5">
+              <div class="card-panel rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div class="text-xs mb-1" style="color: var(--text-muted);">ยอดเหรียญคงเหลือ</div>
+                  <div class="text-3xl font-bold" style="color: var(--gold-1);">${(state.user?.coin_balance || 0).toLocaleString()} <span class="text-sm font-normal" style="color: var(--text-sub);">เหรียญ</span></div>
+                  ${isVipActive() ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">👑 บัญชี VIP · ลดราคาทุกตอน 50% ถึง ${formatVipExpiry()}</div>` : ''}
+                </div>
+                <button type="button" id="libTopupBtn" class="px-5 py-2.5 rounded-xl text-sm btn-gold">+ เติมเหรียญ / สมัคร VIP</button>
+              </div>
+
+              <div class="card-panel rounded-2xl overflow-hidden">
+                <div class="px-5 py-3.5 border-b font-bold text-sm" style="border-color: var(--border-soft);">รายการเติมเงินและปลดล็อกตอนทั้งหมด</div>
+                <div>
+                  ${state.transactions.length === 0 ? `<div class="p-8 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีประวัติการใช้หรือเติมเหรียญ</div>` :
+                    state.transactions.map(tx => `
+                      <div class="px-5 py-3.5 flex items-center justify-between gap-3 border-b last:border-b-0 text-sm" style="border-color: var(--border-soft);">
+                        <div class="min-w-0">
+                          <div class="font-medium truncate">${escapeHtml(tx.note || tx.type)}</div>
+                          <div class="text-[11px] mt-0.5" style="color: var(--text-muted);">
+                            สถานะ: ${tx.status === 'approved' ? 'สำเร็จ' : tx.status === 'pending' ? 'รอตรวจสอบ' : 'ปฏิเสธแล้ว'}${tx.created_at ? ' · ' + new Date(tx.created_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                          </div>
+                        </div>
+                        <div class="font-bold shrink-0 ${tx.type === 'vip' ? 'text-amber-300' : (tx.coins_delta >= 0 ? 'text-emerald-400' : 'text-amber-400')}">
+                          ${tx.type === 'vip' ? '👑 VIP 30 วัน' : `${tx.coins_delta >= 0 ? '+' : ''}${Number(tx.coins_delta || 0).toLocaleString()} เหรียญ`}
+                        </div>
+                      </div>
+                    `).join('')}
+                </div>
+              </div>
+            </div>
+          `}
         </div>
       `;
     }
@@ -2542,7 +2630,7 @@
           const nid = btn.getAttribute('data-toggle-bm');
           const exists = state.bookmarks.includes(nid);
           if (state.isLive && state.user) {
-            await sb.from('bookmarks_progress').upsert({ user_id: state.user.id, novel_id: nid, is_bookmarked: !exists });
+            await sb.from('bookmarks_progress').upsert({ user_id: state.user.id, novel_id: nid, is_bookmarked: !exists, last_chapter_id: state.cloudProgress[nid]?.chapterId || null, updated_at: new Date().toISOString() });
           }
           state.bookmarks = exists ? state.bookmarks.filter(b => b !== nid) : [...state.bookmarks, nid];
           saveDemo();
@@ -2843,6 +2931,12 @@
       const heroPureTopupBtn = document.getElementById('heroPureTopupBtn');
       if (heroPureTopupBtn) heroPureTopupBtn.addEventListener('click', () => openTopup());
 
+      document.querySelectorAll('[data-lib-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.libraryTab = btn.getAttribute('data-lib-tab');
+          render();
+        });
+      });
       const libTopup = document.getElementById('libTopupBtn');
       if (libTopup) libTopup.addEventListener('click', () => openTopup());
 
