@@ -194,7 +194,10 @@
     <!-- Reader Preview Mode Banner (only shown when Admin toggles Reader View) -->
     <div id="readerPreviewBanner" class="hidden px-4 py-2 text-xs sm:text-sm font-medium flex flex-wrap items-center justify-between gap-2 z-30" style="background: linear-gradient(90deg, #D4A857, #F3D999); color: #161410;">
       <span>👁️ <strong>โหมดมุมมองนักอ่าน:</strong> คุณกำลังเห็นหน้าเว็บเหมือนผู้อ่านทั่วไปทุกประการ (ซ่อนแบบร่าง &amp; ล็อกตอนติดเหรียญ)</span>
-      <button type="button" id="exitReaderPreviewBtn" class="px-3.5 py-1 rounded-full text-xs font-bold bg-[#161410] text-amber-200 hover:opacity-90">กลับสู่มุมมองเจ้าของเว็บ (Admin)</button>
+      <div class="flex items-center gap-2">
+        <button type="button" id="togglePreviewVipBtn" class="px-3 py-1 rounded-full text-xs font-bold bg-[#161410]/20 text-[#161410] border border-[#161410]/30 hover:bg-[#161410]/30">👑 จำลองเป็น VIP (-50%)</button>
+        <button type="button" id="exitReaderPreviewBtn" class="px-3.5 py-1 rounded-full text-xs font-bold bg-[#161410] text-amber-200 hover:opacity-90">กลับสู่มุมมองเจ้าของเว็บ (Admin)</button>
+      </div>
     </div>
     <!-- Top Header -->
     <header class="sticky top-0 z-20 backdrop-blur-md border-b px-3.5 sm:px-6 h-14 flex items-center justify-between gap-2.5" style="background-color: color-mix(in srgb, var(--bg-app) 92%, transparent); border-color: var(--border-soft);">
@@ -365,7 +368,7 @@
       <div id="topupStep1">
         <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl mb-4" style="background-color: var(--bg-input);">
           <button type="button" id="topupModeCoinsBtn" class="py-2 rounded-lg text-xs font-semibold transition-all">เติมเหรียญรายตอน</button>
-          <button type="button" id="topupModeVipBtn" class="py-2 rounded-lg text-xs font-semibold transition-all">👑 สมัคร VIP (139฿/เดือน)</button>
+          <button type="button" id="topupModeVipBtn" class="py-2 rounded-lg text-xs font-semibold transition-all">👑 สมัคร VIP (99฿/เดือน)</button>
         </div>
 
         <div id="topupCoinsPane">
@@ -386,12 +389,12 @@
             <div class="flex items-center justify-between gap-2">
               <div>
                 <div class="text-xs font-bold uppercase tracking-wider" style="color: var(--gold-1);">👑 GoldNovel VIP 30 วัน</div>
-                <div class="text-2xl font-extrabold mt-0.5">139 <span class="text-xs font-normal" style="color: var(--text-sub);">บาท / 30 วัน</span></div>
+                <div class="text-2xl font-extrabold mt-0.5">99 <span class="text-xs font-normal" style="color: var(--text-sub);">บาท / 30 วัน</span></div>
               </div>
               <span class="px-2.5 py-1 rounded-full text-[11px] font-bold" style="background: linear-gradient(135deg, #F0C466, #CE9631); color: #120F0A;">คุ้มที่สุด</span>
             </div>
             <ul class="text-xs space-y-1.5" style="color: var(--text-main);">
-              <li>✓ อ่านนิยายได้ <strong>ทุกเรื่อง ทุกตอน</strong> ไม่จำกัดตลอด 30 วัน</li>
+              <li>✓ <strong>ลดราคาทุกตอน 50% ทันที</strong> (เช่น <span class="line-through opacity-60">1.5</span> → เหลือ <strong>0.75 เหรียญ</strong>) ใช้ได้ทั้งซื้อรายตอนและเหมาตอน</li>
               <li>✓ หมดอายุอัตโนมัติเมื่อครบกำหนด ไม่ผูกบัตร ไม่หักเงินซ้ำ</li>
               <li>✓ ต่ออายุก่อนหมด ระบบทบวันต่อจากวันเดิมให้ +30 วันเต็ม</li>
             </ul>
@@ -627,6 +630,7 @@
       adminShowChapterForm: false,
       editingChapterId: null,
       previewAsReader: false,
+      previewAsVip: false,
       rankFilter: 'ทั้งหมด',
       activeCategory: null,
       searchQuery: '',
@@ -806,18 +810,26 @@
     }
 
     function isVipActive() {
+      if (state.previewAsReader && state.previewAsVip) return true;
       if (!state.user) return false;
       if (state.previewAsReader && state.user.role === 'admin') return false;
       return !!(state.user.vip_until && new Date(state.user.vip_until).getTime() > Date.now());
     }
 
     function formatVipExpiry() {
+      if (state.previewAsReader && state.previewAsVip) return 'โหมดจำลอง VIP';
       if (!isVipActive()) return '';
       return new Date(state.user.vip_until).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
     }
 
+    function getEffectivePrice(ch) {
+      const base = roundCoins(ch?.price_coins || 0);
+      if (base <= 0) return 0;
+      return isVipActive() ? roundCoins(base * 0.5) : base;
+    }
+
     function isAccessible(ch) {
-      return ch.price_coins === 0 || isAdmin() || isVipActive() || state.unlockedIds.includes(ch.id);
+      return ch.price_coins === 0 || isAdmin() || state.unlockedIds.includes(ch.id);
     }
 
     function renderCoverBox(novel, extraClass = '') {
@@ -1284,8 +1296,10 @@
                             const badge = ch.price_coins === 0
                               ? `<span class="text-xs px-2.5 py-1 rounded-full shrink-0" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">อ่านฟรี</span>`
                               : open
-                                ? `<span class="text-xs px-2.5 py-1 rounded-full shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">${isVipActive() && !state.unlockedIds.includes(ch.id) ? '👑 VIP อ่านฟรี' : '✓ ปลดล็อกแล้ว'}</span>`
-                                : `<span class="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0" style="background-color: var(--bg-input); color: var(--gold-1);">🔒 ${ch.price_coins} เหรียญ</span>`;
+                                ? `<span class="text-xs px-2.5 py-1 rounded-full shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">✓ ปลดล็อกแล้ว</span>`
+                                : (isVipActive()
+                                  ? `<span class="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0 flex items-center gap-1.5" style="background-color: var(--gold-soft); color: var(--gold-1); border: 1px solid rgba(234,184,84,0.35);"><span class="line-through opacity-55 text-[11px]">${ch.price_coins}</span><span>👑 ${getEffectivePrice(ch)} เหรียญ</span></span>`
+                                  : `<span class="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0" style="background-color: var(--bg-input); color: var(--gold-1);">🔒 ${ch.price_coins} เหรียญ</span>`);
                             return `
                               <button type="button" data-open-ch="${ch.id}" class="w-full text-left px-5 py-3 flex items-center justify-between gap-3 border-b last:border-b-0 hover:bg-white/5" style="border-color: var(--border-soft);">
                                 <div class="flex items-center gap-3 min-w-0">
@@ -1364,7 +1378,8 @@
         `;
       } else {
         const bal = state.user?.coin_balance || 0;
-        const canAfford = !!state.user && bal >= nextCh.price_coins;
+        const nextEffPrice = getEffectivePrice(nextCh);
+        const canAfford = !!state.user && bal >= nextEffPrice;
         nextSectionHtml = `
           <div id="autoContinueSentinel" class="card-panel rounded-3xl p-6 sm:p-8 text-center space-y-4" style="border-color: rgba(232,197,123,0.35);">
             <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่' : '🔒 ตอนถัดไปติดเหรียญ'}</div>
@@ -1374,7 +1389,7 @@
             </div>
             <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
               <button type="button" id="inlineUnlockNextBtn" data-next-ch="${nextCh.id}" class="px-6 py-3 rounded-full text-sm btn-gold">
-                ${canAfford ? `ปลดล็อกอ่านต่อทันที (${nextCh.price_coins} เหรียญ)` : `เติมเหรียญเพื่อปลดล็อก (${nextCh.price_coins} เหรียญ)`}
+                ${canAfford ? (isVipActive() ? `ปลดล็อกทันที (👑 <span class="line-through opacity-60 mr-1">${nextCh.price_coins}</span>${nextEffPrice} เหรียญ)` : `ปลดล็อกอ่านต่อทันที (${nextEffPrice} เหรียญ)`) : `เติมเหรียญเพื่อปลดล็อก (${nextEffPrice} เหรียญ)`}
               </button>
               ${lockedRemaining > 1 ? `<button type="button" id="readerBulkUnlockBtn" class="px-5 py-3 rounded-full text-xs sm:text-sm font-semibold" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">⚡ ปลดล็อกหลายตอน (เหลือ ${lockedRemaining} ตอน)</button>` : ''}
             </div>
@@ -1470,7 +1485,7 @@
             <div>
               <div class="text-xs mb-1" style="color: var(--text-muted);">ยอดเหรียญคงเหลือ</div>
               <div class="text-3xl font-bold" style="color: var(--gold-1);">${(state.user?.coin_balance || 0).toLocaleString()} <span class="text-sm font-normal" style="color: var(--text-sub);">เหรียญ</span></div>
-              ${isVipActive() ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">👑 สมาชิก VIP · อ่านฟรีทุกตอนถึง ${formatVipExpiry()}</div>` : ''}
+              ${isVipActive() ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">👑 บัญชี VIP · ลดราคาทุกตอน 50% ถึง ${formatVipExpiry()}</div>` : ''}
             </div>
             <button type="button" id="libTopupBtn" class="px-6 py-2.5 rounded-full text-sm btn-gold">+ เติมเหรียญ</button>
           </div>
@@ -1904,7 +1919,7 @@
                           </div>
                           <div class="text-xs sm:text-sm font-semibold" style="color: var(--gold-1);">
                             ${tx.type === 'vip'
-                              ? `👑 สมัคร VIP รายเดือน 30 วัน (แจ้งโอน ${Number(tx.amount_baht || 139).toLocaleString()} บาท)`
+                              ? `👑 สมัคร VIP รายเดือน 30 วัน (แจ้งโอน ${Number(tx.amount_baht || 99).toLocaleString()} บาท)`
                               : `แจ้งโอน ${Number(tx.amount_baht || 0).toLocaleString()} บาท → +${Number(tx.coins_delta || 0).toLocaleString()} เหรียญ`}
                           </div>
                           <div class="text-[11px]" style="color: var(--text-muted);">
@@ -2113,7 +2128,7 @@
       }
       if (goBtn) {
         goBtn.textContent = state.topupMode === 'vip'
-          ? 'สมัคร VIP 30 วัน (139 บาท)'
+          ? 'สมัคร VIP 30 วัน (99 บาท)'
           : `ดำเนินการชำระเงิน (${curBaht.toLocaleString()} บาท)`;
       }
     }
@@ -2186,14 +2201,15 @@
       const novel = getNovel(novelId);
       const ch = (novel?.chapters || []).find(c => c.id === chId);
       if (!ch) return;
-      if ((state.user.coin_balance || 0) < ch.price_coins) {
+      const effP = getEffectivePrice(ch);
+      if ((state.user.coin_balance || 0) < effP) {
         state.pendingUnlock = { novelId, chId };
-        openTopup(`ตอนที่ ${ch.chapter_number} ใช้ ${ch.price_coins} เหรียญ (คุณมี ${state.user.coin_balance || 0} เหรียญ)`);
+        openTopup(`ตอนที่ ${ch.chapter_number} ใช้ ${effP} เหรียญ (คุณมี ${state.user.coin_balance || 0} เหรียญ)`);
         return;
       }
       state.pendingUnlock = { novelId, chId };
       document.getElementById('unlockTitle').textContent = `ปลดล็อกตอนที่ ${ch.chapter_number}: ${ch.title}`;
-      document.getElementById('unlockDesc').innerHTML = `ใช้ <strong>${ch.price_coins} เหรียญ</strong> เพื่อปลดล็อกอ่านตลอดไป<br>คงเหลือหลังปลดล็อก: <strong>${roundCoins(state.user.coin_balance - Number(ch.price_coins)).toLocaleString()} เหรียญ</strong>`;
+      document.getElementById('unlockDesc').innerHTML = `${isVipActive() ? `<span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold mb-1.5" style="background-color: var(--gold-soft); color: var(--gold-1);">👑 สิทธิ์บัญชี VIP ลด 50%</span><br>ใช้ <span class="line-through opacity-60 mr-1">${ch.price_coins}</span><strong>${effP} เหรียญ</strong>` : `ใช้ <strong>${effP} เหรียญ</strong>`} เพื่อปลดล็อกอ่านตลอดไป<br>คงเหลือหลังปลดล็อก: <strong>${roundCoins(state.user.coin_balance - effP).toLocaleString()} เหรียญ</strong>`;
       const m = document.getElementById('unlockModal');
       m.classList.remove('hidden');
       m.classList.add('flex');
@@ -2417,7 +2433,7 @@
         const ch = (novel?.chapters || []).find(c => c.id === nextId);
         if (!ch) return;
         if (!state.user) { openAuthModal(); showToast('กรุณาเข้าสู่ระบบก่อนปลดล็อกตอน'); return; }
-        if ((state.user.coin_balance || 0) < ch.price_coins) {
+        if ((state.user.coin_balance || 0) < getEffectivePrice(ch)) {
           state.pendingUnlock = { novelId: novel.id, chId: ch.id, appendInline: true };
           openTopup(`ตอนที่ ${ch.chapter_number} ใช้ ${ch.price_coins} เหรียญ (คุณมี ${state.user.coin_balance || 0} เหรียญ)`);
           return;
@@ -2430,9 +2446,9 @@
             if (error) throw error;
             await loadLiveData();
           } else {
-            state.user.coin_balance = roundCoins(state.user.coin_balance - Number(ch.price_coins));
+            state.user.coin_balance = roundCoins(state.user.coin_balance - getEffectivePrice(ch));
             if (!state.unlockedIds.includes(ch.id)) state.unlockedIds.push(ch.id);
-            state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'unlock', coins_delta: -ch.price_coins, note: `ปลดล็อก: ${ch.title}`, status: 'approved' });
+            state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'unlock', coins_delta: -getEffectivePrice(ch), note: `ปลดล็อก: ${ch.title}`, status: 'approved' });
             saveDemo();
           }
           const freshNovel = getNovel(novel.id);
@@ -2479,7 +2495,8 @@
           showToast('กรุณาเข้าสู่ระบบเพื่อปลดล็อกตอนต่อเนื่อง');
           return;
         }
-        if ((state.user.coin_balance || 0) < nextCh.price_coins) {
+        const nextAutoPrice = getEffectivePrice(nextCh);
+        if ((state.user.coin_balance || 0) < nextAutoPrice) {
           state.autoContinuousMode = false;
           render();
           openTopup(`เหรียญไม่พอสำหรับตอนที่ ${nextCh.chapter_number} (ใช้ ${nextCh.price_coins} เหรียญ)`);
@@ -2493,7 +2510,7 @@
             if (error) throw error;
             await loadLiveData();
           } else {
-            state.user.coin_balance = roundCoins(state.user.coin_balance - Number(nextCh.price_coins));
+            state.user.coin_balance = roundCoins(state.user.coin_balance - getEffectivePrice(nextCh));
             if (!state.unlockedIds.includes(nextCh.id)) state.unlockedIds.push(nextCh.id);
             state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'unlock', coins_delta: -nextCh.price_coins, note: `ปลดล็อกอัตโนมัติ: ${nextCh.title}`, status: 'approved' });
             saveDemo();
@@ -2505,7 +2522,7 @@
           state.activeChapterId = nextCh.id;
           recordLocalRead(novel.id, nextCh);
           render();
-          showToast(`⚡ ปลดล็อกตอนที่ ${nextCh.chapter_number} อัตโนมัติแล้ว (-${nextCh.price_coins} เหรียญ)`);
+          showToast(`⚡ ปลดล็อกตอนที่ ${nextCh.chapter_number} อัตโนมัติแล้ว (-${getEffectivePrice(nextCh)} เหรียญ)`);
         } catch (err) {
           state.autoContinuousMode = false;
           render();
@@ -3358,12 +3375,12 @@
     document.getElementById('goPayStepBtn').addEventListener('click', () => {
       const isVip = state.topupMode === 'vip';
       if (isVip) {
-        state.selectedBaht = 139;
+        state.selectedBaht = 99;
       } else {
         const customVal = Number(document.getElementById('customBahtInput').value);
         if (customVal > 0) state.selectedBaht = Math.floor(customVal);
       }
-      const baht = isVip ? 139 : Math.max(1, Number(state.selectedBaht || 100));
+      const baht = isVip ? 99 : Math.max(1, Number(state.selectedBaht || 100));
       state.selectedBaht = baht;
       const coins = isVip ? 0 : calcCoins(baht);
 
@@ -3376,7 +3393,7 @@
         ? `พร้อมเพย์: ${CFG.promptpayNumber} (${CFG.promptpayAccountName})`
         : `เบอร์วอลเล็ท: ${CFG.truemoneyPhone} (${CFG.promptpayAccountName})`;
       document.getElementById('payBahtText').textContent = `${baht.toFixed(2)} บาท`;
-      document.getElementById('payCoinText').textContent = state.topupMode === 'vip' ? '👑 สิทธิ์ VIP อ่านฟรีทุกตอน 30 วัน' : `รับ ${coins.toLocaleString()} เหรียญ`;
+      document.getElementById('payCoinText').textContent = state.topupMode === 'vip' ? '👑 สิทธิ์ VIP ลดราคาทุกตอน 50% นาน 30 วัน' : `รับ ${coins.toLocaleString()} เหรียญ`;
       document.getElementById('payPlaceholderWarn').classList.toggle('hidden', !isPlaceholder);
 
       const qrWrap = document.getElementById('qrBoxWrap');
@@ -3423,7 +3440,7 @@
           const { error } = await sb.from('transactions').insert({
             user_id: state.user.id,
             type: isVip ? 'vip' : 'topup',
-            amount_baht: isVip ? 139 : state.selectedBaht,
+            amount_baht: isVip ? 99 : state.selectedBaht,
             coins_delta: isVip ? 0 : coins,
             payment_method: state.selectedPay,
             slip_url: slipUrl,
@@ -3475,9 +3492,9 @@
           if (error) throw error;
           await loadLiveData();
         } else {
-          state.user.coin_balance = roundCoins(state.user.coin_balance - Number(ch.price_coins));
+          state.user.coin_balance = roundCoins(state.user.coin_balance - getEffectivePrice(ch));
           if (!state.unlockedIds.includes(ch.id)) state.unlockedIds.push(ch.id);
-          state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'unlock', coins_delta: -ch.price_coins, note: `ปลดล็อก: ${ch.title}`, status: 'approved' });
+          state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'unlock', coins_delta: -getEffectivePrice(ch), note: `ปลดล็อก: ${ch.title}`, status: 'approved' });
           saveDemo();
         }
         state.pendingUnlock = null;
@@ -3791,7 +3808,7 @@
               <span class="text-xs font-bold shrink-0" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
               <span class="text-xs truncate">${c.title}</span>
             </div>
-            <span class="text-xs font-semibold shrink-0" style="color: var(--gold-1);">🪙 ${c.price_coins}</span>
+            <span class="text-xs font-semibold shrink-0" style="color: var(--gold-1);">${isVipActive() ? `<span class="line-through opacity-55 mr-1">${c.price_coins}</span>👑 ${getEffectivePrice(c)}` : `🪙 ${c.price_coins}`}</span>
           </label>
         `;
       }).join('');
@@ -3809,7 +3826,7 @@
       });
 
       const selectedRows = locked.filter(c => state.bulkSelectedIds.includes(c.id));
-      const totalCost = roundCoins(selectedRows.reduce((s, c) => s + Number(c.price_coins || 0), 0));
+      const totalCost = roundCoins(selectedRows.reduce((s, c) => s + getEffectivePrice(c), 0));
       const bal = state.user?.coin_balance || 0;
       sumEl.textContent = `เลือกแล้ว ${selectedRows.length} ตอน (มี ${bal.toLocaleString()} เหรียญ)`;
       totEl.textContent = `รวม ${totalCost.toLocaleString()} เหรียญ`;
@@ -3873,7 +3890,7 @@
           await loadLiveData();
         } else {
           targets.forEach(ch => {
-            state.user.coin_balance = roundCoins(state.user.coin_balance - Number(ch.price_coins));
+            state.user.coin_balance = roundCoins(state.user.coin_balance - getEffectivePrice(ch));
             if (!state.unlockedIds.includes(ch.id)) state.unlockedIds.push(ch.id);
           });
           state.transactions.unshift({
@@ -3903,8 +3920,19 @@
       showToast('สลับเป็นมุมมองนักอ่านแล้ว');
     });
 
+    
+    const togglePreviewVipBtn = document.getElementById('togglePreviewVipBtn');
+    if (togglePreviewVipBtn) togglePreviewVipBtn.addEventListener('click', () => {
+      state.previewAsVip = !state.previewAsVip;
+      togglePreviewVipBtn.textContent = state.previewAsVip ? '👑 กำลังจำลอง VIP (กดเพื่อปิด)' : '👑 จำลองเป็น VIP (-50%)';
+      togglePreviewVipBtn.style.backgroundColor = state.previewAsVip ? '#161410' : 'rgba(22,20,16,0.2)';
+      togglePreviewVipBtn.style.color = state.previewAsVip ? '#F3D999' : '#161410';
+      render();
+      showToast(state.previewAsVip ? '👑 เปิดโหมดจำลองสมาชิก VIP (เห็นราคาลด 50% ขีดฆ่าทุกจุด)' : 'กลับเป็นมุมมองนักอ่านทั่วไปแล้ว');
+    });
     document.getElementById('exitReaderPreviewBtn').addEventListener('click', () => {
       state.previewAsReader = false;
+      state.previewAsVip = false;
       render();
       showToast('กลับสู่มุมมองเจ้าของเว็บ (Admin) แล้ว');
     });
