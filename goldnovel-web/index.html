@@ -1012,14 +1012,18 @@
               {
                 title: s.hero_title,
                 tagline: s.hero_tagline,
-                img: s.hero_banner_url || (featured ? featured.cover_url : ''),
+                img: s.hero_banner_url || (featured ? (featured.banner_url || '') : ''),
+                coverImg: !s.hero_banner_url && featured && !featured.banner_url ? (featured.cover_url || '') : '',
+                isWideBanner: !!(s.hero_banner_url || (featured && featured.banner_url)),
                 novelId: featured ? featured.id : null,
                 badge: 'เรื่องเด่นประจำเว็บ'
               },
               ...state.novels.filter(n => !featured || n.id !== featured.id).slice(0, 4).map(n => ({
                 title: n.title,
                 tagline: n.synopsis || `โดย ${n.author} · ${(n.categories || []).join(' · ')}`,
-                img: n.cover_url || '',
+                img: n.banner_url || '',
+                coverImg: !n.banner_url ? (n.cover_url || '') : '',
+                isWideBanner: !!n.banner_url,
                 novelId: n.id,
                 badge: (n.categories || [])[0] || 'นิยายแนะนำ'
               }))
@@ -1045,19 +1049,44 @@
                       </div>
                     `;
                   }
+                  if (cur.isWideBanner && cur.img) {
+                    return `
+                      <div class="relative rounded-2xl overflow-hidden border shadow-lg hero-placeholder" style="border-color: var(--border-soft);">
+                        <img src="${cur.img}" alt="${cur.title}" class="w-full h-auto block object-contain">
+                        <div class="absolute inset-0 bg-gradient-to-r from-[#0A0B0F]/85 via-[#0A0B0F]/35 to-transparent pointer-events-none"></div>
+                        <div class="absolute inset-y-0 left-0 z-10 p-5 sm:p-9 max-w-lg flex flex-col justify-center fade-in">
+                          <span class="inline-block w-fit text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2" style="background-color: rgba(234,184,84,0.18); color: #F3D999; border: 1px solid rgba(234,184,84,0.3);">${cur.badge}</span>
+                          <h1 class="font-display-thai text-lg sm:text-3xl font-bold leading-tight hero-text-gradient mb-1.5 line-clamp-2">${cur.title}</h1>
+                          <p class="hidden sm:line-clamp-2 text-xs sm:text-sm text-neutral-300/90 mb-3.5 leading-relaxed">${cur.tagline}</p>
+                          <div class="flex flex-wrap gap-2">
+                            ${cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" class="px-5 py-2 rounded-lg text-xs sm:text-sm btn-gold">อ่านเลย →</button>` : ''}
+                          </div>
+                        </div>
+                        ${slides.length > 1 ? `
+                          <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">‹</button>
+                          <button type="button" id="heroNextBtn" aria-label="สไลด์ถัดไป" class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">›</button>
+                        ` : ''}
+                      </div>
+                    `;
+                  }
                   return `
-                    <div class="relative rounded-2xl overflow-hidden border aspect-[16/6] sm:aspect-[16/5] min-h-[190px] flex items-center hero-placeholder shadow-lg" style="border-color: var(--border-soft);">
-                      ${cur.img ? `<img src="${cur.img}" alt="${cur.title}" class="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500">` : ''}
-                      <div class="absolute inset-0 bg-gradient-to-r from-[#0A0B0F]/92 via-[#0A0B0F]/65 to-[#0A0B0F]/15"></div>
-                      <div class="relative z-10 p-5 sm:p-9 max-w-xl fade-in">
+                    <div class="relative rounded-2xl overflow-hidden border min-h-[205px] sm:min-h-[260px] flex items-center justify-between gap-4 px-5 py-5 sm:px-10 sm:py-7 hero-placeholder shadow-lg" style="border-color: var(--border-soft);">
+                      ${cur.coverImg ? `<img src="${cur.coverImg}" alt="" aria-hidden="true" class="absolute inset-0 w-full h-full object-cover opacity-25 blur-2xl scale-110 pointer-events-none">` : ''}
+                      <div class="absolute inset-0 bg-gradient-to-r from-[#0A0B0F]/95 via-[#0A0B0F]/75 to-[#0A0B0F]/45 pointer-events-none"></div>
+                      <div class="relative z-10 max-w-xl flex-1 min-w-0 fade-in">
                         <span class="inline-block text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2" style="background-color: rgba(234,184,84,0.16); color: #F3D999; border: 1px solid rgba(234,184,84,0.3);">${cur.badge}</span>
-                        <h1 class="font-display-thai text-xl sm:text-3xl font-bold leading-tight hero-text-gradient mb-1.5">${cur.title}</h1>
+                        <h1 class="font-display-thai text-lg sm:text-3xl font-bold leading-tight hero-text-gradient mb-1.5 line-clamp-2">${cur.title}</h1>
                         <p class="text-xs sm:text-sm text-neutral-300/90 mb-4 leading-relaxed line-clamp-2">${cur.tagline}</p>
                         <div class="flex flex-wrap gap-2">
                           ${cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" class="px-5 py-2 rounded-lg text-xs sm:text-sm btn-gold">อ่านเลย →</button>` : ''}
                           ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="px-3.5 py-2 rounded-lg text-xs font-medium bg-white/10 text-amber-200 border border-amber-300/25 hover:bg-white/15">แก้ไขแบนเนอร์</button>` : ''}
                         </div>
                       </div>
+                      ${cur.coverImg ? `
+                        <button type="button" ${cur.novelId ? `data-open-novel="${cur.novelId}"` : ''} class="relative z-10 w-24 sm:w-36 aspect-[3/4] rounded-xl overflow-hidden shrink-0 shadow-2xl border transition-transform hover:scale-[1.03] focus:outline-none" style="border-color: rgba(255,255,255,0.16);">
+                          <img src="${cur.coverImg}" alt="${cur.title}" class="w-full h-full object-cover">
+                        </button>
+                      ` : ''}
                       ${slides.length > 1 ? `
                         <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">‹</button>
                         <button type="button" id="heroNextBtn" aria-label="สไลด์ถัดไป" class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">›</button>
@@ -1707,6 +1736,10 @@
                       <label class="px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-main);">
                         🖼️ เปลี่ยนรูปปก
                         <input type="file" accept="image/*" data-change-cover="${targetNovel.id}" class="hidden">
+                      </label>
+                      <label class="px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);" title="อัปโหลดแบนเนอร์แนวนอน 16:5 สำหรับโชว์บนสไลด์หน้าแรก">
+                        🏞️ ${targetNovel.banner_url ? 'เปลี่ยนแบนเนอร์ 16:5' : 'เพิ่มแบนเนอร์ 16:5'}
+                        <input type="file" accept="image/*" data-change-novel-banner="${targetNovel.id}" class="hidden">
                       </label>
                       <button type="button" id="openNewChapterBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มตอนใหม่</button>
                     </div>
@@ -2786,6 +2819,32 @@
       });
 
       // Admin: Change Cover
+      
+      document.querySelectorAll('[data-change-novel-banner]').forEach(input => {
+        input.addEventListener('change', async () => {
+          const nid = input.getAttribute('data-change-novel-banner');
+          const file = input.files[0];
+          if (!file) return;
+          try {
+            showToast('กำลังอัปโหลดแบนเนอร์แนวนอน...');
+            const url = await uploadImageFile(file, 'media');
+            if (state.isLive) {
+              const { error } = await sb.from('novels').update({ banner_url: url }).eq('id', nid);
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const n = getNovel(nid);
+              if (n) n.banner_url = url;
+              saveDemo();
+            }
+            render();
+            showToast('อัปเดตแบนเนอร์แนวนอน (16:5) ของนิยายเรื่องนี้แล้ว!');
+          } catch (err) {
+            showToast('อัปโหลดแบนเนอร์ไม่สำเร็จ (กรุณารัน SQL เพิ่มคอลัมน์ banner_url ก่อน): ' + err.message);
+          }
+        });
+      });
+
       document.querySelectorAll('[data-change-cover]').forEach(input => {
         input.addEventListener('change', async () => {
           const nid = input.getAttribute('data-change-cover');
