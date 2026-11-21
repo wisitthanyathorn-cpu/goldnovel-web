@@ -358,7 +358,7 @@
     <div class="card-panel rounded-2xl max-w-md w-full p-6 shadow-2xl fade-in max-h-[90vh] overflow-y-auto">
       <div class="flex items-start justify-between gap-3 mb-4">
         <div>
-          <span id="topupBonusBadge" class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-1.5" style="background-color: var(--gold-soft); color: var(--gold-1);">โปรโมชั่นโบนัส +20%</span>
+          <span id="topupBonusBadge" class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-1.5" style="background-color: var(--gold-soft); color: var(--gold-1);">โปรโมชั่นโบนัส +10%</span>
           <h2 class="text-xl font-bold">เติมเหรียญ GoldNovel</h2>
           <p id="topupSubtext" class="text-xs mt-0.5" style="color: var(--text-sub);">รองรับ PromptPay และ TrueMoney Wallet</p>
         </div>
@@ -379,7 +379,7 @@
             <input id="customBahtInput" type="number" min="1" step="1" placeholder="พิมพ์จำนวนเงิน (บาท) เช่น 10, 20, 30" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
             <div id="topupLiveSummary" class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">
               <span>ยอดโอนที่เลือก: 100 บาท</span>
-              <span>ได้รับ 120 เหรียญ</span>
+              <span>ได้รับ 110 เหรียญ</span>
             </div>
           </div>
         </div>
@@ -432,7 +432,7 @@
 
           <div id="payPlaceholderWarn" class="hidden text-[11px] text-amber-300 bg-amber-500/10 border border-amber-400/25 rounded-lg px-3 py-1.5 mb-2">⚠️ กรุณาเปลี่ยนเบอร์พร้อมเพย์จริงของคุณในไฟล์ config.js ก่อนเปิดรับเงินจริง</div>
           <div id="payBahtText" class="text-2xl font-bold">100.00 บาท</div>
-          <div id="payCoinText" class="text-xs mt-1" style="color: var(--gold-1);">รับ 120 เหรียญ</div>
+          <div id="payCoinText" class="text-xs mt-1" style="color: var(--gold-1);">รับ 110 เหรียญ</div>
         </div>
 
         <div>
@@ -574,7 +574,7 @@
       promptpayNumber: "08X-XXX-XXXX",
       promptpayAccountName: "ชื่อบัญชีของคุณ (ตั้งค่าใน config.js)",
       truemoneyPhone: "08X-XXX-XXXX",
-      topupBonusPercent: 20
+      topupBonusPercent: 10
     }, window.GOLDNOVEL_CONFIG || {});
 
     const CATEGORIES = ['กำลังภายใน', 'ระบบ', 'แฟนตาซี', 'แอ็กชัน', 'เกิดใหม่', 'ต่างโลก', 'สยองขวัญ', 'โรแมนติก'];
@@ -955,7 +955,7 @@
           is_bookmarked: state.bookmarks.includes(novelId),
           last_chapter_id: chapter.id,
           updated_at: new Date(nowMs).toISOString()
-        }).then(() => {}).catch(() => {});
+        }, { onConflict: 'user_id,novel_id' }).then(() => {}).catch(() => {});
       }
     }
 
@@ -2627,15 +2627,31 @@
 
       document.querySelectorAll('[data-toggle-bm]').forEach(btn => {
         btn.addEventListener('click', async () => {
+          if (!state.user) {
+            openAuth();
+            showToast('กรุณาเข้าสู่ระบบก่อนเพื่อบันทึกนิยายเข้าชั้นหนังสือถาวร');
+            return;
+          }
           const nid = btn.getAttribute('data-toggle-bm');
           const exists = state.bookmarks.includes(nid);
-          if (state.isLive && state.user) {
-            await sb.from('bookmarks_progress').upsert({ user_id: state.user.id, novel_id: nid, is_bookmarked: !exists, last_chapter_id: state.cloudProgress[nid]?.chapterId || null, updated_at: new Date().toISOString() });
+          try {
+            if (state.isLive) {
+              const { error } = await sb.from('bookmarks_progress').upsert({
+                user_id: state.user.id,
+                novel_id: nid,
+                is_bookmarked: !exists,
+                last_chapter_id: state.cloudProgress[nid]?.chapterId || null,
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id,novel_id' });
+              if (error) throw error;
+            }
+            state.bookmarks = exists ? state.bookmarks.filter(b => b !== nid) : [...state.bookmarks, nid];
+            if (!state.isLive) saveDemo();
+            render();
+            showToast(exists ? 'นำออกจากชั้นหนังสือแล้ว' : 'บันทึกเข้าชั้นหนังสือถาวรแล้ว');
+          } catch (err) {
+            showToast('บันทึกชั้นหนังสือไม่สำเร็จ: ' + err.message);
           }
-          state.bookmarks = exists ? state.bookmarks.filter(b => b !== nid) : [...state.bookmarks, nid];
-          saveDemo();
-          render();
-          showToast(exists ? 'นำออกจากคลังแล้ว' : 'บันทึกเข้าคลังแล้ว');
         });
       });
 
