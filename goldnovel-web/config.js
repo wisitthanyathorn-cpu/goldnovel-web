@@ -17,5 +17,5 @@ window.GOLDNOVEL_CONFIG = {
   truemoneyPhone: "080-9810438",
 
   // 3. โบนัสเติมเหรียญ (%) เช่น 20 หมายถึงเติม 100 ได้ 120 เหรียญ (ใส่ 0 ถ้าไม่มีโปร)
-  topupBonusPercent: 10%
+  topupBonusPercent: 10
 };
