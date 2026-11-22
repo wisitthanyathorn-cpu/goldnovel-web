@@ -181,6 +181,50 @@
     @media (prefers-reduced-motion: reduce) {
       .hero-promo-zoom, .gold-ember, .hero-cta-shimmer::after { animation: none !important; }
     }
+
+    @property --vip-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+    @keyframes vipAngleSpin {
+      0% { --vip-angle: 0deg; }
+      100% { --vip-angle: 360deg; }
+    }
+    @keyframes vipTextShimmer {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 220% 50%; }
+    }
+    .vip-gold-text {
+      background: linear-gradient(90deg, #D49B35 0%, #FFF3B8 28%, #F0C466 52%, #FFF7D6 74%, #D49B35 100%);
+      background-size: 220% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: vipTextShimmer 3.2s linear infinite;
+      filter: drop-shadow(0 0 6px rgba(234, 184, 84, 0.42));
+      font-weight: 700;
+    }
+    .vip-beam-box {
+      position: relative;
+      z-index: 0;
+      border: 1.5px solid transparent !important;
+      background:
+        linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+        conic-gradient(from var(--vip-angle), rgba(201,146,43,0.18) 0deg, rgba(201,146,43,0.22) 220deg, #F5D27B 290deg, #FFF7D6 325deg, #D49B35 350deg, rgba(201,146,43,0.18) 360deg) border-box !important;
+      animation: vipAngleSpin 2.8s linear infinite;
+      box-shadow: 0 0 12px rgba(234, 184, 84, 0.24);
+    }
+    .vip-avatar-ring {
+      border: 2px solid transparent !important;
+      background:
+        linear-gradient(135deg, #241D11, #141720) padding-box,
+        conic-gradient(from var(--vip-angle), rgba(201,146,43,0.25) 0deg, rgba(201,146,43,0.25) 210deg, #F5D27B 285deg, #FFF7D6 325deg, #C9922B 355deg, rgba(201,146,43,0.25) 360deg) border-box !important;
+      animation: vipAngleSpin 2.6s linear infinite;
+      box-shadow: 0 0 10px rgba(234, 184, 84, 0.35);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .vip-gold-text, .vip-beam-box, .vip-avatar-ring { animation: none !important; }
+    }
   </style>
   <script src="config.js"></script>
 </head>
@@ -918,7 +962,20 @@
       document.getElementById('brandNameSide').textContent = CFG.siteName;
       document.getElementById('modeBadgeSide').textContent = state.isLive ? 'ONLINE NOVELS' : 'DEMO PREVIEW';
       document.getElementById('coinBalanceText').textContent = (state.user?.coin_balance || 0).toLocaleString();
-      document.getElementById('authHeaderBtn').textContent = state.user ? (state.user.display_name || state.user.email.split('@')[0]) : 'เข้าสู่ระบบ';
+      const authBtnEl = document.getElementById('authHeaderBtn');
+      if (state.user) {
+        const displayNm = state.user.display_name || state.user.email.split('@')[0];
+        if (isVipActive() && !isAdmin()) {
+          authBtnEl.classList.add('vip-beam-box');
+          authBtnEl.innerHTML = `<span class="inline-flex items-center gap-1"><span>👑</span><span class="vip-gold-text">${escapeHtml(displayNm)}</span></span>`;
+        } else {
+          authBtnEl.classList.remove('vip-beam-box');
+          authBtnEl.textContent = displayNm;
+        }
+      } else {
+        authBtnEl.classList.remove('vip-beam-box');
+        authBtnEl.textContent = 'เข้าสู่ระบบ';
+      }
 
       const showAdmin = isAdmin();
       document.getElementById('sideAdminBtn').classList.toggle('hidden', !showAdmin);
@@ -1344,7 +1401,7 @@
             <form id="${formId}" data-cm-novel="${novelId}" data-cm-chapter="${chapterId || ''}" class="card-panel rounded-2xl p-3.5 space-y-2.5">
               <textarea id="${inputId}" rows="2" maxlength="1000" required placeholder="${chapterId ? 'อ่านตอนนี้แล้วเป็นยังไงบ้าง? แสดงความคิดเห็นหรือให้กำลังใจนักเขียนได้เลย...' : 'เขียนรีวิวหรือพูดคุยเกี่ยวกับนิยายเรื่องนี้...'}" class="w-full rounded-xl p-3 text-sm focus:outline-none resize-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);"></textarea>
               <div class="flex items-center justify-between gap-2">
-                <span class="text-[11px]" style="color: var(--text-muted);">แสดงความคิดเห็นในชื่อ <strong style="color: var(--gold-1);">${escapeHtml(state.user.display_name || state.user.email || 'สมาชิก')}</strong>${isAdmin() ? ' (นักเขียน)' : ''}</span>
+                <span class="text-[11px]" style="color: var(--text-muted);">แสดงความคิดเห็นในชื่อ <strong class="${isVipActive() && !isAdmin() ? 'vip-gold-text' : ''}" style="${isVipActive() && !isAdmin() ? '' : 'color: var(--gold-1);'}">${isVipActive() && !isAdmin() ? '👑 ' : ''}${escapeHtml(state.user.display_name || state.user.email || 'สมาชิก')}</strong>${isAdmin() ? ' (นักเขียน)' : (isVipActive() ? ' · VIP' : '')}</span>
                 <button type="submit" class="px-4 py-1.5 rounded-full text-xs font-bold btn-gold">ส่งคอมเมนต์</button>
               </div>
             </form>
@@ -1363,16 +1420,18 @@
             ` : list.map(c => {
               const initial = (c.author_name || 'U').trim().charAt(0).toUpperCase();
               const canDelete = isAdmin() || (state.user && state.user.id === c.user_id);
+              const isVipCm = !!c.is_vip_comment && !c.is_author_reply;
               return `
-                <div class="card-panel rounded-2xl p-4 flex gap-3">
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style="background: ${c.is_author_reply ? 'linear-gradient(135deg, #F3D999, #D4A857)' : 'var(--bg-input)'}; color: ${c.is_author_reply ? '#161410' : 'var(--gold-1)'}; border: 1px solid var(--border-subtle);">
+                <div class="${isVipCm ? 'vip-beam-box' : 'card-panel'} rounded-2xl p-4 flex gap-3">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isVipCm ? 'vip-avatar-ring' : ''}" style="${isVipCm ? 'color: #FFF3B8;' : `background: ${c.is_author_reply ? 'linear-gradient(135deg, #F3D999, #D4A857)' : 'var(--bg-input)'}; color: ${c.is_author_reply ? '#161410' : 'var(--gold-1)'}; border: 1px solid var(--border-subtle);`}">
                     ${escapeHtml(initial)}
                   </div>
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center justify-between gap-2 mb-1">
                       <div class="flex items-center gap-1.5 flex-wrap">
-                        <span class="text-xs sm:text-sm font-bold">${escapeHtml(c.author_name || 'ผู้อ่าน')}</span>
+                        <span class="text-xs sm:text-sm font-bold ${isVipCm ? 'vip-gold-text' : ''}">${escapeHtml(c.author_name || 'ผู้อ่าน')}</span>
                         ${c.is_author_reply ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold" style="background-color: var(--gold-soft); color: var(--gold-1);">✍️ นักเขียน</span>` : ''}
+                        ${isVipCm ? `<span class="vip-beam-box text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-0.5"><span>👑</span><span class="vip-gold-text">VIP</span></span>` : ''}
                         <span class="text-[11px]" style="color: var(--text-muted);">· ${formatCommentTime(c.created_at)}</span>
                       </div>
                       ${canDelete ? `<button type="button" data-del-comment="${c.id}" class="text-[11px] text-rose-400 hover:underline shrink-0">ลบ</button>` : ''}
@@ -1567,6 +1626,119 @@
       `;
     }
 
+
+    // High-DPI Retina Thai Canvas Prose Renderer (Defeats "Enable Copy" extensions 100%, 0% server overhead)
+    function wrapThaiLine(ctx, text, maxWidth, firstIndent = 0) {
+      const lines = [];
+      let tokens;
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        const seg = new Intl.Segmenter('th', { granularity: 'word' });
+        tokens = Array.from(seg.segment(text), s => s.segment);
+      } else {
+        tokens = text.split(/(\s+)/);
+      }
+      let cur = '';
+      let isFirst = true;
+      for (let i = 0; i < tokens.length; i++) {
+        const tok = tokens[i];
+        const limit = isFirst ? (maxWidth - firstIndent) : maxWidth;
+        const test = cur + tok;
+        if (ctx.measureText(test).width <= limit || cur === '') {
+          cur = test;
+        } else {
+          lines.push({ text: cur.trimEnd(), indent: isFirst ? firstIndent : 0 });
+          cur = tok.trimStart();
+          isFirst = false;
+        }
+      }
+      if (cur.trim().length > 0) {
+        lines.push({ text: cur.trimEnd(), indent: isFirst ? firstIndent : 0 });
+      }
+      return lines;
+    }
+
+    function renderReaderCanvases() {
+      if (state.view !== 'reader') return;
+      const containers = document.querySelectorAll('[data-canvas-chapter]');
+      if (!containers.length) return;
+      const novel = getNovel(state.activeNovelId);
+      if (!novel) return;
+
+      const themeColors = {
+        dark: '#DCDEE4',
+        warm: '#26221C',
+        sepia: '#32281D'
+      };
+      const textColor = themeColors[state.readTheme] || '#DCDEE4';
+      const fontSize = Number(state.fontSize || 18);
+      const lineHeight = Math.round(fontSize * 1.92);
+      const paraGap = Math.round(fontSize * 1.05);
+      const indentPx = Math.round(fontSize * 1.75);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      const fontSpec = `400 ${fontSize}px 'Sarabun', 'IBM Plex Sans Thai', sans-serif`;
+
+      containers.forEach(wrap => {
+        const chId = wrap.getAttribute('data-canvas-chapter');
+        const ch = (novel.chapters || []).find(c => c.id === chId);
+        if (!ch) return;
+
+        const width = Math.max(240, Math.floor(wrap.clientWidth || 600));
+        const paras = String(ch.content || '').split(/\n+/).map(p => p.trim()).filter(Boolean);
+        wrap.innerHTML = '';
+
+        // Measure helper canvas
+        const mCanvas = document.createElement('canvas');
+        const mCtx = mCanvas.getContext('2d');
+        mCtx.font = fontSpec;
+
+        // Chunk 6 paragraphs per canvas (safe for iOS Safari memory & max canvas height)
+        const CHUNK_SIZE = 6;
+        for (let start = 0; start < paras.length; start += CHUNK_SIZE) {
+          const chunk = paras.slice(start, start + CHUNK_SIZE);
+          const drawItems = [];
+          let y = Math.round(lineHeight * 0.85);
+
+          chunk.forEach(p => {
+            const wrapped = wrapThaiLine(mCtx, p, width, indentPx);
+            wrapped.forEach(lineObj => {
+              drawItems.push({ text: lineObj.text, x: lineObj.indent, y });
+              y += lineHeight;
+            });
+            y += paraGap;
+          });
+
+          const cssHeight = Math.max(lineHeight, y - Math.round(paraGap * 0.35));
+          const cvs = document.createElement('canvas');
+          cvs.width = Math.round(width * dpr);
+          cvs.height = Math.round(cssHeight * dpr);
+          cvs.style.width = width + 'px';
+          cvs.style.height = cssHeight + 'px';
+          cvs.style.display = 'block';
+          cvs.className = 'reader-protected select-none pointer-events-none';
+          cvs.setAttribute('aria-label', 'เนื้อหานิยาย');
+
+          const ctx = cvs.getContext('2d');
+          ctx.scale(dpr, dpr);
+          ctx.font = fontSpec;
+          ctx.fillStyle = textColor;
+          ctx.textBaseline = 'alphabetic';
+
+          drawItems.forEach(item => {
+            ctx.fillText(item.text, item.x, item.y);
+          });
+
+          wrap.appendChild(cvs);
+        }
+      });
+    }
+
+    let _readerResizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (state.view !== 'reader') return;
+      clearTimeout(_readerResizeTimer);
+      _readerResizeTimer = setTimeout(() => renderReaderCanvases(), 150);
+    });
+
     function renderReader() {
       const novel = getNovel(state.activeNovelId);
       const chapters = (novel?.chapters || []).filter(c => isAdmin() || isChapterPublished(c));
@@ -1591,14 +1763,16 @@
       const chapterCommentsCount = getCommentsFor(novel.id, lastLoaded.id).length;
 
       const sheetsHtml = loadedChapters.map((ch, idx) => {
-        const paras = String(ch.content || '').split(/\n+/).filter(Boolean).map(p => `<p>${p}</p>`).join('');
         return `
           <article class="reading-sheet rounded-xl p-5 sm:p-9 border mb-5 fade-in" data-read-theme="${state.readTheme}">
-            <div class="text-center mb-7 pb-5 border-b" style="border-color: var(--border-soft);">
+            <div class="text-center mb-7 pb-5 border-b reader-protected" style="border-color: var(--border-soft);">
               <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">ตอนที่ ${ch.chapter_number}${idx > 0 ? ' · อ่านต่อเนื่อง' : ''}</div>
-              <h1 class="text-xl sm:text-2xl font-bold">${ch.title}</h1>
+              <h1 class="text-xl sm:text-2xl font-bold">${escapeHtml(ch.title)}</h1>
             </div>
-            <div class="relative reader-protected"><div class="reading-prose reader-protected" style="font-size: ${state.fontSize}px;">${paras}</div><div class="reader-copy-shield" aria-hidden="true"></div></div>
+            <div class="relative reader-protected">
+              <div data-canvas-chapter="${ch.id}" class="reading-prose reader-protected w-full min-h-[120px]"></div>
+              <div class="reader-copy-shield" aria-hidden="true"></div>
+            </div>
           </article>
         `;
       }).join('');
@@ -1773,7 +1947,7 @@
                 <div>
                   <div class="text-xs mb-1" style="color: var(--text-muted);">ยอดเหรียญคงเหลือ</div>
                   <div class="text-3xl font-bold" style="color: var(--gold-1);">${(state.user?.coin_balance || 0).toLocaleString()} <span class="text-sm font-normal" style="color: var(--text-sub);">เหรียญ</span></div>
-                  ${isVipActive() ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">👑 บัญชี VIP · ลดราคาทุกตอน 50% ถึง ${formatVipExpiry()}</div>` : ''}
+                  ${isVipActive() ? `<div class="vip-beam-box inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-xs font-semibold"><span>👑</span><span class="vip-gold-text">บัญชี VIP · ลดราคาทุกตอน 50% ถึง ${formatVipExpiry()}</span></div>` : ''}
                 </div>
                 <button type="button" id="libTopupBtn" class="px-5 py-2.5 rounded-xl text-sm btn-gold">+ เติมเหรียญ / สมัคร VIP</button>
               </div>
@@ -2595,6 +2769,10 @@
       else if (state.view === 'settings') el.innerHTML = renderSettings();
       else if (state.view === 'admin') el.innerHTML = renderAdmin();
       bindDynamic();
+      if (state.view === 'reader') {
+        renderReaderCanvases();
+        if (document.fonts && document.fonts.ready) { document.fonts.ready.then(() => renderReaderCanvases()); }
+      }
       startHeroAutoSlide();
     }
 
@@ -3260,13 +3438,18 @@
             user_id: state.user.id,
             author_name: state.user.display_name || (state.user.email ? state.user.email.split('@')[0] : 'สมาชิก'),
             is_author_reply: isAdmin(),
+            is_vip_comment: isVipActive() && !isAdmin(),
             content: text
           };
           try {
             if (state.isLive) {
-              const { data, error } = await sb.from('comments').insert(payload).select().single();
-              if (error) throw error;
-              state.comments.unshift(data);
+              let res = await sb.from('comments').insert(payload).select().single();
+              if (res.error && String(res.error.message || '').includes('is_vip_comment')) {
+                const { is_vip_comment, ...fallbackPayload } = payload;
+                res = await sb.from('comments').insert(fallbackPayload).select().single();
+              }
+              if (res.error) throw res.error;
+              state.comments.unshift(res.data);
             } else {
               state.comments.unshift({ ...payload, id: 'cm-' + Date.now(), created_at: new Date().toISOString() });
               saveDemo();
