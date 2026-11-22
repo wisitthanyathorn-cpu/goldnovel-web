@@ -135,6 +135,52 @@
       .reading-sheet, .reading-prose { display: none !important; }
       body::after { content: "สงวนลิขสิทธิ์โดย GoldNovel ไม่อนุญาตให้พิมพ์หรือคัดลอกเนื้อหา"; display: block; padding: 40px; text-align: center; font-size: 18px; }
     }
+
+    @keyframes heroBreathZoom {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.045); }
+    }
+    .hero-promo-zoom {
+      animation: heroBreathZoom 13s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    @keyframes emberFloat {
+      0% { transform: translateY(18px) translateX(0px) scale(0.6); opacity: 0; }
+      20% { opacity: 0.9; }
+      80% { opacity: 0.65; }
+      100% { transform: translateY(-130px) translateX(18px) scale(1.1); opacity: 0; }
+    }
+    .gold-ember {
+      position: absolute;
+      bottom: 6%;
+      border-radius: 9999px;
+      pointer-events: none;
+      background: radial-gradient(circle, #FFF5CC 0%, #F0C466 55%, rgba(234,184,84,0) 100%);
+      box-shadow: 0 0 8px rgba(243, 217, 153, 0.75);
+      animation: emberFloat var(--dur, 6s) ease-in-out var(--delay, 0s) infinite;
+      will-change: transform, opacity;
+    }
+    @keyframes ctaShimmer {
+      0%, 55% { transform: translateX(-140%) skewX(-24deg); opacity: 0; }
+      65% { opacity: 0.65; }
+      88% { transform: translateX(260%) skewX(-24deg); opacity: 0; }
+      100% { transform: translateX(260%) skewX(-24deg); opacity: 0; }
+    }
+    .hero-cta-shimmer {
+      overflow: hidden;
+    }
+    .hero-cta-shimmer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: 45%;
+      background: linear-gradient(90deg, transparent, rgba(255, 246, 209, 0.55), transparent);
+      animation: ctaShimmer 3.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-promo-zoom, .gold-ember, .hero-cta-shimmer::after { animation: none !important; }
+    }
   </style>
   <script src="config.js"></script>
 </head>
@@ -1091,9 +1137,21 @@
                   if (isPureGraphic) {
                     return `
                       <div class="relative rounded-2xl overflow-hidden border shadow-lg hero-placeholder" style="border-color: var(--border-soft);">
-                        <img src="${cur.img}" alt="GoldNovel Banner" class="w-full h-auto block object-contain">
+                        <img src="${cur.img}" alt="GoldNovel Banner" class="w-full h-auto block object-contain ${safeIdx === 0 ? 'hero-promo-zoom' : ''}">
                         ${safeIdx === 0 ? `
-                          <button type="button" id="heroPureTopupBtn" aria-label="เติมเหรียญเลยวันนี้" title="คลิกเพื่อเติมเหรียญ" class="absolute z-10 rounded-lg cursor-pointer transition-all hover:bg-amber-300/15 active:scale-[0.98] focus:outline-none" style="left: 17%; bottom: 0%; width: 28%; height: 22%;"></button>
+                          <div class="absolute inset-0 pointer-events-none overflow-hidden z-[5]" aria-hidden="true">
+                            <span class="gold-ember" style="left:8%; width:3px; height:3px; --dur:5.8s; --delay:0s;"></span>
+                            <span class="gold-ember" style="left:16%; width:4px; height:4px; --dur:6.6s; --delay:1.1s;"></span>
+                            <span class="gold-ember" style="left:25%; width:2.5px; height:2.5px; --dur:5.2s; --delay:2.3s;"></span>
+                            <span class="gold-ember" style="left:36%; width:3.5px; height:3.5px; --dur:7.1s; --delay:0.6s;"></span>
+                            <span class="gold-ember" style="left:48%; width:3px; height:3px; --dur:6.2s; --delay:1.8s;"></span>
+                            <span class="gold-ember" style="left:59%; width:4px; height:4px; --dur:5.5s; --delay:2.9s;"></span>
+                            <span class="gold-ember" style="left:70%; width:3px; height:3px; --dur:6.9s; --delay:0.4s;"></span>
+                            <span class="gold-ember" style="left:80%; width:3.5px; height:3.5px; --dur:5.9s; --delay:1.5s;"></span>
+                            <span class="gold-ember" style="left:89%; width:2.5px; height:2.5px; --dur:6.4s; --delay:2.4s;"></span>
+                            <span class="gold-ember" style="left:94%; width:3px; height:3px; --dur:5.4s; --delay:0.9s;"></span>
+                          </div>
+                          <button type="button" id="heroPureTopupBtn" aria-label="เติมเหรียญเลยวันนี้" title="คลิกเพื่อเติมเหรียญ" class="hero-cta-shimmer absolute z-10 rounded-lg cursor-pointer transition-all hover:bg-amber-300/15 active:scale-[0.98] focus:outline-none" style="left: 17%; bottom: 0%; width: 28%; height: 22%;"></button>
                         ` : (cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" aria-label="เปิดอ่านนิยาย" class="absolute inset-0 z-10 cursor-pointer focus:outline-none"></button>` : '')}
                         ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-black/65 text-amber-200 border border-amber-300/30 hover:bg-black/85 backdrop-blur-xs">แก้ไขแบนเนอร์</button>` : ''}
                         ${slides.length > 1 ? `
