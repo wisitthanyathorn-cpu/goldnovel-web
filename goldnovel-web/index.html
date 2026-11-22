@@ -630,6 +630,8 @@
       adminSelectedNovelId: null, // null = novel list view, id = inside that novel's workspace
       adminShowNewNovel: false,
       adminEditNovelOpen: false,
+      adminStats: null,
+      adminStatsError: null,
       adminShowChapterForm: false,
       editingChapterId: null,
       previewAsReader: false,
@@ -786,6 +788,13 @@
           txs = res.data || [];
         }
         state.transactions = txs;
+        if (state.user.role === 'admin') {
+          try {
+            const { data: stData, error: stErr } = await sb.rpc('get_admin_dashboard_stats');
+            if (!stErr && stData) { state.adminStats = stData; state.adminStatsError = null; }
+            else if (stErr) { state.adminStatsError = stErr.message; }
+          } catch (e) { state.adminStatsError = e.message; }
+        }
       } else {
         state.unlockedIds = [];
         state.bookmarks = [];
@@ -1756,13 +1765,168 @@
       }
 
       const tabs = [
+        { id: 'dashboard', label: '📊 สถิติ & รายได้' },
         { id: 'novels', label: '📖 นิยายของฉัน & จัดการตอน' },
-        { id: 'banners', label: '🎨 แบนเนอร์ & โปรโมชัน' },
+        { id: 'banners', label: '🎨 โลโก้ & แบนเนอร์' },
         { id: 'topups', label: '💳 ตรวจสลิปเติมเงิน' }
       ];
 
       let body = '';
-      if (state.adminTab === 'novels') {
+      if (state.adminTab === 'dashboard') {
+        // Compute fallback stats for Demo Mode or if SQL patch hasn't been run yet
+        const stats = state.adminStats || (() => {
+          const approvedTopups = state.transactions.filter(t => (t.type === 'topup' || t.type === 'vip') && t.status === 'approved');
+          const totalBaht = approvedTopups.reduce((s, t) => s + Number(t.amount_baht || 0), 0);
+          const topupBaht = approvedTopups.filter(t => t.type === 'topup').reduce((s, t) => s + Number(t.amount_baht || 0), 0);
+          const vipBaht = approvedTopups.filter(t => t.type === 'vip').reduce((s, t) => s + Number(t.amount_baht || 0), 0);
+          const coinsSpent = state.transactions.filter(t => t.type === 'unlock').reduce((s, t) => s + Math.abs(Number(t.coins_delta || 0)), 0);
+          const coinsMinted = approvedTopups.filter(t => t.type === 'topup').reduce((s, t) => s + Number(t.coins_delta || 0), 0);
+          return {
+            total_baht: totalBaht,
+            month_baht: totalBaht,
+            topup_baht: topupBaht,
+            vip_baht: vipBaht,
+            pending_count: state.transactions.filter(t => (t.type === 'topup' || t.type === 'vip') && t.status === 'pending').length,
+            coins_in_wallets: Number(state.user?.coin_balance || 0),
+            coins_minted: coinsMinted,
+            coins_spent: coinsSpent,
+            total_users: 1,
+            active_vips: isVipActive() ? 1 : 0,
+            total_unlocks: state.unlockedIds.length,
+            total_views: state.novels.reduce((s, n) => s + Number(n.views || 0), 0),
+            novels: state.novels.map(n => {
+              const chs = n.chapters || [];
+              const unlocked = chs.filter(c => state.unlockedIds.includes(c.id));
+              return {
+                id: n.id,
+                title: n.title,
+                views: Number(n.views || 0),
+                chapter_count: chs.length,
+                bookmarks: state.bookmarks.includes(n.id) ? 1 : 0,
+                unlock_count: unlocked.length,
+                unique_buyers: unlocked.length > 0 ? 1 : 0,
+                est_coins: roundCoins(unlocked.reduce((s, c) => s + Number(c.price_coins || 0), 0))
+              };
+            }),
+            daily_7d: []
+          };
+        })();
+
+        const maxNovelCoins = Math.max(1, ...(stats.novels || []).map(n => Number(n.est_coins || 0)));
+        const daily = stats.daily_7d || [];
+        const maxDayBaht = Math.max(1, ...daily.map(d => Number(d.baht || 0)));
+
+        body = `
+          <div class="space-y-5 fade-in">
+            ${state.isLive && !state.adminStats ? `
+              <div class="rounded-xl px-4 py-3 text-xs border" style="background-color: rgba(234,184,84,0.1); border-color: rgba(234,184,84,0.35); color: var(--gold-1);">
+                ⚠️ กรุณารันไฟล์ <strong>supabase_admin_dashboard_patch.sql</strong> ใน Supabase SQL Editor เพื่อดึงตัวเลขสถิติรวมของสมาชิกทุกคนแบบเรียลไทม์
+              </div>
+            ` : ''}
+
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-xs" style="color: var(--text-sub);">ภาพรวมรายได้ เหรียญหมุนเวียน และกำลังซื้อในระบบทั้งหมด</div>
+              <button type="button" id="refreshDashBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--gold-1);">🔄 รีเฟรชสถิติ</button>
+            </div>
+
+            <!-- 4 KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              <div class="card-panel rounded-2xl p-4 space-y-1.5">
+                <div class="text-xs" style="color: var(--text-muted);">รายได้อนุมัติรวม (บาท)</div>
+                <div class="text-2xl font-extrabold" style="color: var(--gold-1);">฿${Number(stats.total_baht || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                <div class="text-[11px]" style="color: var(--text-sub);">เดือนนี้: <strong>฿${Number(stats.month_baht || 0).toLocaleString()}</strong> · รอตรวจ ${stats.pending_count || 0}</div>
+                <div class="text-[11px]" style="color: var(--text-muted);">เติมเหรียญ ฿${Number(stats.topup_baht || 0).toLocaleString()} · VIP ฿${Number(stats.vip_baht || 0).toLocaleString()}</div>
+              </div>
+
+              <div class="card-panel rounded-2xl p-4 space-y-1.5">
+                <div class="text-xs" style="color: var(--text-muted);">เหรียญคงค้างในกระเป๋านักอ่าน</div>
+                <div class="text-2xl font-extrabold text-emerald-400">${Number(stats.coins_in_wallets || 0).toLocaleString()} <span class="text-xs font-normal" style="color: var(--text-sub);">เหรียญ</span></div>
+                <div class="text-[11px]" style="color: var(--text-sub);">ใช้ซื้อตอนไปแล้ว: <strong>${Number(stats.coins_spent || 0).toLocaleString()}</strong> เหรียญ</div>
+                <div class="text-[11px]" style="color: var(--text-muted);">เติมเข้าทั้งหมด: ${Number(stats.coins_minted || 0).toLocaleString()} เหรียญ</div>
+              </div>
+
+              <div class="card-panel rounded-2xl p-4 space-y-1.5">
+                <div class="text-xs" style="color: var(--text-muted);">สมาชิกทั้งหมด &amp; VIP</div>
+                <div class="text-2xl font-extrabold">${Number(stats.total_users || 0).toLocaleString()} <span class="text-xs font-normal" style="color: var(--text-sub);">คน</span></div>
+                <div class="text-[11px]" style="color: var(--gold-1);">👑 สมาชิก VIP ใช้งานอยู่: <strong>${Number(stats.active_vips || 0).toLocaleString()} คน</strong></div>
+              </div>
+
+              <div class="card-panel rounded-2xl p-4 space-y-1.5">
+                <div class="text-xs" style="color: var(--text-muted);">การปลดล็อก &amp; ยอดอ่านรวม</div>
+                <div class="text-2xl font-extrabold">${Number(stats.total_unlocks || 0).toLocaleString()} <span class="text-xs font-normal" style="color: var(--text-sub);">ตอน</span></div>
+                <div class="text-[11px]" style="color: var(--text-sub);">ยอดวิวรวมทุกเรื่อง: <strong>${Number(stats.total_views || 0).toLocaleString()}</strong></div>
+              </div>
+            </div>
+
+            <!-- 7-Day Revenue Mini Chart -->
+            ${daily.length > 0 ? `
+              <div class="card-panel rounded-2xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-sm font-bold">รายได้รายวัน (7 วันล่าสุด)</h3>
+                  <span class="text-[11px]" style="color: var(--text-muted);">เฉพาะรายการที่อนุมัติแล้ว (บาท)</span>
+                </div>
+                <div class="grid grid-cols-7 gap-2 items-end h-28 pt-4">
+                  ${daily.map(d => {
+                    const pct = Math.max(6, Math.round((Number(d.baht || 0) / maxDayBaht) * 100));
+                    return `
+                      <div class="flex flex-col items-center gap-1.5 h-full justify-end">
+                        <span class="text-[10px] font-semibold" style="color: ${Number(d.baht) > 0 ? 'var(--gold-1)' : 'var(--text-muted)'};">${Number(d.baht) > 0 ? '฿' + Number(d.baht).toLocaleString() : '0'}</span>
+                        <div class="w-full max-w-[36px] rounded-t-md transition-all" style="height: ${pct}%; background: ${Number(d.baht) > 0 ? 'linear-gradient(180deg, #F0C466, #C9922B)' : 'var(--bg-input)'};"></div>
+                        <span class="text-[10px]" style="color: var(--text-muted);">${d.label}</span>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Per-Novel Performance Table -->
+            <div class="card-panel rounded-2xl overflow-hidden">
+              <div class="px-5 py-3.5 border-b flex items-center justify-between gap-2" style="border-color: var(--border-soft);">
+                <h3 class="font-bold text-sm">สถิติและกำลังซื้อรายเรื่อง</h3>
+                <span class="text-[11px]" style="color: var(--text-muted);">เรียงตามยอดเหรียญที่ทำได้</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead>
+                    <tr class="border-b" style="border-color: var(--border-soft); color: var(--text-muted);">
+                      <th class="px-5 py-3 font-medium">ชื่อเรื่อง</th>
+                      <th class="px-3 py-3 font-medium text-right">ยอดวิว</th>
+                      <th class="px-3 py-3 font-medium text-right">เก็บเข้าชั้น</th>
+                      <th class="px-3 py-3 font-medium text-right">คนซื้อ / ปลดล็อก</th>
+                      <th class="px-5 py-3 font-medium text-right">เหรียญที่ทำได้</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${(stats.novels || []).length === 0 ? `
+                      <tr><td colspan="5" class="px-5 py-8 text-center" style="color: var(--text-muted);">ยังไม่มีข้อมูลนิยาย</td></tr>
+                    ` : (stats.novels || []).map(n => {
+                      const barW = Math.round((Number(n.est_coins || 0) / maxNovelCoins) * 100);
+                      return `
+                        <tr class="border-b last:border-b-0 hover:bg-white/[0.02]" style="border-color: var(--border-soft);">
+                          <td class="px-5 py-3">
+                            <div class="font-semibold text-sm line-clamp-1">${escapeHtml(n.title)}</div>
+                            <div class="text-[11px]" style="color: var(--text-muted);">${n.chapter_count || 0} ตอน</div>
+                          </td>
+                          <td class="px-3 py-3 text-right tabular-nums">${Number(n.views || 0).toLocaleString()}</td>
+                          <td class="px-3 py-3 text-right tabular-nums">${Number(n.bookmarks || 0).toLocaleString()}</td>
+                          <td class="px-3 py-3 text-right tabular-nums">${Number(n.unique_buyers || 0).toLocaleString()} คน (${Number(n.unlock_count || 0).toLocaleString()} ตอน)</td>
+                          <td class="px-5 py-3 text-right">
+                            <div class="font-bold tabular-nums" style="color: var(--gold-1);">${Number(n.est_coins || 0).toLocaleString()} 🪙</div>
+                            <div class="w-20 h-1.5 rounded-full overflow-hidden ml-auto mt-1" style="background-color: var(--bg-input);">
+                              <div class="h-full" style="width: ${barW}%; background: linear-gradient(90deg, #C9922B, #F0C466);"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (state.adminTab === 'novels') {
         // LEVEL 2: Inside a specific novel's dedicated workspace
         if (state.adminSelectedNovelId) {
           const targetNovel = state.novels.find(n => n.id === state.adminSelectedNovelId);
@@ -2649,6 +2813,15 @@
         }
       });
 
+      const refreshDashBtn = document.getElementById('refreshDashBtn');
+      if (refreshDashBtn) refreshDashBtn.addEventListener('click', async () => {
+        if (state.isLive) {
+          showToast('กำลังอัปเดตสถิติล่าสุด...');
+          await loadLiveData();
+        }
+        render();
+        showToast('อัปเดตสถิติเรียบร้อยแล้ว');
+      });
       const toggleNewNovelBtn = document.getElementById('toggleNewNovelBtn');
       if (toggleNewNovelBtn) toggleNewNovelBtn.addEventListener('click', () => {
         state.adminShowNewNovel = !state.adminShowNewNovel;
