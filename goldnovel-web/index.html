@@ -1108,26 +1108,47 @@
 
           <!-- Auto-Sliding Hero Banner Carousel -->
           ${(() => {
-            const slides = [
-              {
+            const customSlides = Array.isArray(s.hero_slides) ? s.hero_slides.filter(x => x && x.image_url) : [];
+            const slides = [];
+            if (s.hero_banner_url || String(s.hero_title || '').trim()) {
+              slides.push({
                 title: s.hero_title,
                 tagline: s.hero_tagline,
                 img: s.hero_banner_url || (featured ? (featured.banner_url || '') : ''),
                 coverImg: !s.hero_banner_url && featured && !featured.banner_url ? (featured.cover_url || '') : '',
                 isWideBanner: !!(s.hero_banner_url || (featured && featured.banner_url)),
                 novelId: featured ? featured.id : null,
+                actionType: !String(s.hero_title || '').trim() && s.hero_banner_url ? 'topup_hotspot' : 'novel',
+                enableFx: !String(s.hero_title || '').trim() && !!s.hero_banner_url,
                 badge: 'เรื่องเด่นประจำเว็บ'
-              },
-              ...state.novels.filter(n => !featured || n.id !== featured.id).slice(0, 4).map(n => ({
+              });
+            }
+            customSlides.forEach(cs => {
+              slides.push({
+                title: cs.title || '',
+                tagline: cs.tagline || '',
+                img: cs.image_url,
+                coverImg: '',
+                isWideBanner: true,
+                novelId: cs.novel_id || null,
+                actionType: cs.action_type || 'none',
+                enableFx: !!cs.enable_fx,
+                badge: cs.badge || 'โปรโมชัน'
+              });
+            });
+            state.novels.filter(n => !featured || n.id !== featured.id || (!s.hero_banner_url && !customSlides.length)).slice(0, 4).forEach(n => {
+              slides.push({
                 title: n.title,
                 tagline: n.synopsis || `โดย ${n.author} · ${(n.categories || []).join(' · ')}`,
                 img: n.banner_url || '',
                 coverImg: !n.banner_url ? (n.cover_url || '') : '',
                 isWideBanner: !!n.banner_url,
                 novelId: n.id,
+                actionType: 'novel',
+                enableFx: false,
                 badge: (n.categories || [])[0] || 'นิยายแนะนำ'
-              }))
-            ];
+              });
+            });
             const safeIdx = slides.length ? (state.heroSlideIdx % slides.length) : 0;
             const cur = slides[safeIdx] || slides[0];
             return `
@@ -1137,8 +1158,8 @@
                   if (isPureGraphic) {
                     return `
                       <div class="relative rounded-2xl overflow-hidden border shadow-lg hero-placeholder" style="border-color: var(--border-soft);">
-                        <img src="${cur.img}" alt="GoldNovel Banner" class="w-full h-auto block object-contain ${safeIdx === 0 ? 'hero-promo-zoom' : ''}">
-                        ${safeIdx === 0 ? `
+                        <img src="${cur.img}" alt="GoldNovel Banner" class="w-full h-auto block object-contain ${cur.enableFx ? 'hero-promo-zoom' : ''}">
+                        ${cur.enableFx ? `
                           <div class="absolute inset-0 pointer-events-none overflow-hidden z-[5]" aria-hidden="true">
                             <span class="gold-ember" style="left:8%; width:3px; height:3px; --dur:5.8s; --delay:0s;"></span>
                             <span class="gold-ember" style="left:16%; width:4px; height:4px; --dur:6.6s; --delay:1.1s;"></span>
@@ -1151,8 +1172,14 @@
                             <span class="gold-ember" style="left:89%; width:2.5px; height:2.5px; --dur:6.4s; --delay:2.4s;"></span>
                             <span class="gold-ember" style="left:94%; width:3px; height:3px; --dur:5.4s; --delay:0.9s;"></span>
                           </div>
+                        ` : ''}
+                        ${cur.actionType === 'topup_hotspot' ? `
                           <button type="button" id="heroPureTopupBtn" aria-label="เติมเหรียญเลยวันนี้" title="คลิกเพื่อเติมเหรียญ" class="hero-cta-shimmer absolute z-10 rounded-lg cursor-pointer transition-all hover:bg-amber-300/15 active:scale-[0.98] focus:outline-none" style="left: 17%; bottom: 0%; width: 28%; height: 22%;"></button>
-                        ` : (cur.novelId ? `<button type="button" data-open-novel="${cur.novelId}" aria-label="เปิดอ่านนิยาย" class="absolute inset-0 z-10 cursor-pointer focus:outline-none"></button>` : '')}
+                        ` : (cur.actionType === 'topup' ? `
+                          <button type="button" id="heroPureTopupBtn" aria-label="เปิดหน้าเติมเหรียญ" title="คลิกเพื่อเติมเหรียญ" class="absolute inset-0 z-10 cursor-pointer focus:outline-none"></button>
+                        ` : (cur.actionType === 'novel' && cur.novelId ? `
+                          <button type="button" data-open-novel="${cur.novelId}" aria-label="เปิดอ่านนิยาย" class="absolute inset-0 z-10 cursor-pointer focus:outline-none"></button>
+                        ` : ''))}
                         ${isAdmin() ? `<button type="button" data-go-admin-tab="banners" class="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-black/65 text-amber-200 border border-amber-300/30 hover:bg-black/85 backdrop-blur-xs">แก้ไขแบนเนอร์</button>` : ''}
                         ${slides.length > 1 ? `
                           <button type="button" id="heroPrevBtn" aria-label="สไลด์ก่อนหน้า" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/45 text-white items-center justify-center hover:bg-black/75 transition-colors">‹</button>
@@ -2320,41 +2347,126 @@
       } else if (state.adminTab === 'banners') {
         const s = state.settings;
         body = `
-          <form id="bannerForm" class="card-panel rounded-2xl p-5 space-y-5">
-            <h3 class="font-bold text-base" style="color: var(--gold-1);">ปรับแต่งโลโก้เว็บ &amp; แบนเนอร์หน้าแรก</h3>
-            <div class="space-y-2.5 pb-4 border-b" style="border-color: var(--border-soft);">
+          <div class="space-y-5 fade-in">
+            <!-- 1. Logo & Primary Hero Banner -->
+            <form id="bannerForm" class="card-panel rounded-2xl p-5 space-y-5">
+              <h3 class="font-bold text-base" style="color: var(--gold-1);">โลโก้เว็บไซต์ &amp; แบนเนอร์หลักใบแรก</h3>
+              <div class="space-y-2.5 pb-4 border-b" style="border-color: var(--border-soft);">
+                <div class="flex items-center justify-between gap-2">
+                  <label class="block text-xs font-semibold">โลโก้เว็บไซต์ (แถบเมนูและไอคอนแท็บเบราว์เซอร์)</label>
+                  ${s.site_logo_url ? `<button type="button" id="clearLogoBtn" class="text-[11px] text-rose-400 hover:underline">ล้างโลโก้เดิม</button>` : ''}
+                </div>
+                <div class="flex items-center gap-3.5">
+                  <div class="w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border" style="background-color: var(--bg-input); border-color: var(--border-subtle);">
+                    ${s.site_logo_url
+                      ? `<img src="${s.site_logo_url}" alt="Logo Preview" class="w-full h-full object-cover">`
+                      : `<span class="text-[10px] text-center px-1" style="color: var(--text-muted);">โลโก้เริ่มต้น</span>`}
+                  </div>
+                  <div class="flex-1 min-w-0 space-y-1">
+                    <input id="bLogoFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+                    <div class="text-[11px]" style="color: var(--text-muted);">แนะนำรูปสี่เหลี่ยมจัตุรัส 1:1 (512×512 px)</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-2.5">
+                <div class="flex items-center justify-between gap-2">
+                  <label class="block text-xs font-semibold">แบนเนอร์หลักสไลด์ที่ 1 (Hero Banner)</label>
+                  ${s.hero_banner_url ? `<button type="button" id="clearMainHeroBtn" class="text-[11px] text-rose-400 hover:underline">🗑️ ลบรูปแบนเนอร์นี้</button>` : ''}
+                </div>
+                ${s.hero_banner_url ? `
+                  <div class="rounded-xl overflow-hidden border max-w-md" style="border-color: var(--border-soft);">
+                    <img src="${s.hero_banner_url}" alt="Hero Preview" class="w-full h-auto block">
+                  </div>
+                ` : ''}
+                <input id="bHeroTitle" value="${escapeHtml(s.hero_title || '')}" placeholder="หัวข้อบนแบนเนอร์ (เว้นว่างไว้ถ้าในรูปมีข้อความอยู่แล้ว)" class="w-full px-3.5 py-2 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                <input id="bHeroTagline" value="${escapeHtml(s.hero_tagline || '')}" placeholder="คำโปรยรอง (เว้นว่างได้)" class="w-full px-3.5 py-2 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                <input id="bHeroFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+                <input id="bPromoTitle" type="hidden" value="${escapeHtml(s.promo_title || '')}">
+                <input id="bPromoSub" type="hidden" value="${escapeHtml(s.promo_subtitle || '')}">
+                <input id="bPromoFile" type="file" class="hidden">
+              </div>
+              <button type="submit" class="px-5 py-2 rounded-xl text-xs sm:text-sm btn-gold">💾 บันทึกโลโก้ &amp; แบนเนอร์หลัก</button>
+            </form>
+
+            <!-- 2. Multi-Slide Custom Banner Manager (Add / Remove / Reorder / Toggle FX) -->
+            <div class="card-panel rounded-2xl p-5 space-y-4">
               <div class="flex items-center justify-between gap-2">
-                <label class="block text-xs font-semibold">โลโก้เว็บไซต์ (แสดงที่แถบเมนูและไอคอนแท็บเบราว์เซอร์)</label>
-                ${s.site_logo_url ? `<button type="button" id="clearLogoBtn" class="text-[11px] text-rose-400 hover:underline">ล้างโลโก้ (ใช้ไอคอนเดิม)</button>` : ''}
-              </div>
-              <div class="flex items-center gap-3.5">
-                <div class="w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border" style="background-color: var(--bg-input); border-color: var(--border-subtle);">
-                  ${s.site_logo_url
-                    ? `<img src="${s.site_logo_url}" alt="Logo Preview" class="w-full h-full object-cover">`
-                    : `<span class="text-[10px] text-center px-1" style="color: var(--text-muted);">โลโก้เริ่มต้น</span>`}
-                </div>
-                <div class="flex-1 min-w-0 space-y-1">
-                  <input id="bLogoFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
-                  <div class="text-[11px]" style="color: var(--text-muted);">แนะนำรูปสี่เหลี่ยมจัตุรัส 1:1 (เช่น 512×512 px) ไฟล์ PNG พื้นหลังใส หรือ JPG/WEBP</div>
+                <div>
+                  <h3 class="font-bold text-base" style="color: var(--gold-1);">จัดการสไลด์แบนเนอร์เพิ่มเติม (${(Array.isArray(s.hero_slides) ? s.hero_slides : []).length} แผ่น)</h3>
+                  <p class="text-[11px] mt-0.5" style="color: var(--text-muted);">เพิ่ม ลบ เรียงลำดับ หรือเปิด-ปิดเอฟเฟกต์เคลื่อนไหว 0 KB ได้ตามต้องการ</p>
                 </div>
               </div>
+
+              <div class="space-y-2.5">
+                ${(Array.isArray(s.hero_slides) && s.hero_slides.length > 0) ? s.hero_slides.map((sl, idx) => {
+                  const targetNovel = sl.novel_id ? state.novels.find(n => n.id === sl.novel_id) : null;
+                  const actLabel = sl.action_type === 'topup' ? 'คลิกแล้วไป: หน้าเติมเหรียญ'
+                    : (sl.action_type === 'novel' && targetNovel ? `คลิกแล้วไป: ${targetNovel.title}` : 'โชว์ภาพอย่างเดียว');
+                  return `
+                    <div class="p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <img src="${sl.image_url}" alt="Slide" class="w-28 h-10 rounded-lg object-cover shrink-0 border" style="border-color: var(--border-subtle);">
+                        <div class="min-w-0">
+                          <div class="text-xs font-bold truncate">สไลด์เสริม #${idx + 1}${sl.title ? ` · ${escapeHtml(sl.title)}` : ''}</div>
+                          <div class="text-[11px] truncate" style="color: var(--text-sub);">${escapeHtml(actLabel)}</div>
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                        <button type="button" data-slide-fx="${idx}" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold" style="${sl.enable_fx ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'background-color: var(--bg-card); color: var(--text-muted);'}">${sl.enable_fx ? '✨ ขยับ ON' : '✨ ขยับ OFF'}</button>
+                        <button type="button" data-slide-move="${idx}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-card);" title="เลื่อนขึ้น">↑</button>
+                        <button type="button" data-slide-move="${idx}" data-dir="1" ${idx === s.hero_slides.length - 1 ? 'disabled' : ''} class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-card);" title="เลื่อนลง">↓</button>
+                        <button type="button" data-slide-del="${idx}" class="px-2.5 py-1 rounded-lg text-[11px] text-rose-400" style="background-color: rgba(244,63,94,0.14);">🗑️ ลบ</button>
+                      </div>
+                    </div>
+                  `;
+                }).join('') : `<div class="text-xs text-center py-4 rounded-xl" style="background-color: var(--bg-input); color: var(--text-muted);">ยังไม่มีสไลด์แบนเนอร์เสริม กดเพิ่มด้านล่างได้เลยครับ</div>`}
+              </div>
+
+              <form id="addSlideForm" class="pt-4 border-t space-y-3" style="border-color: var(--border-soft);">
+                <div class="text-xs font-bold">+ เพิ่มแบนเนอร์สไลด์ใหม่ (แนะนำขนาดแนวนอน 16:5)</div>
+                <input id="newSlideFile" type="file" accept="image/*" required class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <select id="newSlideAction" class="px-3 py-2 rounded-xl text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
+                    <option value="topup">คลิกแล้วเปิด: หน้าเติมเหรียญ / สมัคร VIP</option>
+                    <option value="novel">คลิกแล้วเปิด: นิยายที่เลือก</option>
+                    <option value="none">โชว์รูปอย่างเดียว (ไม่ลิงก์)</option>
+                  </select>
+                  <select id="newSlideNovel" class="px-3 py-2 rounded-xl text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
+                    <option value="">-- เลือกนิยายปลายทาง (ถ้าเลือกลิงก์ไปนิยาย) --</option>
+                    ${state.novels.map(n => `<option value="${n.id}">${escapeHtml(n.title)}</option>`).join('')}
+                  </select>
+                </div>
+                <label class="flex items-center gap-2 text-xs cursor-pointer" style="color: var(--text-sub);">
+                  <input id="newSlideFx" type="checkbox" class="rounded">
+                  <span>✨ เปิดเอฟเฟกต์ซูมนุ่มๆ + ละอองทอง (0 KB) ให้แบนเนอร์นี้</span>
+                </label>
+                <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold btn-gold">+ เพิ่มแบนเนอร์ขึ้นหน้าแรก</button>
+              </form>
             </div>
-            <div class="space-y-2.5">
-              <label class="block text-xs font-semibold">หัวข้อแบนเนอร์หลัก (Hero Banner)</label>
-              <input id="bHeroTitle" value="${s.hero_title}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-              <input id="bHeroTagline" value="${s.hero_tagline}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-              <label class="block text-xs" style="color: var(--text-sub);">อัปโหลดรูปภาพแบนเนอร์หลัก (แนวนอน 16:9)</label>
-              <input id="bHeroFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
-            </div>
-            <div class="space-y-2.5 pt-4 border-t" style="border-color: var(--border-soft);">
-              <label class="block text-xs font-semibold">ข้อความป้ายโปรโมชันเติมเงิน</label>
-              <input id="bPromoTitle" value="${s.promo_title}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-              <input id="bPromoSub" value="${s.promo_subtitle}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
-              <label class="block text-xs" style="color: var(--text-sub);">อัปโหลดรูปภาพป้ายโปรโมชัน (แนวนอน)</label>
-              <input id="bPromoFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
-            </div>
-            <button type="submit" class="px-6 py-2.5 rounded-xl text-sm btn-gold">บันทึกการเปลี่ยนแปลงหน้าแรก</button>
-          </form>
+
+            <!-- 3. Per-Novel Horizontal Banners List (Quick Remove) -->
+            ${(() => {
+              const withBanners = state.novels.filter(n => !!n.banner_url);
+              if (!withBanners.length) return '';
+              return `
+                <div class="card-panel rounded-2xl p-5 space-y-3">
+                  <h3 class="font-bold text-sm" style="color: var(--gold-1);">แบนเนอร์แนวนอนของแต่ละเรื่อง (${withBanners.length} เรื่อง)</h3>
+                  <div class="space-y-2">
+                    ${withBanners.map(n => `
+                      <div class="p-3 rounded-xl border flex items-center justify-between gap-3" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+                        <div class="flex items-center gap-3 min-w-0">
+                          <img src="${n.banner_url}" alt="" class="w-24 h-9 rounded-lg object-cover shrink-0">
+                          <span class="text-xs font-semibold truncate">${escapeHtml(n.title)}</span>
+                        </div>
+                        <button type="button" data-remove-novel-banner="${n.id}" class="px-2.5 py-1 rounded-lg text-[11px] text-rose-400 shrink-0" style="background-color: rgba(244,63,94,0.14);">🗑️ เอาแบนเนอร์ออก</button>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            })()}
+          </div>
         `;
       } else {
         const topups = state.transactions.filter(t => t.type === 'topup' || t.type === 'vip');
@@ -3639,6 +3751,114 @@
           render();
           showToast('ล้างโลโก้และกลับไปใช้ไอคอนเดิมแล้ว');
         } catch (err) { showToast('ล้างโลโก้ไม่สำเร็จ: ' + err.message); }
+      });
+
+
+      async function saveHeroSlides(newSlides, toastMsg) {
+        try {
+          if (state.isLive) {
+            const { error } = await sb.from('site_settings').update({ hero_slides: newSlides }).eq('id', 'main');
+            if (error) throw error;
+            await loadLiveData();
+          } else {
+            state.settings.hero_slides = newSlides;
+            saveDemo();
+          }
+          state.heroSlideIdx = 0;
+          render();
+          showToast(toastMsg || 'อัปเดตรายการแบนเนอร์เรียบร้อย!');
+        } catch (err) {
+          showToast('บันทึกแบนเนอร์ไม่สำเร็จ (กรุณารัน supabase_banner_manager_patch.sql ใน Supabase ก่อน): ' + err.message);
+        }
+      }
+
+      const clearMainHeroBtn = document.getElementById('clearMainHeroBtn');
+      if (clearMainHeroBtn) clearMainHeroBtn.addEventListener('click', async () => {
+        try {
+          if (state.isLive) {
+            const { error } = await sb.from('site_settings').update({ hero_banner_url: '', hero_title: '', hero_tagline: '' }).eq('id', 'main');
+            if (error) throw error;
+            await loadLiveData();
+          } else {
+            state.settings.hero_banner_url = '';
+            state.settings.hero_title = '';
+            state.settings.hero_tagline = '';
+            saveDemo();
+          }
+          state.heroSlideIdx = 0;
+          render();
+          showToast('ลบแบนเนอร์หลักเดิมออกแล้ว');
+        } catch (err) { showToast('ลบไม่สำเร็จ: ' + err.message); }
+      });
+
+      const addSlideForm = document.getElementById('addSlideForm');
+      if (addSlideForm) addSlideForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = document.getElementById('newSlideFile')?.files[0];
+        if (!file) { showToast('กรุณาเลือกรูปแบนเนอร์ก่อน'); return; }
+        const actionType = document.getElementById('newSlideAction')?.value || 'none';
+        const novelId = document.getElementById('newSlideNovel')?.value || null;
+        const enableFx = !!document.getElementById('newSlideFx')?.checked;
+        const btn = addSlideForm.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'กำลังอัปโหลด...'; }
+        try {
+          const url = await uploadImageFile(file, 'media');
+          const cur = Array.isArray(state.settings.hero_slides) ? state.settings.hero_slides.slice() : [];
+          cur.push({ id: 'sl-' + Date.now(), image_url: url, action_type: actionType, novel_id: actionType === 'novel' ? novelId : null, enable_fx: enableFx, title: '', tagline: '' });
+          await saveHeroSlides(cur, 'เพิ่มแบนเนอร์สไลด์ใหม่ขึ้นหน้าแรกแล้ว!');
+        } catch (err) {
+          if (btn) { btn.disabled = false; btn.textContent = '+ เพิ่มแบนเนอร์ขึ้นหน้าแรก'; }
+          showToast('อัปโหลดไม่สำเร็จ: ' + err.message);
+        }
+      });
+
+      document.querySelectorAll('[data-slide-del]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = Number(btn.getAttribute('data-slide-del'));
+          const cur = Array.isArray(state.settings.hero_slides) ? state.settings.hero_slides.slice() : [];
+          cur.splice(idx, 1);
+          await saveHeroSlides(cur, 'ลบแบนเนอร์ออกจากหน้าแรกแล้ว');
+        });
+      });
+
+      document.querySelectorAll('[data-slide-fx]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = Number(btn.getAttribute('data-slide-fx'));
+          const cur = Array.isArray(state.settings.hero_slides) ? state.settings.hero_slides.map(x => ({ ...x })) : [];
+          if (cur[idx]) cur[idx].enable_fx = !cur[idx].enable_fx;
+          await saveHeroSlides(cur, cur[idx]?.enable_fx ? 'เปิดเอฟเฟกต์เคลื่อนไหวให้แบนเนอร์นี้แล้ว' : 'ปิดเอฟเฟกต์เคลื่อนไหวแล้ว');
+        });
+      });
+
+      document.querySelectorAll('[data-slide-move]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = Number(btn.getAttribute('data-slide-move'));
+          const dir = Number(btn.getAttribute('data-dir'));
+          const cur = Array.isArray(state.settings.hero_slides) ? state.settings.hero_slides.slice() : [];
+          const swap = idx + dir;
+          if (swap < 0 || swap >= cur.length) return;
+          [cur[idx], cur[swap]] = [cur[swap], cur[idx]];
+          await saveHeroSlides(cur, 'เปลี่ยนลำดับแบนเนอร์แล้ว');
+        });
+      });
+
+      document.querySelectorAll('[data-remove-novel-banner]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const nid = btn.getAttribute('data-remove-novel-banner');
+          try {
+            if (state.isLive) {
+              const { error } = await sb.from('novels').update({ banner_url: '' }).eq('id', nid);
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const n = getNovel(nid);
+              if (n) n.banner_url = '';
+              saveDemo();
+            }
+            render();
+            showToast('นำแบนเนอร์แนวนอนของนิยายเรื่องนี้ออกแล้ว');
+          } catch (err) { showToast('ลบไม่สำเร็จ: ' + err.message); }
+        });
       });
 
       const bannerForm = document.getElementById('bannerForm');
