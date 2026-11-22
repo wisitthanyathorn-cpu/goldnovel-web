@@ -720,6 +720,7 @@
       adminSelectedNovelId: null, // null = novel list view, id = inside that novel's workspace
       adminShowNewNovel: false,
       adminEditNovelOpen: false,
+      adminAuditOpen: false,
       adminStats: null,
       adminStatsError: null,
       adminShowChapterForm: false,
@@ -2382,9 +2383,49 @@
                           📚 นำเข้าหลายไฟล์ .txt
                           <input id="bulkImportTxtInput" type="file" accept=".txt,.md" multiple class="hidden">
                         </label>
+                        ${chList.length > 0 ? `<button type="button" id="toggleAuditChaptersBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">🔍 ตรวจหาตอนผิดปกติ</button>` : ''}
                         ${chList.length > 1 ? `<button type="button" id="renumberChaptersBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">🔢 เรียงเลขตอนใหม่</button>` : ''}
                       </div>
                     </div>
+                    ${state.adminAuditOpen ? (() => {
+                      const issues = [];
+                      if (missingNums.length > 0) {
+                        issues.push({ type: 'missing', text: `พบเลขตอนที่หาย/ข้ามไป ${missingNums.length} ตอน: ตอนที่ ${missingNums.slice(0, 12).join(', ')}${missingNums.length > 12 ? '...' : ''}` });
+                      }
+                      const numSeen = {};
+                      chList.forEach(c => {
+                        if (numSeen[c.chapter_number]) {
+                          issues.push({ type: 'dup', id: c.id, chNum: c.chapter_number, text: `ตอนที่ ${c.chapter_number} ซ้ำกัน (${escapeHtml(c.title)})` });
+                        }
+                        numSeen[c.chapter_number] = true;
+                        const mTitleNum = String(c.title || '').match(/(?:ตอนที่|บทที่|Chapter|Ch\.?|EP\.?)\s*(\d+)/i);
+                        if (mTitleNum && Number(mTitleNum[1]) !== Number(c.chapter_number)) {
+                          issues.push({ type: 'mismatch', id: c.id, chNum: c.chapter_number, text: `เลขไม่ตรงกัน: ระบบอยู่ "ตอนที่ ${c.chapter_number}" แต่ชื่อตอนเขียนว่า "${escapeHtml(c.title)}"` });
+                        }
+                        if (c.content !== undefined && c.content !== null && String(c.content).trim().length > 0 && String(c.content).trim().length < 250) {
+                          issues.push({ type: 'short', id: c.id, chNum: c.chapter_number, text: `ตอนที่ ${c.chapter_number} (${escapeHtml(c.title)}) เนื้อหาสั้นผิดปกติ (${String(c.content).trim().length} อักษร — อาจโดนหั่นเกิน)` });
+                        }
+                      });
+                      return `
+                        <div class="px-5 py-4 border-b space-y-2.5 fade-in" style="border-color: var(--border-soft); background-color: rgba(234,184,84,0.06);">
+                          <div class="flex items-center justify-between gap-2">
+                            <div class="text-xs font-bold" style="color: var(--gold-1);">🔍 ผลการสแกนความถูกต้องของตอน (${chList.length} ตอน)</div>
+                            <button type="button" id="closeAuditBtn" class="text-[11px] px-2 py-0.5 rounded" style="background-color: var(--bg-input); color: var(--text-sub);">ปิด</button>
+                          </div>
+                          ${issues.length === 0
+                            ? `<div class="text-xs text-emerald-400 font-medium">✓ ไม่พบเลขตอนข้าม, เลขซ้ำ หรือเลขชื่อตอนไม่ตรงกันครับ!</div>`
+                            : `<div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                ${issues.map(it => `
+                                  <div class="flex items-center justify-between gap-2 text-xs px-3 py-2 rounded-lg" style="background-color: var(--bg-card); border: 1px solid rgba(251,191,36,0.28);">
+                                    <span class="text-amber-300">⚠️ ${it.text}</span>
+                                    ${it.id ? `<button type="button" data-edit-ch="${it.id}" class="px-2.5 py-1 rounded text-[11px] font-semibold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">เปิดดู/แก้</button>` : ''}
+                                  </div>
+                                `).join('')}
+                              </div>`
+                          }
+                        </div>
+                      `;
+                    })() : ''}
                     <div>
                       ${chList.length === 0 ? `<div class="p-10 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยายในเรื่องนี้ กดปุ่ม <strong>+ เพิ่มตอนใหม่</strong> หรือ <strong>✂️ แยกตอนจาก 1 ไฟล์ .txt</strong> ด้านบนได้เลยครับ</div>` : (() => {
                         const adminGroups = buildChapterGroups(chList, 50, false);
@@ -3901,27 +3942,42 @@
       const openSplitBtn = document.getElementById('openSplitModalBtn');
       if (openSplitBtn) openSplitBtn.addEventListener('click', openSplitModal);
 
+      const toggleAuditBtn = document.getElementById('toggleAuditChaptersBtn');
+      if (toggleAuditBtn) toggleAuditBtn.addEventListener('click', () => {
+        state.adminAuditOpen = !state.adminAuditOpen;
+        render();
+      });
+      const closeAuditBtn = document.getElementById('closeAuditBtn');
+      if (closeAuditBtn) closeAuditBtn.addEventListener('click', () => {
+        state.adminAuditOpen = false;
+        render();
+      });
+
       const renumBtn = document.getElementById('renumberChaptersBtn');
       if (renumBtn) renumBtn.addEventListener('click', async () => {
-        const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
-        if (!novel) return;
-        const sorted = novel.chapters.slice().sort((a, b) => a.chapter_number - b.chapter_number);
+        const nid = state.adminSelectedNovelId;
+        const novel = state.novels.find(n => n.id === nid);
+        if (!novel || !novel.chapters?.length) return;
+        renumBtn.disabled = true;
+        renumBtn.textContent = 'กำลังเรียงเลขตอน...';
         try {
           if (state.isLive) {
-            for (let i = 0; i < sorted.length; i++) {
-              await sb.from('chapters').update({ chapter_number: 900000 + i }).eq('id', sorted[i].id);
-            }
-            for (let i = 0; i < sorted.length; i++) {
-              await sb.from('chapters').update({ chapter_number: i + 1 }).eq('id', sorted[i].id);
-            }
+            const { error } = await sb.rpc('renumber_novel_chapters', { p_novel_id: nid });
+            if (error) throw error;
             await loadLiveData();
           } else {
+            const sorted = novel.chapters.slice().sort((a, b) => a.chapter_number - b.chapter_number);
             sorted.forEach((c, i) => { c.chapter_number = i + 1; });
+            novel.chapters = sorted;
             saveDemo();
           }
           render();
-          showToast('จัดเรียงเลขตอน 1, 2, 3... ใหม่เรียบร้อย!');
-        } catch (err) { showToast('จัดเรียงไม่สำเร็จ: ' + err.message); }
+          showToast('จัดเรียงเลขตอน 1, 2, 3... บนเซิร์ฟเวอร์เรียบร้อย!');
+        } catch (err) {
+          renumBtn.disabled = false;
+          renumBtn.textContent = '🔢 เรียงเลขตอนใหม่';
+          showToast('จัดเรียงไม่สำเร็จ (กรุณารัน supabase_renumber_rpc_patch.sql ใน Supabase ก่อน): ' + err.message);
+        }
       });
 
       // Admin: Update Banners
@@ -4659,22 +4715,25 @@
         return;
       }
 
-      header.textContent = `ตรวจพบ ${parsedSplitChapters.length} ตอน (แก้ไขชื่อตอนและราคาเหรียญแยกทีละตอนได้ด้านล่าง)`;
+      const shortCount = parsedSplitChapters.filter(c => (c.content || '').trim().length < 250).length;
+      header.innerHTML = `ตรวจพบ <strong>${parsedSplitChapters.length} ตอน</strong> (เริ่มที่ตอนที่ ${startNum})${shortCount > 0 ? ` · <span class="text-amber-400">⚠️ พบ ${shortCount} ตอนที่เนื้อหาสั้นผิดปกติ (กด "รวมบน" หรือ "✕" ได้เลย)</span>` : ' · <span class="text-emerald-400">✓ ปกติดีทุกตอน</span>'}`;
       listEl.innerHTML = parsedSplitChapters.map((c, idx) => {
         const chNum = startNum + idx;
+        const isShort = (c.content || '').trim().length < 250;
         return `
-          <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-3 py-2 rounded-lg" style="background-color: var(--bg-card); border: 1px solid var(--border-soft);">
+          <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-3 py-2 rounded-lg" style="background-color: var(--bg-card); border: 1px solid ${isShort ? 'rgba(251,191,36,0.55)' : 'var(--border-soft)'};">
             <div class="flex items-center gap-2 min-w-0 flex-1">
               <span class="font-bold shrink-0" style="color: var(--gold-1);">ตอนที่ ${chNum}</span>
               <input type="text" value="${c.title.replace(/"/g, '&quot;')}" data-split-title="${idx}" class="w-full min-w-0 px-2 py-1 rounded text-xs focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
             </div>
-            <div class="shrink-0 flex items-center gap-2 text-[11px]">
+            <div class="shrink-0 flex items-center gap-1.5 text-[11px]">
               <label class="flex items-center gap-1 px-2 py-1 rounded" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                 <span>🪙</span>
                 <input type="number" min="0" step="0.5" value="${c.price}" data-split-price="${idx}" class="w-10 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price === 0 ? '#4ADE80' : 'var(--gold-1)'};">
-                <span style="color: var(--text-muted);">${c.price === 0 ? 'ฟรี' : 'เหรียญ'}</span>
               </label>
-              <span style="color: var(--text-muted);">${c.content.length.toLocaleString()} อักษร</span>
+              <span class="${isShort ? 'text-amber-400 font-bold' : ''}" style="${isShort ? '' : 'color: var(--text-muted);'}">${isShort ? '⚠️ ' : ''}${c.content.length.toLocaleString()} อักษร</span>
+              ${idx > 0 ? `<button type="button" data-split-merge="${idx}" title="รวมเนื้อหานี้เข้ากับตอนด้านบน (กรณีโดนหั่นเกิน)" class="px-1.5 py-0.5 rounded text-[10px] font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">🔗 รวมบน</button>` : ''}
+              <button type="button" data-split-del="${idx}" title="ลบแถวนี้ออก" class="px-1.5 py-0.5 rounded text-[10px] text-rose-400" style="background-color: rgba(244,63,94,0.14);">✕</button>
             </div>
           </div>
         `;
@@ -4701,6 +4760,25 @@
         });
       });
 
+            listEl.querySelectorAll('[data-split-merge]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.getAttribute('data-split-merge'));
+          if (i > 0 && parsedSplitChapters[i] && parsedSplitChapters[i - 1]) {
+            parsedSplitChapters[i - 1].content = (parsedSplitChapters[i - 1].content + '\n\n' + parsedSplitChapters[i].title + '\n' + parsedSplitChapters[i].content).trim();
+            parsedSplitChapters.splice(i, 1);
+            renderSplitPreviewRows();
+          }
+        });
+      });
+      listEl.querySelectorAll('[data-split-del]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.getAttribute('data-split-del'));
+          if (parsedSplitChapters[i]) {
+            parsedSplitChapters.splice(i, 1);
+            renderSplitPreviewRows();
+          }
+        });
+      });
       btn.disabled = false;
       btn.textContent = `นำเข้าทั้งหมด ${parsedSplitChapters.length} ตอนทันที`;
     }
