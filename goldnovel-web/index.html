@@ -646,6 +646,7 @@
       autoUnlockBusy: false,
       tocSortDesc: false,
       tocOpenGroups: {},
+      detailExpanded: {},
       bulkSelectedIds: [],
       selectedBaht: 100,
       selectedPay: 'promptpay',
@@ -1331,12 +1332,26 @@
                 <p class="text-sm leading-relaxed mb-5" style="color: var(--text-sub);">${novel.synopsis || ''}</p>
               </div>
               <div>
-                <div class="flex justify-between text-xs mb-1.5" style="color: var(--text-sub);">
-                  <span>ปลดล็อกแล้ว</span><span>${unlockedCount}/${chapters.length} ตอน (${pct}%)</span>
-                </div>
-                <div class="w-full h-2 rounded-full overflow-hidden mb-4" style="background-color: var(--bg-input);">
-                  <div class="h-full" style="width:${pct}%; background: linear-gradient(90deg, #D4A857, #F3D999);"></div>
-                </div>
+                ${(() => {
+                  const freeCount = chapters.filter(c => Number(c.price_coins || 0) === 0).length;
+                  if (!state.user) {
+                    return `
+                      <div class="flex items-center gap-2 text-xs mb-4 px-3 py-2 rounded-xl w-fit" style="background-color: var(--bg-input); color: var(--text-sub);">
+                        <span>เปิดอ่านฟรี <strong style="color: var(--gold-1);">${freeCount}</strong> ตอน</span>
+                        <span>·</span>
+                        <span>ทั้งหมด ${chapters.length} ตอน</span>
+                      </div>
+                    `;
+                  }
+                  return `
+                    <div class="flex justify-between text-xs mb-1.5" style="color: var(--text-sub);">
+                      <span>เปิดอ่านได้แล้ว (รวมตอนฟรี)</span><span>${unlockedCount}/${chapters.length} ตอน (${pct}%)</span>
+                    </div>
+                    <div class="w-full h-2 rounded-full overflow-hidden mb-4" style="background-color: var(--bg-input);">
+                      <div class="h-full" style="width:${pct}%; background: linear-gradient(90deg, #D4A857, #F3D999);"></div>
+                    </div>
+                  `;
+                })()}
                 <div class="flex flex-wrap gap-2.5">
                   ${(() => {
                     if (!chapters.length) return '';
@@ -1352,6 +1367,41 @@
             </div>
             </div>
           </div>
+
+          ${(() => {
+            const hasImg = !!String(novel.detail_image_url || '').trim();
+            const hasTxt = !!String(novel.detail_content || '').trim();
+            if (!hasImg && !hasTxt) return '';
+            const isExp = state.detailExpanded[novel.id] !== false;
+            const formattedText = escapeHtml(novel.detail_content || '')
+              .replace(/\*\*(.+?)\*\*/g, '<strong style="color: var(--text-main);">$1</strong>')
+              .replace(/\n/g, '<br>');
+            return `
+              <section class="space-y-3">
+                <div class="flex items-center justify-between px-1">
+                  <h2 class="text-base font-bold flex items-center gap-2.5">
+                    <span class="section-accent-bar"></span>
+                    <span>รายละเอียด</span>
+                  </h2>
+                  <button type="button" data-toggle-detail="${novel.id}" class="text-xs font-semibold hover:underline" style="color: var(--gold-1);">
+                    ${isExp ? 'ย่อลง ⌃' : 'ดูรายละเอียดเพิ่มเติม ⌄'}
+                  </button>
+                </div>
+                ${isExp ? `
+                  <div class="card-panel rounded-2xl p-5 sm:p-7 space-y-5 fade-in">
+                    ${hasImg ? `
+                      <div class="flex justify-center">
+                        <img src="${novel.detail_image_url}" alt="รายละเอียด ${escapeHtml(novel.title)}" class="max-w-full sm:max-w-md w-auto max-h-[540px] rounded-xl object-contain shadow-lg border" style="border-color: var(--border-soft);">
+                      </div>
+                    ` : ''}
+                    ${hasTxt ? `
+                      <div class="text-xs sm:text-sm leading-relaxed space-y-2 break-words" style="color: var(--text-sub);">${formattedText}</div>
+                    ` : ''}
+                  </div>
+                ` : ''}
+              </section>
+            `;
+          })()}
 
           <div class="space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2 px-1">
@@ -1597,7 +1647,7 @@
               ${readingList.length > 0 ? `
                 <div>
                   <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-bold" style="color: var(--gold-1);">อ่านค้างไว้ล่าสุด (ซิงก์อัตโนมัติในบัญชี)</h2>
+                    <h2 class="text-sm font-bold" style="color: var(--gold-1);">อ่านค้างไว้ล่าสุด</h2>
                     <span class="text-[11px]" style="color: var(--text-muted);">${readingList.length} เรื่อง</span>
                   </div>
                   <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -1868,8 +1918,19 @@
                         </div>
                       </div>
                       <div>
-                        <label class="block text-xs mb-1" style="color: var(--text-sub);">คำโปรย / เรื่องย่อ</label>
-                        <textarea id="editNSynopsis" rows="3" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">${escapeHtml(targetNovel.synopsis || '')}</textarea>
+                        <label class="block text-xs mb-1" style="color: var(--text-sub);">คำโปรยสั้น (แสดงด้านบนข้างรูปปก 2–3 บรรทัด)</label>
+                        <textarea id="editNSynopsis" rows="2" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">${escapeHtml(targetNovel.synopsis || '')}</textarea>
+                      </div>
+                      <div class="pt-2 border-t space-y-2.5" style="border-color: var(--border-soft);">
+                        <div class="flex items-center justify-between gap-2">
+                          <label class="block text-xs font-semibold" style="color: var(--gold-1);">รูปภาพประกอบโซน "รายละเอียด" (เช่น ตารางระดับพลัง / แนะนำตัวละคร)</label>
+                          ${targetNovel.detail_image_url ? `<label class="text-[11px] text-rose-400 flex items-center gap-1 cursor-pointer"><input id="clearDetailImgChk" type="checkbox"> ลบรูปเดิม</label>` : ''}
+                        </div>
+                        <input id="editNDetailImgFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+                        <div>
+                          <label class="block text-xs mb-1" style="color: var(--text-sub);">เนื้อหาโซน "รายละเอียด" (ตารางระดับพลัง / ข้อมูลเรื่อง / ตารางอัปเดต — ใส่ **ข้อความ** เพื่อทำตัวหนาได้)</label>
+                          <textarea id="editNDetailContent" rows="6" placeholder="เช่น&#10;**ระดับพลังในเรื่อง**&#10;1. ขั้นหลอมกายา&#10;2. ขั้นปราณแท้&#10;..." class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none overscroll-contain" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">${escapeHtml(targetNovel.detail_content || '')}</textarea>
+                        </div>
                       </div>
                       <div class="flex justify-end gap-2">
                         <button type="submit" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-bold btn-gold">💾 บันทึกการแก้ไข</button>
@@ -2553,15 +2614,24 @@
       if (editNovelInfoForm) editNovelInfoForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const nid = editNovelInfoForm.getAttribute('data-edit-novel-id');
+        const detailFile = document.getElementById('editNDetailImgFile')?.files[0];
+        const clearDetailImg = !!document.getElementById('clearDetailImgChk')?.checked;
         const payload = {
           title: document.getElementById('editNTitle').value.trim(),
           author: document.getElementById('editNAuthor').value.trim() || 'GoldNovel',
           categories: [document.getElementById('editNCategory').value],
           status: document.getElementById('editNStatus').value,
-          synopsis: document.getElementById('editNSynopsis').value.trim()
+          synopsis: document.getElementById('editNSynopsis').value.trim(),
+          detail_content: (document.getElementById('editNDetailContent')?.value || '').trim()
         };
         if (!payload.title) { showToast('กรุณากรอกชื่อเรื่องนิยาย'); return; }
         try {
+          if (detailFile) {
+            showToast('กำลังอัปโหลดรูปภาพรายละเอียด...');
+            payload.detail_image_url = await uploadImageFile(detailFile, 'media');
+          } else if (clearDetailImg) {
+            payload.detail_image_url = '';
+          }
           if (state.isLive) {
             const { error } = await sb.from('novels').update(payload).eq('id', nid);
             if (error) throw error;
@@ -2956,7 +3026,14 @@
       const libTopup = document.getElementById('libTopupBtn');
       if (libTopup) libTopup.addEventListener('click', () => openTopup());
 
-                  document.querySelectorAll('[data-toggle-toc]').forEach(btn => {
+                  document.querySelectorAll('[data-toggle-detail]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const nid = btn.getAttribute('data-toggle-detail');
+          state.detailExpanded[nid] = state.detailExpanded[nid] === false ? true : false;
+          render();
+        });
+      });
+      document.querySelectorAll('[data-toggle-toc]').forEach(btn => {
         btn.addEventListener('click', () => {
           const key = btn.getAttribute('data-toggle-toc');
           const curOpen = btn.querySelector('.rotate-180') !== null;
