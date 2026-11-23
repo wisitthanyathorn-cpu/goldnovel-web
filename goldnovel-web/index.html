@@ -636,6 +636,30 @@
     </div>
   </div>
 
+  <!-- Refund Request Modal (Reader reports issue & requests coin refund) -->
+  <div id="refundModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+    <div class="card-panel rounded-2xl max-w-md w-full p-6 shadow-2xl fade-in" style="border-color: rgba(234,184,84,0.35);">
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <div class="text-xs font-bold" style="color: var(--gold-1);">🔄 แจ้งปัญหาและขอคืนเหรียญ</div>
+          <h3 id="refundModalTitle" class="text-base font-bold mt-0.5">ขอคืนเหรียญ</h3>
+        </div>
+        <button type="button" id="closeRefundModalBtn" class="w-8 h-8 rounded-full text-sm" style="background-color: var(--bg-input);">✕</button>
+      </div>
+      <p id="refundModalSub" class="text-xs mb-4 leading-relaxed" style="color: var(--text-sub);"></p>
+      <form id="refundRequestForm" class="space-y-3">
+        <div>
+          <label class="block text-xs mb-1" style="color: var(--text-sub);">ระบุเหตุผล / ปัญหาที่พบ (เช่น ลงตอนผิด, ตอนซ้ำ, เนื้อหาขาดหาย)</label>
+          <textarea id="refundReasonInput" rows="3" required minlength="4" maxlength="500" placeholder="อธิบายปัญหาที่พบในตอนนี้เพื่อให้แอดมินตรวจสอบ..." class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);"></textarea>
+        </div>
+        <div class="flex gap-2.5 pt-1">
+          <button type="button" id="cancelRefundBtn" class="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-medium" style="background-color: var(--bg-input);">ยกเลิก</button>
+          <button type="submit" id="submitRefundBtn" class="flex-1 py-2.5 rounded-xl text-xs sm:text-sm btn-gold">ส่งคำขอคืนเหรียญ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Delete Confirm Modal (Prevents accidental deletion) -->
   <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
     <div class="card-panel rounded-2xl max-w-md w-full p-6 shadow-2xl fade-in" style="border-color: rgba(244,63,94,0.45);">
@@ -879,6 +903,16 @@
           txs = res.data || [];
         }
         state.transactions = txs;
+        try {
+          if (state.user.role === 'admin') {
+            let rfRes = await sb.from('refund_requests').select('*, profiles(display_name, email), novels(title)').order('created_at', { ascending: false }).limit(60);
+            if (rfRes.error) rfRes = await sb.from('refund_requests').select('*').order('created_at', { ascending: false }).limit(60);
+            state.refundRequests = rfRes.data || [];
+          } else {
+            const rfRes = await sb.from('refund_requests').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(30);
+            state.refundRequests = rfRes.data || [];
+          }
+        } catch { state.refundRequests = []; }
         if (state.user.role === 'admin') {
           try {
             const { data: stData, error: stErr } = await sb.rpc('get_admin_dashboard_stats');
@@ -1774,6 +1808,13 @@
               <div data-canvas-chapter="${ch.id}" class="reading-prose reader-protected w-full min-h-[120px]"></div>
               <div class="reader-copy-shield" aria-hidden="true"></div>
             </div>
+            ${(!isAdmin() && state.user && Number(ch.price_coins || 0) > 0 && state.unlockedIds.includes(ch.id)) ? `
+              <div class="mt-6 pt-4 border-t flex items-center justify-end" style="border-color: var(--border-soft);">
+                <button type="button" data-open-refund="${ch.id}" class="text-[11px] px-3 py-1.5 rounded-lg transition-colors hover:bg-white/[0.06]" style="color: var(--text-muted); border: 1px solid var(--border-soft);">
+                  ⚠️ เนื้อหาผิดพลาด / ลงตอนผิด? แจ้งขอคืนเหรียญ
+                </button>
+              </div>
+            ` : ''}
           </article>
         `;
       }).join('');
@@ -2034,7 +2075,7 @@
         { id: 'dashboard', label: '📊 สถิติ & รายได้' },
         { id: 'novels', label: '📖 นิยายของฉัน & จัดการตอน' },
         { id: 'banners', label: '🎨 โลโก้ & แบนเนอร์' },
-        { id: 'topups', label: '💳 ตรวจสลิปเติมเงิน' }
+        { id: 'topups', label: '💳 ตรวจสลิป & คืนเหรียญ' }
       ];
 
       let body = '';
@@ -2251,7 +2292,7 @@
                       </div>
                       <div>
                         <label class="block text-xs mb-1" style="color: var(--text-sub);">ราคาเหรียญ (0 = ฟรี)</label>
-                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : 1.5}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : (nextNum % 10 === 0 ? 0 : 1.5)}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                       </div>
                     </div>
 
@@ -2692,8 +2733,61 @@
       } else {
         const topups = state.transactions.filter(t => t.type === 'topup' || t.type === 'vip');
         const pendingCount = topups.filter(t => t.status === 'pending').length;
+        const refunds = state.refundRequests || [];
+        const pendingRefunds = refunds.filter(r => r.status === 'pending').length;
         body = `
-          <div class="card-panel rounded-2xl overflow-hidden">
+          <div class="space-y-5 fade-in">
+            <!-- Refund Requests Panel -->
+            <div class="card-panel rounded-2xl overflow-hidden" style="${pendingRefunds > 0 ? 'border-color: rgba(234,184,84,0.4);' : ''}">
+              <div class="px-5 py-4 border-b flex flex-wrap items-center justify-between gap-2" style="border-color: var(--border-soft);">
+                <span class="font-bold text-sm">🔄 คำขอคืนเหรียญจากนักอ่าน (${refunds.length})</span>
+                ${pendingRefunds > 0 ? `<span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300">รอตรวจสอบ ${pendingRefunds} รายการ</span>` : ''}
+              </div>
+              <div>
+                ${refunds.length === 0 ? `<div class="p-6 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีคำขอคืนเหรียญ</div>` :
+                  refunds.map(rf => {
+                    const prof = rf.profiles || {};
+                    const rawEmail = prof.email || '';
+                    const handle = rawEmail.endsWith('@goldnovel.app') ? '@' + rawEmail.replace('@goldnovel.app', '') : rawEmail;
+                    const readerName = prof.display_name || handle || (rf.user_id ? 'UID: ' + String(rf.user_id).slice(0, 8) : 'สมาชิก');
+                    const novelName = rf.novels?.title || (state.novels.find(n => n.id === rf.novel_id)?.title) || 'นิยาย';
+                    const dtText = rf.created_at ? new Date(rf.created_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'เมื่อสักครู่';
+                    const stBadge = rf.status === 'approved'
+                      ? `<span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">✓ คืนเหรียญแล้ว</span>`
+                      : rf.status === 'rejected'
+                        ? `<span class="text-xs px-2.5 py-1 rounded-full font-semibold text-rose-400" style="background-color: rgba(244,63,94,0.15);">✕ ปฏิเสธแล้ว</span>`
+                        : `<span class="text-xs px-2.5 py-1 rounded-full font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">⏳ รอตรวจสอบ</span>`;
+                    return `
+                      <div class="px-5 py-4 border-b last:border-b-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style="border-color: var(--border-soft);">
+                        <div class="min-w-0 space-y-1 flex-1">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm font-bold">👤 ${escapeHtml(readerName)}</span>
+                            ${handle && handle !== readerName ? `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: var(--bg-input); color: var(--text-sub);">${escapeHtml(handle)}</span>` : ''}
+                            ${stBadge}
+                          </div>
+                          <div class="text-xs font-semibold" style="color: var(--gold-1);">
+                            ${escapeHtml(novelName)} · ตอนที่ ${rf.chapter_number}: ${escapeHtml(rf.chapter_title)} (ขอคืน ${Number(rf.coins_requested || 0).toLocaleString()} เหรียญ)
+                          </div>
+                          <div class="text-xs px-3 py-2 rounded-lg" style="background-color: var(--bg-input); color: var(--text-main);">เหตุผล: ${escapeHtml(rf.reason)}</div>
+                          <div class="text-[11px]" style="color: var(--text-muted);">แจ้งเมื่อ: ${dtText}</div>
+                        </div>
+                        ${rf.status === 'pending' ? `
+                          <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <div class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);" title="ปรับจำนวนเหรียญที่จะคืนได้">
+                              <span style="color: var(--text-muted);">🪙</span>
+                              <input type="number" min="0.25" step="0.25" value="${rf.coins_requested}" data-refund-coins="${rf.id}" class="w-14 bg-transparent text-center font-bold focus:outline-none" style="color: var(--gold-1);">
+                            </div>
+                            <button type="button" data-approve-refund="${rf.id}" class="px-3.5 py-2 rounded-xl text-xs font-bold btn-gold">✅ คืนเหรียญ</button>
+                            <button type="button" data-reject-refund="${rf.id}" class="px-3 py-2 rounded-xl text-xs font-semibold text-rose-400" style="background-color: rgba(244,63,94,0.14);">ปฏิเสธ</button>
+                          </div>
+                        ` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+              </div>
+            </div>
+
+            <div class="card-panel rounded-2xl overflow-hidden">
             <div class="px-5 py-4 border-b flex flex-wrap items-center justify-between gap-2" style="border-color: var(--border-soft);">
               <span class="font-bold text-sm">รายการแจ้งเติมเงินทั้งหมด (${topups.length})</span>
               ${pendingCount > 0 ? `<span class="text-xs px-2.5 py-0.5 rounded-full font-bold" style="background-color: var(--gold-soft); color: var(--gold-1);">รอตรวจสอบ ${pendingCount} รายการ</span>` : ''}
@@ -2755,6 +2849,7 @@
                   `;
                 }).join('')}
             </div>
+          </div>
           </div>
         `;
       }
@@ -3780,7 +3875,7 @@
               novel_id: nid,
               chapter_number: nextN++,
               title,
-              price_coins: defaultPrice,
+              price_coins: (nextN > 0 && nextN % 10 === 0) ? 0 : defaultPrice,
               content: text,
               status: 'published',
               publish_at: new Date().toISOString()
@@ -4170,6 +4265,62 @@
             render();
             showToast('อนุมัติและเติมเหรียญเข้าบัญชีนักอ่านแล้ว!');
           } catch (err) { showToast('อนุมัติไม่สำเร็จ: ' + err.message); }
+        });
+      });
+
+      document.querySelectorAll('[data-open-refund]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cid = btn.getAttribute('data-open-refund');
+          const novel = getNovel(state.activeNovelId);
+          const ch = (novel?.chapters || []).find(c => c.id === cid);
+          if (ch) openRefundModal(ch);
+        });
+      });
+
+      document.querySelectorAll('[data-approve-refund]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const rfId = btn.getAttribute('data-approve-refund');
+          const inp = document.querySelector(`[data-refund-coins="${rfId}"]`);
+          const coinsVal = inp ? roundCoins(inp.value) : null;
+          try {
+            if (state.isLive) {
+              const { error } = await sb.rpc('approve_refund_request', { p_refund_id: rfId, p_coins: coinsVal > 0 ? coinsVal : null });
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const rf = state.refundRequests.find(r => r.id === rfId);
+              if (rf && rf.status === 'pending') {
+                const credit = coinsVal > 0 ? coinsVal : rf.coins_requested;
+                rf.status = 'approved';
+                rf.coins_requested = credit;
+                state.user.coin_balance = roundCoins((state.user.coin_balance || 0) + credit);
+                state.unlockedIds = state.unlockedIds.filter(id => id !== rf.chapter_id);
+                state.transactions.unshift({ id: 'tx-' + Date.now(), type: 'topup', coins_delta: credit, note: `คืนเหรียญ: ตอนที่ ${rf.chapter_number} ${rf.chapter_title}`, status: 'approved', created_at: new Date().toISOString() });
+                saveDemo();
+              }
+            }
+            render();
+            showToast('อนุมัติและคืนเหรียญเข้าบัญชีนักอ่านเรียบร้อยแล้ว!');
+          } catch (err) { showToast('คืนเหรียญไม่สำเร็จ: ' + err.message); }
+        });
+      });
+
+      document.querySelectorAll('[data-reject-refund]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const rfId = btn.getAttribute('data-reject-refund');
+          try {
+            if (state.isLive) {
+              const { error } = await sb.rpc('reject_refund_request', { p_refund_id: rfId });
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const rf = state.refundRequests.find(r => r.id === rfId);
+              if (rf && rf.status === 'pending') rf.status = 'rejected';
+              saveDemo();
+            }
+            render();
+            showToast('ปฏิเสธคำขอคืนเหรียญแล้ว');
+          } catch (err) { showToast('ปฏิเสธไม่สำเร็จ: ' + err.message); }
         });
       });
 
@@ -4797,14 +4948,88 @@
       if (reparse) {
         parsedSplitChapters = parseChaptersFromSingleText(splitRawText, ruleMode);
       }
+      const novelForSplit = state.novels.find(n => n.id === state.adminSelectedNovelId);
+      const exSplit = novelForSplit?.chapters || [];
+      const splitStartN = exSplit.length ? Math.max(...exSplit.map(c => c.chapter_number)) + 1 : 1;
       parsedSplitChapters.forEach((c, idx) => {
         if (c.customPrice === null || reparse) {
-          c.price = idx < freeCount ? 0 : paidPrice;
+          const calcChNum = splitStartN + idx;
+          c.price = (idx < freeCount || (calcChNum > 0 && calcChNum % 10 === 0)) ? 0 : paidPrice;
           c.customPrice = null;
         }
       });
       renderSplitPreviewRows();
     }
+
+
+    let pendingRefundChapter = null;
+    function openRefundModal(ch) {
+      if (!state.user || !ch) return;
+      const novel = getNovel(state.activeNovelId);
+      if (!novel) return;
+      const alreadyPending = (state.refundRequests || []).some(r => r.chapter_id === ch.id && r.status === 'pending');
+      if (alreadyPending) {
+        showToast('คุณได้ส่งคำขอคืนเหรียญสำหรับตอนนี้ไปแล้ว กรุณารอแอดมินตรวจสอบครับ');
+        return;
+      }
+      pendingRefundChapter = { novel, chapter: ch, coins: getEffectivePrice(ch) || roundCoins(ch.price_coins) };
+      document.getElementById('refundModalTitle').textContent = `ตอนที่ ${ch.chapter_number}: ${ch.title}`;
+      document.getElementById('refundModalSub').textContent = `คำขอคืนเหรียญจำนวน ${pendingRefundChapter.coins} เหรียญ จะถูกส่งไปยังเจ้าของเว็บเพื่อตรวจสอบ หากเป็นความผิดพลาดของระบบ แอดมินจะอนุมัติคืนเป็นเหรียญเข้าบัญชีให้ทันทีครับ`;
+      document.getElementById('refundReasonInput').value = '';
+      const m = document.getElementById('refundModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+    function closeRefundModal() {
+      const m = document.getElementById('refundModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+      pendingRefundChapter = null;
+    }
+    document.getElementById('closeRefundModalBtn').addEventListener('click', closeRefundModal);
+    document.getElementById('cancelRefundBtn').addEventListener('click', closeRefundModal);
+    document.getElementById('refundRequestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!pendingRefundChapter || !state.user) return;
+      const reason = document.getElementById('refundReasonInput').value.trim();
+      if (reason.length < 4) { showToast('กรุณาระบุเหตุผลอย่างน้อย 4 ตัวอักษร'); return; }
+      const btn = document.getElementById('submitRefundBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'กำลังส่งคำขอ...'; }
+      const { novel, chapter, coins } = pendingRefundChapter;
+      try {
+        const payload = {
+          user_id: state.user.id,
+          novel_id: novel.id,
+          chapter_id: chapter.id,
+          chapter_number: chapter.chapter_number,
+          chapter_title: chapter.title,
+          coins_requested: coins,
+          reason,
+          status: 'pending'
+        };
+        if (state.isLive) {
+          const { error } = await sb.from('refund_requests').insert(payload);
+          if (error) throw error;
+          await loadLiveData();
+        } else {
+          state.refundRequests.unshift({
+            ...payload,
+            id: 'rf-' + Date.now(),
+            created_at: new Date().toISOString(),
+            profiles: { display_name: state.user.display_name, email: state.user.email },
+            novels: { title: novel.title }
+          });
+          saveDemo();
+        }
+        closeRefundModal();
+        render();
+        showToast('ส่งคำขอคืนเหรียญให้แอดมินตรวจสอบเรียบร้อยแล้วครับ');
+      } catch (err) {
+        showToast('ส่งคำขอไม่สำเร็จ (กรุณารัน supabase_refund_and_free0_patch.sql ใน Supabase ก่อน): ' + err.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'ส่งคำขอคืนเหรียญ'; }
+      }
+    });
 
     function openSplitModal() {
       splitRawText = '';
