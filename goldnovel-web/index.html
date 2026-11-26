@@ -753,6 +753,7 @@
       adminStats: null,
       adminStatsError: null,
       adminShowChapterForm: false,
+      adminNewIsNote: false,
       editingChapterId: null,
       previewAsReader: false,
       previewAsVip: false,
@@ -1119,7 +1120,7 @@
     }
 
     function renderEditorialNovelCard(n, opts = {}) {
-      const chCount = (n.chapters || []).filter(c => isAdmin() || isChapterPublished(c)).length;
+      const chCount = (n.chapters || []).filter(c => !c.is_note && (isAdmin() || isChapterPublished(c))).length;
       const catText = (n.categories && n.categories.length) ? n.categories.slice(0, 2).join(' / ') : 'นิยาย';
       const badgeHtml = opts.rank
         ? `<span class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow ${opts.rank === 1 ? 'rank-1' : opts.rank === 2 ? 'rank-2' : opts.rank === 3 ? 'rank-3' : 'rank-n'}">#${opts.rank}</span>`
@@ -1492,17 +1493,44 @@
       `;
     }
 
+    function annotateChapters(chapters) {
+      const sorted = (chapters || []).slice().sort((a, b) => a.chapter_number - b.chapter_number);
+      let realNum = 0;
+      sorted.forEach(c => {
+        if (c.is_note) {
+          c._displayNum = null;
+          c._label = '📌 หมายเหตุ';
+        } else {
+          realNum += 1;
+          c._displayNum = realNum;
+          c._label = `ตอนที่ ${realNum}`;
+        }
+      });
+      return sorted;
+    }
+
+    function getChapterLabel(ch) {
+      if (!ch) return '';
+      if (ch.is_note) return '📌 หมายเหตุ';
+      return `ตอนที่ ${ch._displayNum ?? ch.chapter_number}`;
+    }
+
     function buildChapterGroups(chapters, chunkSize = 50, desc = false) {
-      const sorted = chapters.slice().sort((a, b) => a.chapter_number - b.chapter_number);
+      const sorted = annotateChapters(chapters);
       const groups = [];
       for (let i = 0; i < sorted.length; i += chunkSize) {
         const slice = sorted.slice(i, i + chunkSize);
-        const startNum = slice[0].chapter_number;
-        const endNum = slice[slice.length - 1].chapter_number;
+        const realInSlice = slice.filter(c => !c.is_note);
+        const startNum = realInSlice.length ? realInSlice[0]._displayNum : null;
+        const endNum = realInSlice.length ? realInSlice[realInSlice.length - 1]._displayNum : null;
+        const label = startNum === null
+          ? '📌 หมายเหตุ / ประกาศ'
+          : (startNum === endNum ? `ตอนที่ ${startNum}` : `${startNum} – ${endNum}`);
         groups.push({
           idx: groups.length,
-          label: startNum === endNum ? `ตอนที่ ${startNum}` : `${startNum} – ${endNum}`,
-          count: slice.length,
+          label,
+          count: realInSlice.length || slice.length,
+          noteCount: slice.length - realInSlice.length,
           items: desc ? slice.slice().reverse() : slice
         });
       }
@@ -1516,7 +1544,7 @@
     function renderNovelDetail() {
       const novel = getNovel(state.activeNovelId);
       if (!novel) return `<div class="p-8 text-center">ไม่พบนิยาย</div>`;
-      const chapters = (novel.chapters || []).filter(c => isAdmin() || isChapterPublished(c));
+      const chapters = annotateChapters((novel.chapters || []).filter(c => isAdmin() || isChapterPublished(c)));
       const unlockedCount = chapters.filter(c => isAccessible(c)).length;
       const pct = chapters.length ? Math.round((unlockedCount / chapters.length) * 100) : 0;
 
@@ -1544,7 +1572,7 @@
                       <div class="flex items-center gap-2 text-xs mb-4 px-3 py-2 rounded-xl w-fit" style="background-color: var(--bg-input); color: var(--text-sub);">
                         <span>เปิดอ่านฟรี <strong style="color: var(--gold-1);">${freeCount}</strong> ตอน</span>
                         <span>·</span>
-                        <span>ทั้งหมด ${chapters.length} ตอน</span>
+                        <span>ทั้งหมด ${chapters.filter(c => !c.is_note).length} ตอน</span>
                       </div>
                     `;
                   }
@@ -1616,7 +1644,7 @@
                 <span class="font-bold text-base">สารบัญ</span>
               </div>
               <div class="flex flex-wrap items-center gap-2.5">
-                <span class="text-xs" style="color: var(--text-muted);">${chapters.length} ตอน</span>
+                <span class="text-xs" style="color: var(--text-muted);">${chapters.filter(c => !c.is_note).length} ตอน</span>
                 ${chapters.length > 1 ? `<button type="button" id="toggleTocSortBtn" class="text-xs font-semibold hover:underline" style="color: var(--gold-1);">${state.tocSortDesc ? '↓ เรียงจากตอนล่าสุด' : '↑ เรียงจากตอนแรก'}</button>` : ''}
                 ${chapters.some(c => !isAccessible(c)) ? `<button type="button" id="detailBulkUnlockBtn" class="px-3.5 py-1.5 rounded-full text-xs btn-gold">⚡ ปลดล็อกหลายตอน</button>` : ''}
               </div>
@@ -1652,7 +1680,7 @@
                             return `
                               <button type="button" data-open-ch="${ch.id}" class="w-full text-left px-5 py-3 flex items-center justify-between gap-3 border-b last:border-b-0 hover:bg-white/5" style="border-color: var(--border-soft);">
                                 <div class="flex items-center gap-3 min-w-0">
-                                  <span class="text-xs w-14 shrink-0" style="color: var(--text-muted);">ตอนที่ ${ch.chapter_number}</span>
+                                  <span class="text-xs ${ch.is_note ? 'px-2 py-0.5 rounded-md font-semibold' : 'w-14'} shrink-0" style="${ch.is_note ? 'background-color: rgba(234,184,84,0.16); color: var(--gold-1);' : 'color: var(--text-muted);'}">${getChapterLabel(ch)}</span>
                                   <span class="text-sm font-medium truncate">${ch.title}</span>${(getReadingProgressForNovel(novel)?.chapter?.id === ch.id) ? `<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">อ่านค้างไว้</span>` : ''}
                                 </div>
                                 ${badge}
@@ -1788,7 +1816,7 @@
 
     function renderReader() {
       const novel = getNovel(state.activeNovelId);
-      const chapters = (novel?.chapters || []).filter(c => isAdmin() || isChapterPublished(c));
+      const chapters = annotateChapters((novel?.chapters || []).filter(c => isAdmin() || isChapterPublished(c)));
       if (!chapters.length) return `<div class="p-8 text-center">ไม่พบตอนนิยาย</div>`;
 
       // Ensure loadedChapterIds contains at least activeChapterId
@@ -1813,7 +1841,7 @@
         return `
           <article class="reading-sheet rounded-xl p-5 sm:p-9 border mb-5 fade-in" data-read-theme="${state.readTheme}">
             <div class="text-center mb-7 pb-5 border-b reader-protected" style="border-color: var(--border-soft);">
-              <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">ตอนที่ ${ch.chapter_number}${idx > 0 ? ' · อ่านต่อเนื่อง' : ''}</div>
+              <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">${getChapterLabel(ch)}${idx > 0 ? ' · อ่านต่อเนื่อง' : ''}</div>
               <h1 class="text-xl sm:text-2xl font-bold">${escapeHtml(ch.title)}</h1>
             </div>
             <div class="relative reader-protected">
@@ -1843,7 +1871,7 @@
         nextSectionHtml = `
           <div id="autoContinueSentinel" class="card-panel rounded-2xl p-6 text-center space-y-3">
             <div class="text-xs" style="color: var(--text-muted);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่ — กำลังเตรียมโหลดตอนถัดไป...' : 'ตอนถัดไปพร้อมให้อ่านต่อเนื่องด้านล่างนี้'}</div>
-            <div class="text-base font-bold">ตอนที่ ${nextCh.chapter_number}: ${nextCh.title}</div>
+            <div class="text-base font-bold">${getChapterLabel(nextCh)}: ${nextCh.title}</div>
             <button type="button" id="appendNextFreeBtn" data-next-ch="${nextCh.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านตอนถัดไปต่อด้านล่าง ↓</button>
           </div>
         `;
@@ -2304,7 +2332,7 @@
             state.adminSelectedNovelId = null;
         state.adminEditNovelOpen = false;
           } else {
-            const chList = (targetNovel.chapters || []).slice().sort((a, b) => a.chapter_number - b.chapter_number);
+            const chList = annotateChapters(targetNovel.chapters || []);
             const editCh = state.editingChapterId ? chList.find(c => c.id === state.editingChapterId) : null;
             const nextNum = chList.length ? Math.max(...chList.map(c => c.chapter_number)) + 1 : 1;
 
@@ -2355,9 +2383,13 @@
                       </div>
                       <div>
                         <label class="block text-xs mb-1" style="color: var(--text-sub);">ราคาเหรียญ (0 = ฟรี)</label>
-                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : (nextNum % 10 === 0 ? 0 : 1.5)}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : ((state.adminNewIsNote || nextNum % 10 === 0) ? 0 : 1.5)}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                       </div>
                     </div>
+                    <label class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl cursor-pointer text-xs" style="background-color: rgba(234,184,84,0.08); border: 1px solid rgba(234,184,84,0.28);">
+                      <input id="chIsNote" type="checkbox" ${(editCh ? !!editCh.is_note : !!state.adminNewIsNote) ? 'checked' : ''} class="w-4 h-4 accent-amber-400 rounded">
+                      <span><strong style="color: var(--gold-1);">📌 ตั้งเป็น "หมายเหตุ / ประกาศคั่นตอน"</strong> <span style="color: var(--text-sub);">(ไม่นับเป็นเลขตอน ระบบจะข้ามเลขให้ตอนถัดไปเรียงต่ออัตโนมัติ และเปิดให้อ่านฟรี)</span></span>
+                    </label>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
@@ -2416,6 +2448,7 @@
                         🏞️ ${targetNovel.banner_url ? 'เปลี่ยนแบนเนอร์ 16:5' : 'เพิ่มแบนเนอร์ 16:5'}
                         <input type="file" accept="image/*" data-change-novel-banner="${targetNovel.id}" class="hidden">
                       </label>
+                      <button type="button" id="openNewNoteBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); border: 1px solid var(--border-subtle); color: var(--gold-1);">📌 + เพิ่มหมายเหตุ</button>
                       <button type="button" id="openNewChapterBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มตอนใหม่</button>
                     </div>
                   </div>
@@ -2502,6 +2535,7 @@
                           issues.push({ type: 'dup', id: c.id, chNum: c.chapter_number, text: `ตอนที่ ${c.chapter_number} ซ้ำกัน (${escapeHtml(c.title)})` });
                         }
                         numSeen[c.chapter_number] = true;
+                        if (c.is_note) return;
                         const mTitleNum = String(c.title || '').match(/(?:ตอนที่|บทที่|Chapter|Ch\.?|EP\.?)\s*(\d+)/i);
                         if (mTitleNum && Number(mTitleNum[1]) !== Number(c.chapter_number)) {
                           issues.push({ type: 'mismatch', id: c.id, chNum: c.chapter_number, text: `เลขไม่ตรงกัน: ระบบอยู่ "ตอนที่ ${c.chapter_number}" แต่ชื่อตอนเขียนว่า "${escapeHtml(c.title)}"` });
@@ -2564,7 +2598,7 @@
                                       <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors" style="border-color: var(--border-soft);">
                                         <button type="button" data-edit-ch="${c.id}" class="min-w-0 flex-1 text-left focus:outline-none">
                                           <div class="flex flex-wrap items-center gap-2 mb-0.5">
-                                            <span class="text-xs font-bold" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
+                                            <span class="text-xs font-bold ${c.is_note ? 'px-2 py-0.5 rounded-md' : ''}" style="${c.is_note ? 'background-color: rgba(234,184,84,0.18); color: var(--gold-1);' : 'color: var(--gold-1);'}">${getChapterLabel(c)}</span>
                                             <span class="text-sm font-semibold truncate hover:underline">${c.title}</span>
                                           </div>
                                           <div class="flex flex-wrap items-center gap-2 text-[11px]" style="color: var(--text-muted);">
@@ -3469,8 +3503,23 @@
       const openNewChapterBtn = document.getElementById('openNewChapterBtn');
       if (openNewChapterBtn) openNewChapterBtn.addEventListener('click', () => {
         state.editingChapterId = null;
+        state.adminNewIsNote = false;
         state.adminShowChapterForm = true;
         render();
+      });
+
+      const openNewNoteBtn = document.getElementById('openNewNoteBtn');
+      if (openNewNoteBtn) openNewNoteBtn.addEventListener('click', () => {
+        state.editingChapterId = null;
+        state.adminNewIsNote = true;
+        state.adminShowChapterForm = true;
+        render();
+      });
+
+      const chIsNoteChk = document.getElementById('chIsNote');
+      if (chIsNoteChk) chIsNoteChk.addEventListener('change', () => {
+        const pInp = document.getElementById('chPrice');
+        if (pInp && chIsNoteChk.checked) pInp.value = '0';
       });
 
       document.querySelectorAll('[data-rank-filter]').forEach(btn => {
@@ -4034,14 +4083,16 @@
           const nid = state.adminSelectedNovelId;
           const pubRaw = document.getElementById('chPublishAt').value;
           const publishIso = pubRaw ? new Date(pubRaw).toISOString() : new Date().toISOString();
+          const isNoteFlag = !!document.getElementById('chIsNote')?.checked;
           const payload = {
             novel_id: nid,
             chapter_number: Number(document.getElementById('chNum').value),
             title: document.getElementById('chTitle').value.trim(),
-            price_coins: Math.max(0, roundCoins(document.getElementById('chPrice').value || 0)),
+            price_coins: isNoteFlag ? 0 : Math.max(0, roundCoins(document.getElementById('chPrice').value || 0)),
             content: document.getElementById('chContent').value.trim(),
             status: document.getElementById('chStatus').value,
-            publish_at: publishIso
+            publish_at: publishIso,
+            is_note: isNoteFlag
           };
 
           if (state.editingChapterId) {
