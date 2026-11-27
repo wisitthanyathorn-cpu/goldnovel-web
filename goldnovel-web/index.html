@@ -348,7 +348,6 @@
           <button type="button" data-top-tab="ranking" class="top-tab py-4 border-b-2 transition-colors">อันดับมาแรง</button>
           <button type="button" data-view="library" class="py-4 border-b-2 border-transparent transition-colors hover:text-amber-300" style="color: var(--text-sub);">ชั้นหนังสือ</button>
           <button type="button" data-view="settings" class="py-4 border-b-2 border-transparent transition-colors hover:text-amber-300" style="color: var(--text-sub);">ตั้งค่า</button>
-          <button type="button" id="topAdminBtn" data-view="admin" class="hidden px-3 py-1 rounded-full text-xs font-semibold transition-colors" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.35); color: var(--gold-1);">✨ หลังบ้านนักเขียน</button>
         </nav>
       </div>
 
@@ -365,6 +364,10 @@
         <button type="button" id="pwaHeaderInstallBtn" class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors hover:bg-white/[0.06]" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.32); color: var(--gold-1);" title="ติดตั้งแอป GoldNovel ลงหน้าจอ">
           <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span class="hidden md:inline">ติดตั้งแอป</span>
+        </button>
+
+        <button type="button" id="topAdminBtn" data-view="admin" class="hidden items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition-colors hover:brightness-110" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.12)); border: 1px solid rgba(234,184,84,0.5); color: var(--gold-1);" title="เข้าหลังบ้านนักเขียน">
+          <span>✨</span><span class="hidden sm:inline">หลังบ้านนักเขียน</span><span class="sm:hidden">หลังบ้าน</span>
         </button>
 
         <button type="button" id="headerTopupBtn" class="flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-full text-xs font-semibold shrink-0 transition-transform hover:scale-[1.02]" style="background-color: var(--bg-card); border: 1px solid rgba(234,184,84,0.38); color: var(--gold-1);" title="เติมเหรียญ">
@@ -1186,6 +1189,16 @@
 
       const showAdmin = isAdmin();
       document.getElementById('sideAdminBtn').classList.toggle('hidden', !showAdmin);
+      const topAdminBtnEl = document.getElementById('topAdminBtn');
+      if (topAdminBtnEl) {
+        topAdminBtnEl.classList.toggle('hidden', !showAdmin);
+        topAdminBtnEl.classList.toggle('flex', showAdmin);
+      }
+      document.querySelectorAll('header nav [data-view]').forEach(btn => {
+        const active = state.view === btn.getAttribute('data-view');
+        btn.style.color = active ? 'var(--gold-1)' : 'var(--text-sub)';
+        btn.style.borderColor = active ? 'var(--gold-1)' : 'transparent';
+      });
       document.getElementById('mobileAdminBtn').classList.toggle('hidden', !showAdmin);
       document.getElementById('sideReaderPreviewBtn').classList.toggle('hidden', !showAdmin);
       document.getElementById('readerPreviewBanner').classList.toggle('hidden', !(isRealAdmin() && state.previewAsReader));
@@ -5287,8 +5300,13 @@
     }
 
     // Static listeners
-    document.querySelectorAll('aside [data-view]').forEach(btn => {
-      btn.addEventListener('click', () => { state.view = btn.getAttribute('data-view'); state.activeCategory = null; render(); });
+    document.querySelectorAll('aside [data-view], header [data-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.view = btn.getAttribute('data-view');
+        state.activeCategory = null;
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        render();
+      });
     });
 
     document.querySelectorAll('[data-top-tab]').forEach(btn => {
