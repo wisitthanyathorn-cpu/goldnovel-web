@@ -226,6 +226,7 @@
     @media (prefers-reduced-motion: reduce) {
       .vip-gold-text, .vip-beam-box, .vip-avatar-ring { animation: none !important; }
     }
+    .reading-sheet, #mainContent { overflow-anchor: none; }
   </style>
   <script src="config.js"></script>
 </head>
@@ -787,6 +788,9 @@
       autoContinuousNovelId: null,
       autoContinuousInfoOpen: true,
       autoUnlockBusy: false,
+      readerSettingsOpen: false,
+      pendingScrollChapterId: null,
+      pendingScrollToTop: false,
       tocSortDesc: false,
       tocOpenGroups: {},
       detailExpanded: {},
@@ -1859,7 +1863,7 @@
 
       const sheetsHtml = loadedChapters.map((ch, idx) => {
         return `
-          <article class="reading-sheet rounded-xl p-5 sm:p-9 border mb-5 fade-in" data-read-theme="${state.readTheme}">
+          <article id="chapter-article-${ch.id}" class="reading-sheet rounded-xl p-5 sm:p-9 border mb-5 fade-in" style="scroll-margin-top: 72px;" data-read-theme="${state.readTheme}">
             <div class="text-center mb-7 pb-5 border-b reader-protected" style="border-color: var(--border-soft);">
               <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">${getChapterLabel(ch)}${idx > 0 ? ' · อ่านต่อเนื่อง' : ''}</div>
               <h1 class="text-xl sm:text-2xl font-bold">${escapeHtml(ch.title)}</h1>
@@ -1890,9 +1894,9 @@
       } else if (isAccessible(nextCh)) {
         nextSectionHtml = `
           <div id="autoContinueSentinel" class="card-panel rounded-2xl p-6 text-center space-y-3">
-            <div class="text-xs" style="color: var(--text-muted);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่ — กำลังเตรียมโหลดตอนถัดไป...' : 'ตอนถัดไปพร้อมให้อ่านต่อเนื่องด้านล่างนี้'}</div>
+            <div class="text-xs" style="color: var(--text-muted);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่ — กำลังเตรียมโหลดตอนถัดไป...' : 'ตอนถัดไปพร้อมให้อ่านแล้ว'}</div>
             <div class="text-base font-bold">${getChapterLabel(nextCh)}: ${nextCh.title}</div>
-            <button type="button" id="appendNextFreeBtn" data-next-ch="${nextCh.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านตอนถัดไปต่อด้านล่าง ↓</button>
+            <button type="button" id="appendNextFreeBtn" data-next-ch="${nextCh.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านตอนถัดไป →</button>
           </div>
         `;
       } else {
@@ -1904,7 +1908,7 @@
             <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่' : '🔒 ตอนถัดไปติดเหรียญ'}</div>
             <div>
               <div class="text-lg font-bold">ตอนที่ ${nextCh.chapter_number}: ${nextCh.title}</div>
-              <div class="text-xs mt-1" style="color: var(--text-sub);">ปลดล็อกเพื่อโหลดเนื้อหาต่อด้านล่างทันที · ยอดเหรียญของคุณ: <strong style="color: var(--gold-1);">${bal.toLocaleString()} เหรียญ</strong></div>
+              <div class="text-xs mt-1" style="color: var(--text-sub);">ปลดล็อกเพื่อเปิดอ่านตอนถัดไปทันที · ยอดเหรียญของคุณ: <strong style="color: var(--gold-1);">${bal.toLocaleString()} เหรียญ</strong></div>
             </div>
             <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
               <button type="button" id="inlineUnlockNextBtn" data-next-ch="${nextCh.id}" class="px-6 py-3 rounded-full text-sm btn-gold">
@@ -1945,28 +1949,48 @@
       `;
 
       return `
-        <div class="fade-in max-w-2xl mx-auto pb-16">
-          <div class="sticky top-16 z-10 py-3 mb-4 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 border-b" style="background-color: color-mix(in srgb, var(--bg-app) 90%, transparent); border-color: var(--border-soft);">
-            <button type="button" data-open-novel="${novel.id}" class="text-xs sm:text-sm font-medium hover:underline truncate max-w-[200px] sm:max-w-xs" style="color: var(--gold-1);">← ${novel.title}</button>
-            <div class="flex items-center gap-2">
-              <div class="flex gap-1 p-1 rounded-lg" style="background-color: var(--bg-input);">
-                <button type="button" data-rtheme="dark" class="px-2 py-1 rounded text-[11px]" style="${state.readTheme === 'dark' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">มืด</button>
-                <button type="button" data-rtheme="warm" class="px-2 py-1 rounded text-[11px]" style="${state.readTheme === 'warm' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">อุ่น</button>
-                <button type="button" data-rtheme="sepia" class="px-2 py-1 rounded text-[11px]" style="${state.readTheme === 'sepia' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">Sepia</button>
-              </div>
-              <button type="button" id="fontDownBtn" class="w-8 h-8 rounded-lg text-xs font-bold" style="background-color: var(--bg-input);">A-</button>
-              <button type="button" id="fontUpBtn" class="w-8 h-8 rounded-lg text-xs font-bold" style="background-color: var(--bg-input);">A+</button>
-            </div>
+        <div class="fade-in max-w-2xl mx-auto pb-20">
+          <!-- Non-sticky slim top bar (never covers novel text while scrolling!) -->
+          <div class="py-2 mb-3 flex items-center justify-between gap-2 border-b" style="border-color: var(--border-soft);">
+            <button type="button" data-open-novel="${novel.id}" class="text-xs sm:text-sm font-medium hover:underline truncate" style="color: var(--gold-1);">← ${novel.title}</button>
+            <button type="button" id="topReaderSettingsBtn" class="px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1" style="background-color: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-sub);">
+              <span>Aa</span><span class="hidden sm:inline">ตั้งค่าอ่าน</span>
+            </button>
           </div>
 
           ${sheetsHtml}
           ${nextSectionHtml}
           ${autoCardHtml}
-          ${renderCommentsSection(novel.id, lastLoaded.id, `ความคิดเห็นท้ายตอนที่ ${lastLoaded.chapter_number}`)}
+          ${renderCommentsSection(novel.id, lastLoaded.id, `ความคิดเห็นท้าย${getChapterLabel(lastLoaded)}`)}
+
+          <!-- Collapsible Reader Settings Pop-up (Closed by default so screen stays 100% clean) -->
+          ${state.readerSettingsOpen ? `
+            <div id="readerSettingsPopup" class="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-24px)] max-w-md card-panel rounded-2xl p-4 shadow-2xl space-y-3.5 fade-in" style="border-color: rgba(234,184,84,0.35);">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold" style="color: var(--gold-1);">Aa ตั้งค่าหน้าอ่าน</span>
+                <button type="button" id="closeReaderSettingsBtn" class="w-6 h-6 rounded-full text-xs flex items-center justify-center" style="background-color: var(--bg-input); color: var(--text-sub);">✕</button>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-xs" style="color: var(--text-sub);">โทนสีกระดาษ</span>
+                <div class="flex gap-1.5 p-1 rounded-xl" style="background-color: var(--bg-input);">
+                  <button type="button" data-rtheme="dark" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="${state.readTheme === 'dark' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">มืด</button>
+                  <button type="button" data-rtheme="warm" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="${state.readTheme === 'warm' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">อุ่น</button>
+                  <button type="button" data-rtheme="sepia" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="${state.readTheme === 'sepia' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">Sepia</button>
+                </div>
+              </div>
+              <div class="flex items-center justify-between gap-3 pt-2 border-t" style="border-color: var(--border-soft);">
+                <span class="text-xs" style="color: var(--text-sub);">ขนาดตัวอักษร (${state.fontSize}px)</span>
+                <div class="flex items-center gap-2">
+                  <button type="button" id="fontDownBtn" class="w-9 h-8 rounded-lg text-xs font-bold" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">A-</button>
+                  <button type="button" id="fontUpBtn" class="w-9 h-8 rounded-lg text-xs font-bold" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">A+</button>
+                </div>
+              </div>
+            </div>
+          ` : ''}
 
           <!-- Fixed Bottom Reader Toolbar -->
           <div id="readerBottomBar" class="fixed bottom-0 inset-x-0 z-30 mobile-bottom-nav backdrop-blur-md">
-            <div class="max-w-2xl mx-auto px-2 h-13 py-1.5 grid grid-cols-5 items-center text-center">
+            <div class="max-w-2xl mx-auto px-1.5 h-13 py-1.5 grid grid-cols-6 items-center text-center">
               <button type="button" data-open-novel="${novel.id}" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors hover:text-amber-300" style="color: var(--text-sub);" title="สารบัญตอน">
                 <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
                 <span class="text-[10px]">สารบัญ</span>
@@ -1978,17 +2002,21 @@
                 </span>
                 <span class="text-[10px]">คอมเมนต์</span>
               </button>
+              <button type="button" id="barSettingsToggleBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors" style="color: ${state.readerSettingsOpen ? 'var(--gold-1)' : 'var(--text-sub)'};" title="ปรับขนาดฟอนต์และสีพื้นหลัง">
+                <span class="text-[15px] font-bold leading-[18px]">Aa</span>
+                <span class="text-[10px]">ตัวอักษร</span>
+              </button>
               <button type="button" id="barAutoToggleBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors" style="color: ${state.autoContinuousMode ? 'var(--gold-1)' : 'var(--text-sub)'};" title="เปิด/ปิด โหมดอ่านต่อเนื่อง">
                 <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
-                <span class="text-[10px] font-medium">${state.autoContinuousMode ? 'ต่อเนื่อง ON' : 'อ่านต่อเนื่อง'}</span>
+                <span class="text-[10px] font-medium">${state.autoContinuousMode ? 'ต่อเนื่อง ON' : 'ต่อเนื่อง'}</span>
               </button>
               <button type="button" id="barPrevChBtn" ${prevCh ? `data-prev-ch="${prevCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${prevCh ? 'hover:text-amber-300' : 'opacity-25 cursor-not-allowed'}" style="color: var(--text-sub);" title="ตอนก่อนหน้า">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                <span class="text-[10px]">ตอนก่อน</span>
+                <span class="text-[10px]">ก่อนหน้า</span>
               </button>
               <button type="button" id="barNextChBtn" ${nextCh ? `data-next-ch="${nextCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${nextCh ? 'hover:text-amber-300' : 'opacity-25 cursor-not-allowed'}" style="color: ${nextCh ? 'var(--gold-1)' : 'var(--text-muted)'};" title="ตอนถัดไป">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                <span class="text-[10px]">ตอนถัดไป</span>
+                <span class="text-[10px]">ถัดไป</span>
               </button>
             </div>
           </div>
@@ -3068,6 +3096,7 @@
       if (state.view !== 'reader' || state.activeNovelId !== state.autoContinuousNovelId) {
         state.autoContinuousMode = false;
         state.autoContinuousNovelId = null;
+        state.readerSettingsOpen = false;
       }
       const mNav = document.getElementById('mobileBottomNav');
       if (mNav) mNav.classList.toggle('hidden', state.view === 'reader');
@@ -3084,7 +3113,42 @@
       bindDynamic();
       if (state.view === 'reader') {
         renderReaderCanvases();
-        if (document.fonts && document.fonts.ready) { document.fonts.ready.then(() => renderReaderCanvases()); }
+        const scrollToTopNow = () => {
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        };
+        if (state.pendingScrollToTop) {
+          state.pendingScrollToTop = false;
+          scrollToTopNow();
+          requestAnimationFrame(() => {
+            scrollToTopNow();
+            setTimeout(scrollToTopNow, 60);
+          });
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => {
+              renderReaderCanvases();
+              if (window.scrollY < 160) scrollToTopNow();
+            });
+          }
+        } else if (state.pendingScrollChapterId) {
+          const targetId = state.pendingScrollChapterId;
+          state.pendingScrollChapterId = null;
+          const jumpToArt = () => {
+            const art = document.getElementById('chapter-article-' + targetId);
+            if (art) {
+              const y = Math.max(0, art.getBoundingClientRect().top + window.scrollY - 68);
+              window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+            }
+          };
+          requestAnimationFrame(() => {
+            jumpToArt();
+            setTimeout(jumpToArt, 60);
+          });
+          if (document.fonts && document.fonts.ready) { document.fonts.ready.then(() => renderReaderCanvases()); }
+        } else if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => renderReaderCanvases());
+        }
       }
       startHeroAutoSlide();
     }
@@ -3285,6 +3349,7 @@
       m.classList.remove('flex');
     }
 
+    function openAuth(defaultMode = 'login') { return openAuthModal(defaultMode); }
     function openUnlockModal(novelId, chId) {
       if (!state.user) { openAuthModal(); showToast('กรุณาเข้าสู่ระบบก่อนปลดล็อกตอน'); return; }
       const novel = getNovel(novelId);
@@ -3354,10 +3419,11 @@
           return;
         }
         state.activeChapterId = ch.id;
-      recordLocalRead(novel.id, ch);
+        recordLocalRead(novel.id, ch);
         state.loadedChapterIds = [ch.id];
         state.view = 'reader';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        state.pendingScrollChapterId = null;
+        state.pendingScrollToTop = true;
         render();
       } else {
         openUnlockModal(novel.id, ch.id);
@@ -3604,8 +3670,11 @@
         if (!ch) return;
         const ok = await fetchChapterContentIfNeeded(ch);
         if (!ok) { showToast('โหลดตอนถัดไปไม่สำเร็จ'); return; }
-        if (!state.loadedChapterIds.includes(ch.id)) state.loadedChapterIds.push(ch.id);
+        state.loadedChapterIds = [ch.id];
         state.activeChapterId = ch.id;
+        state.pendingScrollChapterId = null;
+        state.pendingScrollToTop = true;
+        recordLocalRead(novel.id, ch);
         render();
       });
 
@@ -3637,10 +3706,13 @@
           const freshNovel = getNovel(novel.id);
           const freshCh = (freshNovel?.chapters || []).find(c => c.id === ch.id);
           if (freshCh) await fetchChapterContentIfNeeded(freshCh);
-          if (!state.loadedChapterIds.includes(ch.id)) state.loadedChapterIds.push(ch.id);
+          state.loadedChapterIds = [ch.id];
           state.activeChapterId = ch.id;
+          state.pendingScrollChapterId = null;
+          state.pendingScrollToTop = true;
+          recordLocalRead(novel.id, freshCh || ch);
           render();
-          showToast(`ปลดล็อกตอนที่ ${ch.chapter_number} แล้ว อ่านต่อด้านล่างได้เลย!`);
+          showToast(`ปลดล็อกตอนที่ ${ch.chapter_number} แล้ว!`);
         } catch (err) {
           inlineUnlockNextBtn.disabled = false;
           showToast('ปลดล็อกไม่สำเร็จ: ' + err.message);
@@ -3823,10 +3895,11 @@
           state.activeChapterId = ch.id;
           state.loadedChapterIds = [ch.id];
           recordLocalRead(novel.id, ch);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          state.pendingScrollChapterId = null;
+          state.pendingScrollToTop = true;
           render();
         } else {
-          openUnlock(ch);
+          openUnlockModal(novel.id, ch.id);
         }
       });
 
@@ -3836,12 +3909,18 @@
         const novel = getNovel(state.activeNovelId);
         const ch = (novel?.chapters || []).find(c => c.id === cid);
         if (!ch) return;
-        if (state.autoContinuousMode || isAccessible(ch)) {
+        if (isAccessible(ch)) {
+          await fetchChapterContentIfNeeded(ch);
+          state.activeChapterId = ch.id;
+          state.loadedChapterIds = [ch.id];
+          recordLocalRead(novel.id, ch);
+          state.pendingScrollChapterId = null;
+          state.pendingScrollToTop = true;
+          render();
+        } else if (state.autoContinuousMode) {
           await triggerAutoNextChapter();
         } else {
-          const inlineBtn = document.getElementById('inlineUnlockNextBtn');
-          if (inlineBtn) inlineBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          else openUnlock(ch);
+          openUnlockModal(novel.id, ch.id);
         }
       });
 
@@ -3916,6 +3995,19 @@
         saveUserDisplayName(document.getElementById('settingsDisplayNameInput').value, settingsDisplayNameForm.querySelector('button[type="submit"]'));
       });
 
+      const toggleReaderSettings = () => {
+        state.readerSettingsOpen = !state.readerSettingsOpen;
+        render();
+      };
+      const topReaderSettingsBtn = document.getElementById('topReaderSettingsBtn');
+      if (topReaderSettingsBtn) topReaderSettingsBtn.addEventListener('click', toggleReaderSettings);
+      const barSettingsToggleBtn = document.getElementById('barSettingsToggleBtn');
+      if (barSettingsToggleBtn) barSettingsToggleBtn.addEventListener('click', toggleReaderSettings);
+      const closeReaderSettingsBtn = document.getElementById('closeReaderSettingsBtn');
+      if (closeReaderSettingsBtn) closeReaderSettingsBtn.addEventListener('click', () => {
+        state.readerSettingsOpen = false;
+        render();
+      });
       const fDown = document.getElementById('fontDownBtn') || document.getElementById('setFontDown');
       if (fDown) fDown.addEventListener('click', () => { state.fontSize = Math.max(14, state.fontSize - 2); saveDemo(); render(); });
 
@@ -5217,9 +5309,12 @@
         if (freshCh) await fetchChapterContentIfNeeded(freshCh);
         state.activeNovelId = novel.id;
         state.activeChapterId = ch.id;
+        state.loadedChapterIds = [ch.id];
+        recordLocalRead(novel.id, freshCh || ch);
         state.view = 'reader';
+        state.pendingScrollChapterId = null;
+        state.pendingScrollToTop = true;
         closeUnlockModal();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
         render();
         showToast(`ปลดล็อกตอนที่ ${ch.chapter_number} สำเร็จ!`);
       } catch (err) { showToast('ปลดล็อกไม่สำเร็จ: ' + err.message); }
