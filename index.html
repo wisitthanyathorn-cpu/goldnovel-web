@@ -272,10 +272,10 @@
     50% { box-shadow: 0 0 0 1.5px rgba(247,223,155,0.85), 0 0 38px rgba(234,184,84,0.58), 0 16px 36px -8px rgba(0,0,0,0.75); }
   }
   .cover-fx-wrap { position: relative; width: 100%; height: 100%; overflow: hidden; }
-  .cover-fx-img { width: 100%; height: 100%; object-fit: cover; will-change: transform; animation: coverBreathe 7s ease-in-out infinite; }
+  .cover-fx-img { width: 100%; height: 100%; object-fit: cover; object-position: top center; transform-origin: 50% 12%; will-change: transform; animation: coverBreathe 7.5s ease-in-out infinite; }
   @keyframes coverBreathe {
-    0%, 100% { transform: scale(1) translate3d(0, 0, 0); }
-    50% { transform: scale(1.095) translate3d(0, -2.5%, 0); }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.055); }
   }
   .cover-fx-aura {
     position: absolute; inset: 0; pointer-events: none; z-index: 2;
