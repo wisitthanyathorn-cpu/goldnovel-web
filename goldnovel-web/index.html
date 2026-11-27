@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -434,6 +435,7 @@
           <span class="text-[11px]" style="color: var(--text-muted);">หรือ</span>
           <div class="h-px flex-1" style="background-color: var(--border-soft);"></div>
         </div>
+        <div id="googleGsiBtnWrap" class="hidden w-full flex justify-center mb-1"></div>
         <button type="button" id="googleLoginBtn" class="w-full py-2.5 px-4 rounded-xl text-sm font-medium flex items-center justify-center gap-2.5 transition-opacity hover:opacity-90" style="background-color: #FFFFFF; color: #1F1F1F; border: 1px solid #DADCE0;">
           <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" aria-hidden="true">
             <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
@@ -709,7 +711,8 @@
       promptpayNumber: "08X-XXX-XXXX",
       promptpayAccountName: "ชื่อบัญชีของคุณ (ตั้งค่าใน config.js)",
       truemoneyPhone: "08X-XXX-XXXX",
-      topupBonusPercent: 10
+      topupBonusPercent: 10,
+      googleClientId: ""
     }, window.GOLDNOVEL_CONFIG || {});
 
     const CATEGORIES = ['กำลังภายใน', 'ระบบ', 'แฟนตาซี', 'แอ็กชัน', 'เกิดใหม่', 'ต่างโลก', 'สยองขวัญ', 'โรแมนติก'];
@@ -3101,6 +3104,7 @@
       const m = document.getElementById('topupModal');
       m.classList.remove('hidden');
       m.classList.add('flex');
+      if (!hasUser && typeof initDirectGoogleButtonIfReady === 'function') setTimeout(() => initDirectGoogleButtonIfReady(), 40);
     }
 
     function closeTopup() {
@@ -4762,6 +4766,82 @@
     // Auth actions
     document.getElementById('tabLoginBtn').addEventListener('click', () => setAuthMode('login'));
     document.getElementById('tabSignupBtn').addEventListener('click', () => setAuthMode('signup'));
+
+
+    // Direct Google Sign-In via Google Identity Services + Supabase signInWithIdToken (Zero supabase.co URL shown!)
+    let _gsiInitialized = false;
+    let _gsiRawNonce = '';
+
+    async function makeGoogleNoncePair() {
+      const bytes = new Uint8Array(16);
+      if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(bytes);
+      } else {
+        for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+      }
+      const raw = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      if (window.crypto && window.crypto.subtle) {
+        const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+        const hashed = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+        return { raw, hashed };
+      }
+      return { raw, hashed: raw };
+    }
+
+    async function initDirectGoogleButtonIfReady() {
+      const clientId = String(CFG.googleClientId || '').trim();
+      const gsiWrap = document.getElementById('googleGsiBtnWrap');
+      const fallbackBtn = document.getElementById('googleLoginBtn');
+      if (!state.isLive || !clientId || !gsiWrap || !window.google?.accounts?.id) {
+        if (gsiWrap) gsiWrap.classList.add('hidden');
+        if (fallbackBtn) fallbackBtn.classList.remove('hidden');
+        return;
+      }
+
+      if (!_gsiInitialized) {
+        const pair = await makeGoogleNoncePair();
+        _gsiRawNonce = pair.raw;
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          nonce: pair.hashed,
+          callback: async (response) => {
+            if (!response?.credential) {
+              showToast('เข้าสู่ระบบ Google ไม่สำเร็จ กรุณาลองใหม่');
+              return;
+            }
+            try {
+              showToast('กำลังเข้าสู่ระบบด้วย Google...');
+              const { error } = await sb.auth.signInWithIdToken({
+                provider: 'google',
+                token: response.credential,
+                nonce: _gsiRawNonce
+              });
+              if (error) throw error;
+              await loadLiveData();
+              closeAuthModal();
+              render();
+              if (typeof resumePendingQuickSlipIfAny === 'function') resumePendingQuickSlipIfAny();
+              showToast('เข้าสู่ระบบด้วย Google สำเร็จ!');
+            } catch (err) {
+              showToast('เข้าสู่ระบบ Google ไม่สำเร็จ: ' + err.message);
+            }
+          }
+        });
+        _gsiInitialized = true;
+      }
+
+      gsiWrap.classList.remove('hidden');
+      if (fallbackBtn) fallbackBtn.classList.add('hidden');
+      gsiWrap.innerHTML = '';
+      window.google.accounts.id.renderButton(gsiWrap, {
+        theme: state.mode === 'light' ? 'outline' : 'filled_black',
+        size: 'large',
+        shape: 'pill',
+        text: 'continue_with',
+        width: Math.min(336, Math.max(240, gsiWrap.clientWidth || 320)),
+        locale: 'th'
+      });
+    }
 
     document.getElementById('googleLoginBtn').addEventListener('click', async () => {
       if (!state.isLive) {
