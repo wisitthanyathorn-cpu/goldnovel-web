@@ -6,4 +6,22 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>https://www.goldnovelth.com/?novel=4dbdd31c-7651-4014-b262-7ea2252ebd5b</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.goldnovelth.com/?novel=1d3bbe08-a5a0-4f3f-9772-37607ba8098c</loc>
+    <lastmod>2026-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.goldnovelth.com/?novel=eed1ac34-747c-424d-bd75-b5f485970599</loc>
+    <lastmod>2026-11-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
