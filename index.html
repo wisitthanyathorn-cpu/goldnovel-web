@@ -4,9 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์</title>
+  <meta name="description" content="GoldNovel (goldnovelth.com) แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน อ่านลื่น ปลดล็อกตอนอัตโนมัติ">
+  <link rel="canonical" href="https://www.goldnovelth.com/">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0A0B0F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GoldNovel">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="GoldNovel">
+  <meta property="og:title" content="GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์">
+  <meta property="og:description" content="GoldNovel แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน">
+  <meta property="og:url" content="https://www.goldnovelth.com/">
+  <meta property="og:image" content="https://www.goldnovelth.com/favicon.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "GoldNovel",
+    "alternateName": ["Gold Novel", "GoldNovelTH", "goldnovelth.com"],
+    "url": "https://www.goldnovelth.com/"
+  }
+  </script>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -225,6 +251,7 @@
     @media (prefers-reduced-motion: reduce) {
       .vip-gold-text, .vip-beam-box, .vip-avatar-ring { animation: none !important; }
     }
+    .reading-sheet, #mainContent { overflow-anchor: none; }
   </style>
   <script src="config.js"></script>
 </head>
@@ -318,6 +345,11 @@
           <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style="color: var(--text-muted);"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
         </div>
 
+        <button type="button" id="pwaHeaderInstallBtn" class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors hover:bg-white/[0.06]" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.32); color: var(--gold-1);" title="ติดตั้งแอป GoldNovel ลงหน้าจอ">
+          <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="hidden md:inline">ติดตั้งแอป</span>
+        </button>
+
         <button type="button" id="headerTopupBtn" class="flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-full text-xs font-semibold shrink-0 transition-transform hover:scale-[1.02]" style="background-color: var(--bg-card); border: 1px solid rgba(234,184,84,0.38); color: var(--gold-1);" title="เติมเหรียญ">
           <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#gnCoinGrad)"/><text x="12" y="15.5" text-anchor="middle" font-size="10" font-weight="800" fill="#1A1408" font-family="sans-serif">G</text><defs><linearGradient id="gnCoinGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#F7DF9B"/><stop offset="1" stop-color="#C9922B"/></linearGradient></defs></svg>
           <span id="coinBalanceText" class="px-0.5 tabular-nums text-[12px]">0</span>
@@ -338,6 +370,10 @@
             <button type="button" id="closeDrawerBtn" class="w-7 h-7 rounded-lg text-xs" style="background-color: var(--bg-input); color: var(--text-sub);">✕</button>
           </div>
           <nav class="space-y-1">
+            <button type="button" id="pwaDrawerInstallBtn" class="hidden w-full text-left px-3 py-2.5 mb-2 rounded-xl text-[13px] font-semibold flex items-center gap-2.5" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.32); color: var(--gold-1);">
+              <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>ติดตั้งแอปลงหน้าจอ</span>
+            </button>
             <button type="button" data-mview="home" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4.5v-6h3v6H18a1 1 0 0 0 1-1V9.5"/></svg><span>หน้าหลัก</span></button>
             <button type="button" data-mview="library" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>ชั้นหนังสือ</span></button>
             <button type="button" id="mobileTopupBtn" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h.01"/><path d="M2 10h20"/></svg><span>เติมเหรียญ</span></button>
@@ -434,6 +470,7 @@
           <span class="text-[11px]" style="color: var(--text-muted);">หรือ</span>
           <div class="h-px flex-1" style="background-color: var(--border-soft);"></div>
         </div>
+        <div id="googleGsiBtnWrap" class="hidden w-full flex justify-center mb-1"></div>
         <button type="button" id="googleLoginBtn" class="w-full py-2.5 px-4 rounded-xl text-sm font-medium flex items-center justify-center gap-2.5 transition-opacity hover:opacity-90" style="background-color: #FFFFFF; color: #1F1F1F; border: 1px solid #DADCE0;">
           <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" aria-hidden="true">
             <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
@@ -454,7 +491,7 @@
         <div>
           <span id="topupBonusBadge" class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-1.5" style="background-color: var(--gold-soft); color: var(--gold-1);">โปรโมชั่นโบนัส +10%</span>
           <h2 class="text-xl font-bold">เติมเหรียญ GoldNovel</h2>
-          <p id="topupSubtext" class="text-xs mt-0.5" style="color: var(--text-sub);">รองรับ PromptPay และ TrueMoney Wallet</p>
+          <p id="topupSubtext" class="text-xs mt-0.5" style="color: var(--text-sub);">โอนผ่าน PromptPay QR ล็อกยอดอัตโนมัติ (รองรับทุกธนาคาร)</p>
         </div>
         <button type="button" id="closeTopupBtn" class="w-8 h-8 rounded-full text-sm" style="background-color: var(--bg-input);">✕</button>
       </div>
@@ -497,16 +534,15 @@
           </div>
         </div>
 
-        <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">2. เลือกช่องทางชำระเงิน</div>
-        <div class="grid grid-cols-2 gap-2.5 mb-5">
-          <button type="button" data-pay="promptpay" class="pay-opt p-3 rounded-xl border text-left">
-            <div class="text-sm font-semibold">PromptPay</div>
-            <div class="text-[11px] mt-0.5" style="color: var(--text-sub);">โอนพร้อมเพย์ทุกธนาคาร</div>
-          </button>
-          <button type="button" data-pay="truemoney" class="pay-opt p-3 rounded-xl border text-left">
-            <div class="text-sm font-semibold">TrueMoney Wallet</div>
-            <div class="text-[11px] mt-0.5" style="color: var(--text-sub);">โอนเข้าวอลเล็ท</div>
-          </button>
+        <div class="mb-4 rounded-xl p-3 border space-y-1" style="background-color: var(--bg-input); border-color: rgba(234,184,84,0.3);">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold" style="color: var(--gold-1);">⚡ ช่องทางชำระเงิน: PromptPay QR (ทุกธนาคาร)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">ออโต้ 24 ชม.</span>
+          </div>
+          <p class="text-[11px] leading-relaxed" style="color: var(--text-sub);">
+            • เติม <strong>100 บาทขึ้นไป</strong> หรือ <strong>VIP 99 บาท</strong>: ตรวจสลิปอัตโนมัติ เหรียญ/VIP เข้าทันที<br>
+            • เติม <strong>ต่ำกว่า 100 บาท</strong>: แนบสลิปรอแอดมินตรวจสอบอนุมัติ
+          </p>
         </div>
         <button type="button" id="goPayStepBtn" class="w-full py-3 rounded-xl text-sm btn-gold">ดำเนินการชำระเงิน</button>
       </div>
@@ -521,7 +557,7 @@
               <div class="text-[11px] font-bold text-[#113566] tracking-wide mb-1.5">THAI QR PAYMENT · PROMPTPAY</div>
               <div id="promptpayQrCanvas" class="w-44 h-44 flex items-center justify-center"></div>
             </div>
-            <button type="button" id="downloadQrBtn" class="mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">💾 บันทึกรูป QR ไว้สแกนในแอปธนาคาร</button>
+            <div class="mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">📸 สามารถแคปหน้าจอนี้ไปสแกนจ่ายในแอปธนาคารได้เลย</div>
           </div>
 
           <div id="payPlaceholderWarn" class="hidden text-[11px] text-amber-300 bg-amber-500/10 border border-amber-400/25 rounded-lg px-3 py-1.5 mb-2">⚠️ กรุณาเปลี่ยนเบอร์พร้อมเพย์จริงของคุณในไฟล์ config.js ก่อนเปิดรับเงินจริง</div>
@@ -532,6 +568,24 @@
         <div>
           <label class="block text-xs font-medium mb-1.5" style="color: var(--text-sub);">แนบรูปสลิปการโอนเงิน</label>
           <input id="slipFileInput" type="file" accept="image/*" class="w-full text-xs p-2.5 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+        </div>
+
+        <!-- Mobile Quick-Slip Handoff QR (Helps PC readers upload slip directly from phone!) -->
+        <div class="hidden sm:block rounded-xl p-3 border space-y-2.5" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] font-semibold" style="color: var(--text-main);">📱 สลิปอยู่ในมือถือ? แสกนส่งจากมือถือได้เลย</span>
+            <button type="button" id="toggleMobileSlipQrBtn" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">แสดง QR ส่งสลิป</button>
+          </div>
+          <div id="mobileSlipQrPanel" class="hidden pt-2 border-t text-center space-y-2" style="border-color: var(--border-soft);">
+            <p class="text-[11px]" style="color: var(--text-sub);">ใช้กล้องมือถือสแกน QR นี้เพื่อเปิดหน้าแนบสลิปบนมือถือ (พอส่งเสร็จ หน้าคอมจะอัปเดตเหรียญให้อัตโนมัติ)</p>
+            <div class="bg-white p-2 rounded-xl inline-block shadow">
+              <div id="mobileSlipQrCanvas" class="w-32 h-32 flex items-center justify-center"></div>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+              <span class="text-[10px]" style="color: var(--gold-1);">⏳ กำลังรอรับยอดจากมือถืออัตโนมัติ...</span>
+              <button type="button" id="checkMobileSyncBtn" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main);">🔄 เช็กยอดตอนนี้</button>
+            </div>
+          </div>
         </div>
 
         <button type="button" id="submitSlipBtn" class="w-full py-3 rounded-xl text-sm btn-gold">ยืนยันการโอนเงิน / ส่งสลิป</button>
@@ -681,6 +735,52 @@
     </div>
   </div>
 
+  <!-- PWA Install Guide Modal (for iOS Safari & browsers without native prompt) -->
+  <div id="pwaInstallModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+    <div class="w-full max-w-sm rounded-3xl p-6 card-panel shadow-2xl fade-in space-y-4">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-3">
+          <img src="/favicon.png" alt="GoldNovel" class="w-11 h-11 rounded-2xl object-cover border" style="border-color: rgba(234,184,84,0.35);" onerror="this.style.display='none'">
+          <div>
+            <h3 class="text-base font-bold" style="color: var(--gold-1);">ติดตั้งแอป GoldNovel</h3>
+            <p class="text-[11px]" style="color: var(--text-sub);">เปิดอ่านเต็มจอจากหน้าจอหลักได้ทันที</p>
+          </div>
+        </div>
+        <button type="button" id="closePwaInstallBtn" class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background-color: var(--bg-input); color: var(--text-sub);">✕</button>
+      </div>
+
+      <div id="pwaInstallIosSteps" class="hidden space-y-2.5 text-xs leading-relaxed p-3.5 rounded-2xl" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+        <div class="font-bold text-sm" style="color: var(--text-main);">วิธีติดตั้งบน iPhone / iPad</div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">1</span>
+          <span style="color: var(--text-sub);">กดปุ่ม <strong>แชร์ (Share ⬆️)</strong> ที่แถบด้านล่างของ Safari</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">2</span>
+          <span style="color: var(--text-sub);">เลื่อนลงมาแล้วแตะ <strong>เพิ่มไปยังหน้าจอโฮม (Add to Home Screen)</strong></span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">3</span>
+          <span style="color: var(--text-sub);">กด <strong>เพิ่ม (Add)</strong> มุมขวาบน — ไอคอน GoldNovel จะขึ้นบนหน้าจอทันทีครับ</span>
+        </div>
+      </div>
+
+      <div id="pwaInstallOtherSteps" class="hidden space-y-2.5 text-xs leading-relaxed p-3.5 rounded-2xl" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+        <div class="font-bold text-sm" style="color: var(--text-main);">วิธีติดตั้งลงมือถือ / คอมพิวเตอร์</div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">1</span>
+          <span style="color: var(--text-sub);"><strong>บนมือถือ Android (Chrome):</strong> กดปุ่มเมนู <strong>⋮</strong> มุมขวาบน แล้วเลือก <strong>เพิ่มลงหน้าจอหลัก / ติดตั้งแอป</strong></span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">2</span>
+          <span style="color: var(--text-sub);"><strong>บนคอมพิวเตอร์ (Chrome / Edge):</strong> กดไอคอน <strong>ติดตั้งแอป (⊕)</strong> ที่มุมขวาของช่องพิมพ์ URL ด้านบน</span>
+        </div>
+      </div>
+
+      <button type="button" id="pwaInstallConfirmCloseBtn" class="w-full py-2.5 rounded-xl text-sm font-semibold btn-gold">เข้าใจแล้ว</button>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl shadow-2xl text-sm font-medium fade-in" style="background: linear-gradient(135deg, #F3D999, #D4A857); color: #161410;"></div>
 
@@ -692,7 +792,8 @@
       promptpayNumber: "08X-XXX-XXXX",
       promptpayAccountName: "ชื่อบัญชีของคุณ (ตั้งค่าใน config.js)",
       truemoneyPhone: "08X-XXX-XXXX",
-      topupBonusPercent: 10
+      topupBonusPercent: 10,
+      googleClientId: ""
     }, window.GOLDNOVEL_CONFIG || {});
 
     const CATEGORIES = ['กำลังภายใน', 'ระบบ', 'แฟนตาซี', 'แอ็กชัน', 'เกิดใหม่', 'ต่างโลก', 'สยองขวัญ', 'โรแมนติก'];
@@ -753,6 +854,7 @@
       adminStats: null,
       adminStatsError: null,
       adminShowChapterForm: false,
+      adminNewIsNote: false,
       editingChapterId: null,
       previewAsReader: false,
       previewAsVip: false,
@@ -766,6 +868,11 @@
       autoContinuousNovelId: null,
       autoContinuousInfoOpen: true,
       autoUnlockBusy: false,
+      readerSettingsOpen: false,
+      readerTocOpen: false,
+      readerTocReverse: false,
+      pendingScrollChapterId: null,
+      pendingScrollToTop: false,
       tocSortDesc: false,
       tocOpenGroups: {},
       detailExpanded: {},
@@ -1119,7 +1226,7 @@
     }
 
     function renderEditorialNovelCard(n, opts = {}) {
-      const chCount = (n.chapters || []).filter(c => isAdmin() || isChapterPublished(c)).length;
+      const chCount = (n.chapters || []).filter(c => !c.is_note && (isAdmin() || isChapterPublished(c))).length;
       const catText = (n.categories && n.categories.length) ? n.categories.slice(0, 2).join(' / ') : 'นิยาย';
       const badgeHtml = opts.rank
         ? `<span class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow ${opts.rank === 1 ? 'rank-1' : opts.rank === 2 ? 'rank-2' : opts.rank === 3 ? 'rank-3' : 'rank-n'}">#${opts.rank}</span>`
@@ -1492,17 +1599,44 @@
       `;
     }
 
+    function annotateChapters(chapters) {
+      const sorted = (chapters || []).slice().sort((a, b) => a.chapter_number - b.chapter_number);
+      let realNum = 0;
+      sorted.forEach(c => {
+        if (c.is_note) {
+          c._displayNum = null;
+          c._label = '📌 หมายเหตุ';
+        } else {
+          realNum += 1;
+          c._displayNum = realNum;
+          c._label = `ตอนที่ ${realNum}`;
+        }
+      });
+      return sorted;
+    }
+
+    function getChapterLabel(ch) {
+      if (!ch) return '';
+      if (ch.is_note) return '📌 หมายเหตุ';
+      return `ตอนที่ ${ch._displayNum ?? ch.chapter_number}`;
+    }
+
     function buildChapterGroups(chapters, chunkSize = 50, desc = false) {
-      const sorted = chapters.slice().sort((a, b) => a.chapter_number - b.chapter_number);
+      const sorted = annotateChapters(chapters);
       const groups = [];
       for (let i = 0; i < sorted.length; i += chunkSize) {
         const slice = sorted.slice(i, i + chunkSize);
-        const startNum = slice[0].chapter_number;
-        const endNum = slice[slice.length - 1].chapter_number;
+        const realInSlice = slice.filter(c => !c.is_note);
+        const startNum = realInSlice.length ? realInSlice[0]._displayNum : null;
+        const endNum = realInSlice.length ? realInSlice[realInSlice.length - 1]._displayNum : null;
+        const label = startNum === null
+          ? '📌 หมายเหตุ / ประกาศ'
+          : (startNum === endNum ? `ตอนที่ ${startNum}` : `${startNum} – ${endNum}`);
         groups.push({
           idx: groups.length,
-          label: startNum === endNum ? `ตอนที่ ${startNum}` : `${startNum} – ${endNum}`,
-          count: slice.length,
+          label,
+          count: realInSlice.length || slice.length,
+          noteCount: slice.length - realInSlice.length,
           items: desc ? slice.slice().reverse() : slice
         });
       }
@@ -1516,7 +1650,7 @@
     function renderNovelDetail() {
       const novel = getNovel(state.activeNovelId);
       if (!novel) return `<div class="p-8 text-center">ไม่พบนิยาย</div>`;
-      const chapters = (novel.chapters || []).filter(c => isAdmin() || isChapterPublished(c));
+      const chapters = annotateChapters((novel.chapters || []).filter(c => isAdmin() || isChapterPublished(c)));
       const unlockedCount = chapters.filter(c => isAccessible(c)).length;
       const pct = chapters.length ? Math.round((unlockedCount / chapters.length) * 100) : 0;
 
@@ -1544,7 +1678,7 @@
                       <div class="flex items-center gap-2 text-xs mb-4 px-3 py-2 rounded-xl w-fit" style="background-color: var(--bg-input); color: var(--text-sub);">
                         <span>เปิดอ่านฟรี <strong style="color: var(--gold-1);">${freeCount}</strong> ตอน</span>
                         <span>·</span>
-                        <span>ทั้งหมด ${chapters.length} ตอน</span>
+                        <span>ทั้งหมด ${chapters.filter(c => !c.is_note).length} ตอน</span>
                       </div>
                     `;
                   }
@@ -1616,7 +1750,7 @@
                 <span class="font-bold text-base">สารบัญ</span>
               </div>
               <div class="flex flex-wrap items-center gap-2.5">
-                <span class="text-xs" style="color: var(--text-muted);">${chapters.length} ตอน</span>
+                <span class="text-xs" style="color: var(--text-muted);">${chapters.filter(c => !c.is_note).length} ตอน</span>
                 ${chapters.length > 1 ? `<button type="button" id="toggleTocSortBtn" class="text-xs font-semibold hover:underline" style="color: var(--gold-1);">${state.tocSortDesc ? '↓ เรียงจากตอนล่าสุด' : '↑ เรียงจากตอนแรก'}</button>` : ''}
                 ${chapters.some(c => !isAccessible(c)) ? `<button type="button" id="detailBulkUnlockBtn" class="px-3.5 py-1.5 rounded-full text-xs btn-gold">⚡ ปลดล็อกหลายตอน</button>` : ''}
               </div>
@@ -1652,7 +1786,7 @@
                             return `
                               <button type="button" data-open-ch="${ch.id}" class="w-full text-left px-5 py-3 flex items-center justify-between gap-3 border-b last:border-b-0 hover:bg-white/5" style="border-color: var(--border-soft);">
                                 <div class="flex items-center gap-3 min-w-0">
-                                  <span class="text-xs w-14 shrink-0" style="color: var(--text-muted);">ตอนที่ ${ch.chapter_number}</span>
+                                  <span class="text-xs ${ch.is_note ? 'px-2 py-0.5 rounded-md font-semibold' : 'w-14'} shrink-0" style="${ch.is_note ? 'background-color: rgba(234,184,84,0.16); color: var(--gold-1);' : 'color: var(--text-muted);'}">${getChapterLabel(ch)}</span>
                                   <span class="text-sm font-medium truncate">${ch.title}</span>${(getReadingProgressForNovel(novel)?.chapter?.id === ch.id) ? `<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">อ่านค้างไว้</span>` : ''}
                                 </div>
                                 ${badge}
@@ -1788,7 +1922,7 @@
 
     function renderReader() {
       const novel = getNovel(state.activeNovelId);
-      const chapters = (novel?.chapters || []).filter(c => isAdmin() || isChapterPublished(c));
+      const chapters = annotateChapters((novel?.chapters || []).filter(c => isAdmin() || isChapterPublished(c)));
       if (!chapters.length) return `<div class="p-8 text-center">ไม่พบตอนนิยาย</div>`;
 
       // Ensure loadedChapterIds contains at least activeChapterId
@@ -1811,9 +1945,9 @@
 
       const sheetsHtml = loadedChapters.map((ch, idx) => {
         return `
-          <article class="reading-sheet rounded-xl p-5 sm:p-9 border mb-5 fade-in" data-read-theme="${state.readTheme}">
+          <article id="chapter-article-${ch.id}" class="reading-sheet rounded-xl p-5 sm:p-9 border mb-5 fade-in" style="scroll-margin-top: 72px;" data-read-theme="${state.readTheme}">
             <div class="text-center mb-7 pb-5 border-b reader-protected" style="border-color: var(--border-soft);">
-              <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">ตอนที่ ${ch.chapter_number}${idx > 0 ? ' · อ่านต่อเนื่อง' : ''}</div>
+              <div class="text-xs uppercase tracking-widest mb-1" style="color: var(--gold-2);">${getChapterLabel(ch)}${idx > 0 ? ' · อ่านต่อเนื่อง' : ''}</div>
               <h1 class="text-xl sm:text-2xl font-bold">${escapeHtml(ch.title)}</h1>
             </div>
             <div class="relative reader-protected">
@@ -1842,9 +1976,9 @@
       } else if (isAccessible(nextCh)) {
         nextSectionHtml = `
           <div id="autoContinueSentinel" class="card-panel rounded-2xl p-6 text-center space-y-3">
-            <div class="text-xs" style="color: var(--text-muted);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่ — กำลังเตรียมโหลดตอนถัดไป...' : 'ตอนถัดไปพร้อมให้อ่านต่อเนื่องด้านล่างนี้'}</div>
-            <div class="text-base font-bold">ตอนที่ ${nextCh.chapter_number}: ${nextCh.title}</div>
-            <button type="button" id="appendNextFreeBtn" data-next-ch="${nextCh.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านตอนถัดไปต่อด้านล่าง ↓</button>
+            <div class="text-xs" style="color: var(--text-muted);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่ — กำลังเตรียมโหลดตอนถัดไป...' : 'ตอนถัดไปพร้อมให้อ่านแล้ว'}</div>
+            <div class="text-base font-bold">${getChapterLabel(nextCh)}: ${nextCh.title}</div>
+            <button type="button" id="appendNextFreeBtn" data-next-ch="${nextCh.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านตอนถัดไป →</button>
           </div>
         `;
       } else {
@@ -1856,7 +1990,7 @@
             <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">${state.autoContinuousMode ? '⚡ โหมดอ่านต่อเนื่องเปิดอยู่' : '🔒 ตอนถัดไปติดเหรียญ'}</div>
             <div>
               <div class="text-lg font-bold">ตอนที่ ${nextCh.chapter_number}: ${nextCh.title}</div>
-              <div class="text-xs mt-1" style="color: var(--text-sub);">ปลดล็อกเพื่อโหลดเนื้อหาต่อด้านล่างทันที · ยอดเหรียญของคุณ: <strong style="color: var(--gold-1);">${bal.toLocaleString()} เหรียญ</strong></div>
+              <div class="text-xs mt-1" style="color: var(--text-sub);">ปลดล็อกเพื่อเปิดอ่านตอนถัดไปทันที · ยอดเหรียญของคุณ: <strong style="color: var(--gold-1);">${bal.toLocaleString()} เหรียญ</strong></div>
             </div>
             <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
               <button type="button" id="inlineUnlockNextBtn" data-next-ch="${nextCh.id}" class="px-6 py-3 rounded-full text-sm btn-gold">
@@ -1896,30 +2030,102 @@
         </div>
       `;
 
-      return `
-        <div class="fade-in max-w-2xl mx-auto pb-16">
-          <div class="sticky top-16 z-10 py-3 mb-4 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 border-b" style="background-color: color-mix(in srgb, var(--bg-app) 90%, transparent); border-color: var(--border-soft);">
-            <button type="button" data-open-novel="${novel.id}" class="text-xs sm:text-sm font-medium hover:underline truncate max-w-[200px] sm:max-w-xs" style="color: var(--gold-1);">← ${novel.title}</button>
-            <div class="flex items-center gap-2">
-              <div class="flex gap-1 p-1 rounded-lg" style="background-color: var(--bg-input);">
-                <button type="button" data-rtheme="dark" class="px-2 py-1 rounded text-[11px]" style="${state.readTheme === 'dark' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">มืด</button>
-                <button type="button" data-rtheme="warm" class="px-2 py-1 rounded text-[11px]" style="${state.readTheme === 'warm' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">อุ่น</button>
-                <button type="button" data-rtheme="sepia" class="px-2 py-1 rounded text-[11px]" style="${state.readTheme === 'sepia' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">Sepia</button>
+      const tocList = state.readerTocReverse ? [...chapters].reverse() : chapters;
+      const tocItemsHtml = tocList.map(ch => {
+        const isCurrent = ch.id === lastLoaded.id || ch.id === state.activeChapterId;
+        const accessible = isAccessible(ch);
+        const effPrice = getEffectivePrice(ch);
+        let badgeHtml = '';
+        if (ch.is_note) {
+          badgeHtml = `<span class="text-[10px] px-2 py-0.5 rounded-full shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">หมายเหตุ</span>`;
+        } else if (Number(ch.price_coins || 0) <= 0) {
+          badgeHtml = `<span class="text-[10px] px-2 py-0.5 rounded-full shrink-0" style="background-color: rgba(16,185,129,0.14); color: #34d399;">ฟรี</span>`;
+        } else if (accessible) {
+          badgeHtml = `<span class="text-[10px] px-2 py-0.5 rounded-full shrink-0" style="background-color: rgba(234,184,84,0.14); color: var(--gold-1);">เปิดแล้ว</span>`;
+        } else {
+          badgeHtml = `<span class="text-[10px] px-2 py-0.5 rounded-full shrink-0" style="background-color: var(--bg-input); color: var(--text-sub);">🔒 ${effPrice}</span>`;
+        }
+        return `
+          <button type="button" data-toc-ch="${ch.id}" ${isCurrent ? 'data-toc-current="1"' : ''} class="w-full text-left px-4 py-3 flex items-center justify-between gap-2.5 border-b transition-colors hover:bg-white/[0.05]" style="border-color: var(--border-soft); ${isCurrent ? 'background-color: var(--gold-soft);' : ''}">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-semibold" style="color: ${isCurrent ? 'var(--gold-1)' : 'var(--text-muted)'};">${getChapterLabel(ch)}</span>
+                ${isCurrent ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="background-color: rgba(234,184,84,0.22); color: var(--gold-1);">กำลังอ่าน</span>` : ''}
               </div>
-              <button type="button" id="fontDownBtn" class="w-8 h-8 rounded-lg text-xs font-bold" style="background-color: var(--bg-input);">A-</button>
-              <button type="button" id="fontUpBtn" class="w-8 h-8 rounded-lg text-xs font-bold" style="background-color: var(--bg-input);">A+</button>
+              <div class="text-xs sm:text-sm truncate mt-0.5 ${isCurrent ? 'font-bold' : ''}" style="color: ${isCurrent ? 'var(--gold-1)' : 'var(--text-main)'};">${escapeHtml(ch.title)}</div>
             </div>
+            ${badgeHtml}
+          </button>
+        `;
+      }).join('');
+
+      return `
+        <div class="max-w-2xl mx-auto pb-20">
+          <!-- Non-sticky slim top bar (never covers novel text while scrolling!) -->
+          <div class="py-2 mb-3 flex items-center justify-between gap-2 border-b" style="border-color: var(--border-soft);">
+            <button type="button" data-open-novel="${novel.id}" class="text-xs sm:text-sm font-medium hover:underline truncate" style="color: var(--gold-1);">← ${novel.title}</button>
+            <button type="button" id="topReaderSettingsBtn" class="px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1" style="background-color: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-sub);">
+              <span>Aa</span><span class="hidden sm:inline">ตั้งค่าอ่าน</span>
+            </button>
           </div>
 
           ${sheetsHtml}
           ${nextSectionHtml}
           ${autoCardHtml}
-          ${renderCommentsSection(novel.id, lastLoaded.id, `ความคิดเห็นท้ายตอนที่ ${lastLoaded.chapter_number}`)}
+          ${renderCommentsSection(novel.id, lastLoaded.id, `ความคิดเห็นท้าย${getChapterLabel(lastLoaded)}`)}
+
+          <!-- Left-Side Slide-In TOC Drawer -->
+          <div id="readerTocBackdrop" class="${state.readerTocOpen ? '' : 'hidden'} fixed inset-0 z-50 bg-black/65 backdrop-blur-[2px] flex">
+            <aside id="readerTocDrawer" class="w-[84vw] max-w-[340px] h-full flex flex-col shadow-2xl border-r" style="background-color: var(--bg-card); border-color: var(--border-soft);">
+              <div class="p-4 border-b flex items-start justify-between gap-2 shrink-0" style="border-color: var(--border-soft);">
+                <div class="min-w-0">
+                  <div class="text-xs font-bold uppercase tracking-wider" style="color: var(--gold-1);">สารบัญตอน</div>
+                  <div class="text-sm font-bold truncate mt-0.5">${escapeHtml(novel.title)}</div>
+                  <div class="text-[11px] mt-0.5" style="color: var(--text-muted);">ทั้งหมด ${chapters.length} ตอน</div>
+                </div>
+                <button type="button" id="closeReaderTocBtn" class="w-8 h-8 rounded-full text-sm flex items-center justify-center shrink-0" style="background-color: var(--bg-input); color: var(--text-sub);">✕</button>
+              </div>
+              <div class="px-4 py-2 border-b flex items-center justify-between gap-2 shrink-0" style="border-color: var(--border-soft); background-color: var(--bg-elevated);">
+                <button type="button" id="readerTocSortBtn" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg" style="background-color: var(--bg-input); color: var(--text-sub);">
+                  ${state.readerTocReverse ? '↓ เรียงจากตอนล่าสุด' : '↑ เรียงจากตอนแรก'}
+                </button>
+                <button type="button" data-open-novel="${novel.id}" class="text-[11px] font-semibold hover:underline" style="color: var(--gold-1);">หน้ารายละเอียดนิยาย ↗</button>
+              </div>
+              <div id="readerTocScrollList" class="flex-1 overflow-y-auto overscroll-contain">
+                ${tocItemsHtml}
+              </div>
+            </aside>
+            <div id="readerTocOutside" class="flex-1 h-full"></div>
+          </div>
+
+          <!-- Instant Collapsible Reader Settings Pop-up (Always viewport-fixed, zero redraw flicker) -->
+          <div id="readerSettingsBackdrop" class="${state.readerSettingsOpen ? '' : 'hidden'} fixed inset-0 z-40"></div>
+          <div id="readerSettingsPopup" class="${state.readerSettingsOpen ? '' : 'hidden'} fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] max-w-md card-panel rounded-2xl p-4 shadow-2xl space-y-3.5" style="border-color: rgba(234,184,84,0.4);">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold" style="color: var(--gold-1);">Aa ตั้งค่าหน้าอ่าน</span>
+              <button type="button" id="closeReaderSettingsBtn" class="w-7 h-7 rounded-full text-xs flex items-center justify-center" style="background-color: var(--bg-input); color: var(--text-sub);">✕</button>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-xs" style="color: var(--text-sub);">โทนสีกระดาษ</span>
+              <div class="flex gap-1.5 p-1 rounded-xl" style="background-color: var(--bg-input);">
+                <button type="button" data-rtheme="dark" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="${state.readTheme === 'dark' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">มืด</button>
+                <button type="button" data-rtheme="warm" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="${state.readTheme === 'warm' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">อุ่น</button>
+                <button type="button" data-rtheme="sepia" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="${state.readTheme === 'sepia' ? 'background-color: var(--gold-soft); color: var(--gold-1);' : 'color: var(--text-sub);'}">Sepia</button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3 pt-2 border-t" style="border-color: var(--border-soft);">
+              <span id="readerFontSizeLabel" class="text-xs" style="color: var(--text-sub);">ขนาดตัวอักษร (${state.fontSize}px)</span>
+              <div class="flex items-center gap-2">
+                <button type="button" id="fontDownBtn" class="w-10 h-9 rounded-lg text-sm font-bold active:scale-95" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">A-</button>
+                <button type="button" id="fontUpBtn" class="w-10 h-9 rounded-lg text-sm font-bold active:scale-95" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">A+</button>
+              </div>
+            </div>
+          </div>
 
           <!-- Fixed Bottom Reader Toolbar -->
           <div id="readerBottomBar" class="fixed bottom-0 inset-x-0 z-30 mobile-bottom-nav backdrop-blur-md">
-            <div class="max-w-2xl mx-auto px-2 h-13 py-1.5 grid grid-cols-5 items-center text-center">
-              <button type="button" data-open-novel="${novel.id}" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors hover:text-amber-300" style="color: var(--text-sub);" title="สารบัญตอน">
+            <div class="max-w-2xl mx-auto px-1.5 h-13 py-1.5 grid grid-cols-6 items-center text-center">
+              <button type="button" id="barTocBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors hover:text-amber-300" style="color: ${state.readerTocOpen ? 'var(--gold-1)' : 'var(--text-sub)'};" title="เปิดสารบัญตอน">
                 <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
                 <span class="text-[10px]">สารบัญ</span>
               </button>
@@ -1930,17 +2136,21 @@
                 </span>
                 <span class="text-[10px]">คอมเมนต์</span>
               </button>
+              <button type="button" id="barSettingsToggleBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors" style="color: ${state.readerSettingsOpen ? 'var(--gold-1)' : 'var(--text-sub)'};" title="ปรับขนาดฟอนต์และสีพื้นหลัง">
+                <span class="text-[15px] font-bold leading-[18px]">Aa</span>
+                <span class="text-[10px]">ตัวอักษร</span>
+              </button>
               <button type="button" id="barAutoToggleBtn" class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors" style="color: ${state.autoContinuousMode ? 'var(--gold-1)' : 'var(--text-sub)'};" title="เปิด/ปิด โหมดอ่านต่อเนื่อง">
                 <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
-                <span class="text-[10px] font-medium">${state.autoContinuousMode ? 'ต่อเนื่อง ON' : 'อ่านต่อเนื่อง'}</span>
+                <span class="text-[10px] font-medium">${state.autoContinuousMode ? 'ต่อเนื่อง ON' : 'ต่อเนื่อง'}</span>
               </button>
               <button type="button" id="barPrevChBtn" ${prevCh ? `data-prev-ch="${prevCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${prevCh ? 'hover:text-amber-300' : 'opacity-25 cursor-not-allowed'}" style="color: var(--text-sub);" title="ตอนก่อนหน้า">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                <span class="text-[10px]">ตอนก่อน</span>
+                <span class="text-[10px]">ก่อนหน้า</span>
               </button>
               <button type="button" id="barNextChBtn" ${nextCh ? `data-next-ch="${nextCh.id}"` : 'disabled'} class="flex flex-col items-center justify-center gap-0.5 py-1 transition-colors ${nextCh ? 'hover:text-amber-300' : 'opacity-25 cursor-not-allowed'}" style="color: ${nextCh ? 'var(--gold-1)' : 'var(--text-muted)'};" title="ตอนถัดไป">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                <span class="text-[10px]">ตอนถัดไป</span>
+                <span class="text-[10px]">ถัดไป</span>
               </button>
             </div>
           </div>
@@ -2304,7 +2514,7 @@
             state.adminSelectedNovelId = null;
         state.adminEditNovelOpen = false;
           } else {
-            const chList = (targetNovel.chapters || []).slice().sort((a, b) => a.chapter_number - b.chapter_number);
+            const chList = annotateChapters(targetNovel.chapters || []);
             const editCh = state.editingChapterId ? chList.find(c => c.id === state.editingChapterId) : null;
             const nextNum = chList.length ? Math.max(...chList.map(c => c.chapter_number)) + 1 : 1;
 
@@ -2355,9 +2565,13 @@
                       </div>
                       <div>
                         <label class="block text-xs mb-1" style="color: var(--text-sub);">ราคาเหรียญ (0 = ฟรี)</label>
-                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : (nextNum % 10 === 0 ? 0 : 1.5)}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+                        <input id="chPrice" type="number" min="0" step="0.5" value="${editCh ? editCh.price_coins : ((state.adminNewIsNote || nextNum % 10 === 0) ? 0 : 1.5)}" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
                       </div>
                     </div>
+                    <label class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl cursor-pointer text-xs" style="background-color: rgba(234,184,84,0.08); border: 1px solid rgba(234,184,84,0.28);">
+                      <input id="chIsNote" type="checkbox" ${(editCh ? !!editCh.is_note : !!state.adminNewIsNote) ? 'checked' : ''} class="w-4 h-4 accent-amber-400 rounded">
+                      <span><strong style="color: var(--gold-1);">📌 ตั้งเป็น "หมายเหตุ / ประกาศคั่นตอน"</strong> <span style="color: var(--text-sub);">(ไม่นับเป็นเลขตอน ระบบจะข้ามเลขให้ตอนถัดไปเรียงต่ออัตโนมัติ และเปิดให้อ่านฟรี)</span></span>
+                    </label>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
@@ -2416,6 +2630,7 @@
                         🏞️ ${targetNovel.banner_url ? 'เปลี่ยนแบนเนอร์ 16:5' : 'เพิ่มแบนเนอร์ 16:5'}
                         <input type="file" accept="image/*" data-change-novel-banner="${targetNovel.id}" class="hidden">
                       </label>
+                      <button type="button" id="openNewNoteBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); border: 1px solid var(--border-subtle); color: var(--gold-1);">📌 + เพิ่มหมายเหตุ</button>
                       <button type="button" id="openNewChapterBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มตอนใหม่</button>
                     </div>
                   </div>
@@ -2502,6 +2717,7 @@
                           issues.push({ type: 'dup', id: c.id, chNum: c.chapter_number, text: `ตอนที่ ${c.chapter_number} ซ้ำกัน (${escapeHtml(c.title)})` });
                         }
                         numSeen[c.chapter_number] = true;
+                        if (c.is_note) return;
                         const mTitleNum = String(c.title || '').match(/(?:ตอนที่|บทที่|Chapter|Ch\.?|EP\.?)\s*(\d+)/i);
                         if (mTitleNum && Number(mTitleNum[1]) !== Number(c.chapter_number)) {
                           issues.push({ type: 'mismatch', id: c.id, chNum: c.chapter_number, text: `เลขไม่ตรงกัน: ระบบอยู่ "ตอนที่ ${c.chapter_number}" แต่ชื่อตอนเขียนว่า "${escapeHtml(c.title)}"` });
@@ -2564,7 +2780,7 @@
                                       <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors" style="border-color: var(--border-soft);">
                                         <button type="button" data-edit-ch="${c.id}" class="min-w-0 flex-1 text-left focus:outline-none">
                                           <div class="flex flex-wrap items-center gap-2 mb-0.5">
-                                            <span class="text-xs font-bold" style="color: var(--gold-1);">ตอนที่ ${c.chapter_number}</span>
+                                            <span class="text-xs font-bold ${c.is_note ? 'px-2 py-0.5 rounded-md' : ''}" style="${c.is_note ? 'background-color: rgba(234,184,84,0.18); color: var(--gold-1);' : 'color: var(--gold-1);'}">${getChapterLabel(c)}</span>
                                             <span class="text-sm font-semibold truncate hover:underline">${c.title}</span>
                                           </div>
                                           <div class="flex flex-wrap items-center gap-2 text-[11px]" style="color: var(--text-muted);">
@@ -2577,6 +2793,7 @@
                                             <span class="text-[11px]" style="color: var(--text-muted);">🪙</span>
                                             <input type="number" min="0" step="0.5" value="${c.price_coins}" data-quick-price="${c.id}" class="w-11 bg-transparent text-center font-semibold focus:outline-none" style="color: ${c.price_coins === 0 ? '#4ADE80' : 'var(--gold-1)'};">
                                           </div>
+                                          <button type="button" data-toggle-free="${c.id}" data-cur-price="${c.price_coins}" title="${c.price_coins === 0 ? 'คลิกเพื่อกลับไปติดเหรียญ 1.5' : 'คลิกเดียวเปิดเป็นตอนอ่านฟรี'}" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors" style="${c.price_coins === 0 ? 'background-color: var(--bg-input); color: var(--gold-1); border: 1px solid var(--border-soft);' : 'background-color: rgba(34,197,94,0.16); color: #4ADE80;'}">${c.price_coins === 0 ? 'ติด 1.5' : 'เปิดฟรี'}</button>
                                           <button type="button" data-move-ch="${c.id}" data-dir="-1" ${idx === 0 ? 'disabled' : ''} title="เลื่อนขึ้น" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↑</button>
                                           <button type="button" data-move-ch="${c.id}" data-dir="1" ${idx === chList.length - 1 ? 'disabled' : ''} title="เลื่อนลง" class="w-7 h-7 rounded-lg text-xs disabled:opacity-30" style="background-color: var(--bg-input);">↓</button>
                                           <button type="button" data-edit-ch="${c.id}" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">แก้ไข</button>
@@ -3013,6 +3230,8 @@
       if (state.view !== 'reader' || state.activeNovelId !== state.autoContinuousNovelId) {
         state.autoContinuousMode = false;
         state.autoContinuousNovelId = null;
+        state.readerSettingsOpen = false;
+        state.readerTocOpen = false;
       }
       const mNav = document.getElementById('mobileBottomNav');
       if (mNav) mNav.classList.toggle('hidden', state.view === 'reader');
@@ -3029,7 +3248,42 @@
       bindDynamic();
       if (state.view === 'reader') {
         renderReaderCanvases();
-        if (document.fonts && document.fonts.ready) { document.fonts.ready.then(() => renderReaderCanvases()); }
+        const scrollToTopNow = () => {
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        };
+        if (state.pendingScrollToTop) {
+          state.pendingScrollToTop = false;
+          scrollToTopNow();
+          requestAnimationFrame(() => {
+            scrollToTopNow();
+            setTimeout(scrollToTopNow, 60);
+          });
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => {
+              renderReaderCanvases();
+              if (window.scrollY < 160) scrollToTopNow();
+            });
+          }
+        } else if (state.pendingScrollChapterId) {
+          const targetId = state.pendingScrollChapterId;
+          state.pendingScrollChapterId = null;
+          const jumpToArt = () => {
+            const art = document.getElementById('chapter-article-' + targetId);
+            if (art) {
+              const y = Math.max(0, art.getBoundingClientRect().top + window.scrollY - 68);
+              window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+            }
+          };
+          requestAnimationFrame(() => {
+            jumpToArt();
+            setTimeout(jumpToArt, 60);
+          });
+          if (document.fonts && document.fonts.ready) { document.fonts.ready.then(() => renderReaderCanvases()); }
+        } else if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => renderReaderCanvases());
+        }
       }
       startHeroAutoSlide();
     }
@@ -3041,7 +3295,7 @@
         return;
       }
       document.getElementById('topupBonusBadge').textContent = CFG.topupBonusPercent > 0 ? `โปรโมชั่นโบนัส +${CFG.topupBonusPercent}%` : 'เติมเหรียญ GoldNovel';
-      document.getElementById('topupSubtext').textContent = msg || 'รองรับ PromptPay และ TrueMoney Wallet';
+      document.getElementById('topupSubtext').textContent = msg || 'โอนผ่าน PromptPay QR ล็อกยอดอัตโนมัติ (รองรับทุกธนาคาร)';
       document.getElementById('topupStep1').classList.remove('hidden');
       document.getElementById('topupStep2').classList.add('hidden');
       setTopupMode('coins');
@@ -3052,6 +3306,7 @@
     }
 
     function closeTopup() {
+      if (typeof stopMobileSlipPoller === 'function') stopMobileSlipPoller();
       const m = document.getElementById('topupModal');
       m.classList.add('hidden');
       m.classList.remove('flex');
@@ -3114,12 +3369,77 @@
       return body + crc16Ccitt(body);
     }
 
+    window._cachedQrCardFile = null;
+    window._cachedQrCardUrl = '';
+    window._cachedQrCardName = 'GoldNovel-PromptPay.png';
+
     function renderPromptPayQR(targetRaw, amount) {
       const container = document.getElementById('promptpayQrCanvas');
       if (!container) return;
       container.innerHTML = '';
+      window._cachedQrCardFile = null;
+      window._cachedQrCardUrl = '';
+      const bahtVal = Number(amount || 0);
+      const fileName = `GoldNovel-PromptPay-${bahtVal}THB.png`;
+      window._cachedQrCardName = fileName;
+
       const payload = buildPromptPayPayload(targetRaw, amount);
-      if (window.QRCode) {
+      if (!window.QRCode) return;
+
+      // Render high-res QR in offscreen temp div, then compose crisp card PNG + real <img> (supports long-press Save to Photos + instant Web Share)
+      const tmp = document.createElement('div');
+      new window.QRCode(tmp, {
+        text: payload,
+        width: 360,
+        height: 360,
+        colorDark: '#0F172A',
+        colorLight: '#FFFFFF',
+        correctLevel: window.QRCode.CorrectLevel.M
+      });
+
+      const qrCanvas = tmp.querySelector('canvas');
+      if (qrCanvas) {
+        const out = document.createElement('canvas');
+        const W = 540, H = 640;
+        out.width = W;
+        out.height = H;
+        const ctx = out.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#113566';
+        ctx.fillRect(0, 0, W, 68);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('THAI QR PAYMENT · PROMPTPAY', W / 2, 42);
+        ctx.drawImage(qrCanvas, 90, 96, 360, 360);
+        ctx.fillStyle = '#111827';
+        ctx.font = 'bold 30px sans-serif';
+        ctx.fillText(`${bahtVal.toFixed(2)} บาท`, W / 2, 530);
+        ctx.fillStyle = '#6B7280';
+        ctx.font = '18px sans-serif';
+        ctx.fillText('GoldNovel · สแกนจ่ายได้ทุกแอปธนาคาร', W / 2, 574);
+
+        const dataUrl = out.toDataURL('image/png');
+        window._cachedQrCardUrl = dataUrl;
+
+        // Pre-build File object BEFORE user taps Save so iOS Safari Web Share keeps user gesture!
+        out.toBlob((blob) => {
+          if (blob) {
+            try { window._cachedQrCardFile = new File([blob], fileName, { type: 'image/png' }); } catch (_) {}
+          }
+        }, 'image/png');
+
+        // Display real <img> so mobile users can ALSO long-press -> Save to Photos directly
+        const imgEl = document.createElement('img');
+        imgEl.src = dataUrl;
+        imgEl.alt = `PromptPay QR ${bahtVal} บาท`;
+        imgEl.className = 'w-44 h-auto rounded-lg select-none';
+        imgEl.style.webkitTouchCallout = 'default';
+        imgEl.style.pointerEvents = 'auto';
+        container.className = 'flex items-center justify-center';
+        container.appendChild(imgEl);
+      } else {
         new window.QRCode(container, {
           text: payload,
           width: 176,
@@ -3220,6 +3540,7 @@
       }
       m.classList.remove('hidden');
       m.classList.add('flex');
+      if (!hasUser && typeof initDirectGoogleButtonIfReady === 'function') setTimeout(() => initDirectGoogleButtonIfReady(0), 40);
     }
 
     function closeAuthModal() {
@@ -3228,6 +3549,7 @@
       m.classList.remove('flex');
     }
 
+    function openAuth(defaultMode = 'login') { return openAuthModal(defaultMode); }
     function openUnlockModal(novelId, chId) {
       if (!state.user) { openAuthModal(); showToast('กรุณาเข้าสู่ระบบก่อนปลดล็อกตอน'); return; }
       const novel = getNovel(novelId);
@@ -3297,10 +3619,11 @@
           return;
         }
         state.activeChapterId = ch.id;
-      recordLocalRead(novel.id, ch);
+        recordLocalRead(novel.id, ch);
         state.loadedChapterIds = [ch.id];
         state.view = 'reader';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        state.pendingScrollChapterId = null;
+        state.pendingScrollToTop = true;
         render();
       } else {
         openUnlockModal(novel.id, ch.id);
@@ -3468,8 +3791,23 @@
       const openNewChapterBtn = document.getElementById('openNewChapterBtn');
       if (openNewChapterBtn) openNewChapterBtn.addEventListener('click', () => {
         state.editingChapterId = null;
+        state.adminNewIsNote = false;
         state.adminShowChapterForm = true;
         render();
+      });
+
+      const openNewNoteBtn = document.getElementById('openNewNoteBtn');
+      if (openNewNoteBtn) openNewNoteBtn.addEventListener('click', () => {
+        state.editingChapterId = null;
+        state.adminNewIsNote = true;
+        state.adminShowChapterForm = true;
+        render();
+      });
+
+      const chIsNoteChk = document.getElementById('chIsNote');
+      if (chIsNoteChk) chIsNoteChk.addEventListener('change', () => {
+        const pInp = document.getElementById('chPrice');
+        if (pInp && chIsNoteChk.checked) pInp.value = '0';
       });
 
       document.querySelectorAll('[data-rank-filter]').forEach(btn => {
@@ -3511,7 +3849,21 @@
       });
 
       document.querySelectorAll('[data-rtheme]').forEach(btn => {
-        btn.addEventListener('click', () => { state.readTheme = btn.getAttribute('data-rtheme'); saveDemo(); render(); });
+        btn.addEventListener('click', () => {
+          state.readTheme = btn.getAttribute('data-rtheme');
+          saveDemo();
+          if (state.view === 'reader') {
+            document.querySelectorAll('.reading-sheet').forEach(s => s.setAttribute('data-read-theme', state.readTheme));
+            document.querySelectorAll('[data-rtheme]').forEach(b => {
+              const active = b.getAttribute('data-rtheme') === state.readTheme;
+              b.style.backgroundColor = active ? 'var(--gold-soft)' : 'transparent';
+              b.style.color = active ? 'var(--gold-1)' : 'var(--text-sub)';
+            });
+            renderReaderCanvases();
+          } else {
+            render();
+          }
+        });
       });
 
       document.querySelectorAll('#mainContent [data-set-mode]').forEach(btn => {
@@ -3532,8 +3884,11 @@
         if (!ch) return;
         const ok = await fetchChapterContentIfNeeded(ch);
         if (!ok) { showToast('โหลดตอนถัดไปไม่สำเร็จ'); return; }
-        if (!state.loadedChapterIds.includes(ch.id)) state.loadedChapterIds.push(ch.id);
+        state.loadedChapterIds = [ch.id];
         state.activeChapterId = ch.id;
+        state.pendingScrollChapterId = null;
+        state.pendingScrollToTop = true;
+        recordLocalRead(novel.id, ch);
         render();
       });
 
@@ -3565,10 +3920,13 @@
           const freshNovel = getNovel(novel.id);
           const freshCh = (freshNovel?.chapters || []).find(c => c.id === ch.id);
           if (freshCh) await fetchChapterContentIfNeeded(freshCh);
-          if (!state.loadedChapterIds.includes(ch.id)) state.loadedChapterIds.push(ch.id);
+          state.loadedChapterIds = [ch.id];
           state.activeChapterId = ch.id;
+          state.pendingScrollChapterId = null;
+          state.pendingScrollToTop = true;
+          recordLocalRead(novel.id, freshCh || ch);
           render();
-          showToast(`ปลดล็อกตอนที่ ${ch.chapter_number} แล้ว อ่านต่อด้านล่างได้เลย!`);
+          showToast(`ปลดล็อกตอนที่ ${ch.chapter_number} แล้ว!`);
         } catch (err) {
           inlineUnlockNextBtn.disabled = false;
           showToast('ปลดล็อกไม่สำเร็จ: ' + err.message);
@@ -3751,10 +4109,11 @@
           state.activeChapterId = ch.id;
           state.loadedChapterIds = [ch.id];
           recordLocalRead(novel.id, ch);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          state.pendingScrollChapterId = null;
+          state.pendingScrollToTop = true;
           render();
         } else {
-          openUnlock(ch);
+          openUnlockModal(novel.id, ch.id);
         }
       });
 
@@ -3764,12 +4123,18 @@
         const novel = getNovel(state.activeNovelId);
         const ch = (novel?.chapters || []).find(c => c.id === cid);
         if (!ch) return;
-        if (state.autoContinuousMode || isAccessible(ch)) {
+        if (isAccessible(ch)) {
+          await fetchChapterContentIfNeeded(ch);
+          state.activeChapterId = ch.id;
+          state.loadedChapterIds = [ch.id];
+          recordLocalRead(novel.id, ch);
+          state.pendingScrollChapterId = null;
+          state.pendingScrollToTop = true;
+          render();
+        } else if (state.autoContinuousMode) {
           await triggerAutoNextChapter();
         } else {
-          const inlineBtn = document.getElementById('inlineUnlockNextBtn');
-          if (inlineBtn) inlineBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          else openUnlock(ch);
+          openUnlockModal(novel.id, ch.id);
         }
       });
 
@@ -3844,11 +4209,93 @@
         saveUserDisplayName(document.getElementById('settingsDisplayNameInput').value, settingsDisplayNameForm.querySelector('button[type="submit"]'));
       });
 
+      const syncReaderOverlays = () => {
+        const pop = document.getElementById('readerSettingsPopup');
+        const popBg = document.getElementById('readerSettingsBackdrop');
+        const barSetBtn = document.getElementById('barSettingsToggleBtn');
+        if (pop) pop.classList.toggle('hidden', !state.readerSettingsOpen);
+        if (popBg) popBg.classList.toggle('hidden', !state.readerSettingsOpen);
+        if (barSetBtn) barSetBtn.style.color = state.readerSettingsOpen ? 'var(--gold-1)' : 'var(--text-sub)';
+
+        const tocBg = document.getElementById('readerTocBackdrop');
+        const barTocBtn = document.getElementById('barTocBtn');
+        if (tocBg) tocBg.classList.toggle('hidden', !state.readerTocOpen);
+        if (barTocBtn) barTocBtn.style.color = state.readerTocOpen ? 'var(--gold-1)' : 'var(--text-sub)';
+        if (state.readerTocOpen) {
+          requestAnimationFrame(() => {
+            const cur = document.querySelector('#readerTocScrollList [data-toc-current="1"]');
+            if (cur) cur.scrollIntoView({ block: 'center', behavior: 'auto' });
+          });
+        }
+      };
+
+      const toggleReaderSettings = () => {
+        state.readerSettingsOpen = !state.readerSettingsOpen;
+        if (state.readerSettingsOpen) state.readerTocOpen = false;
+        syncReaderOverlays();
+      };
+      const topReaderSettingsBtn = document.getElementById('topReaderSettingsBtn');
+      if (topReaderSettingsBtn) topReaderSettingsBtn.addEventListener('click', toggleReaderSettings);
+      const barSettingsToggleBtn = document.getElementById('barSettingsToggleBtn');
+      if (barSettingsToggleBtn) barSettingsToggleBtn.addEventListener('click', toggleReaderSettings);
+      const closeReaderSettingsBtn = document.getElementById('closeReaderSettingsBtn');
+      if (closeReaderSettingsBtn) closeReaderSettingsBtn.addEventListener('click', () => {
+        state.readerSettingsOpen = false;
+        syncReaderOverlays();
+      });
+      const readerSettingsBackdrop = document.getElementById('readerSettingsBackdrop');
+      if (readerSettingsBackdrop) readerSettingsBackdrop.addEventListener('click', () => {
+        state.readerSettingsOpen = false;
+        syncReaderOverlays();
+      });
+
+      const barTocBtn = document.getElementById('barTocBtn');
+      if (barTocBtn) barTocBtn.addEventListener('click', () => {
+        state.readerTocOpen = !state.readerTocOpen;
+        if (state.readerTocOpen) state.readerSettingsOpen = false;
+        syncReaderOverlays();
+      });
+      const closeReaderTocBtn = document.getElementById('closeReaderTocBtn');
+      if (closeReaderTocBtn) closeReaderTocBtn.addEventListener('click', () => {
+        state.readerTocOpen = false;
+        syncReaderOverlays();
+      });
+      const readerTocOutside = document.getElementById('readerTocOutside');
+      if (readerTocOutside) readerTocOutside.addEventListener('click', () => {
+        state.readerTocOpen = false;
+        syncReaderOverlays();
+      });
+      const readerTocSortBtn = document.getElementById('readerTocSortBtn');
+      if (readerTocSortBtn) readerTocSortBtn.addEventListener('click', () => {
+        state.readerTocReverse = !state.readerTocReverse;
+        state.readerTocOpen = true;
+        render();
+      });
+      document.querySelectorAll('[data-toc-ch]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cid = btn.getAttribute('data-toc-ch');
+          state.readerTocOpen = false;
+          state.readerSettingsOpen = false;
+          openChapter(cid);
+        });
+      });
+
+      const updateReaderFontSize = (delta) => {
+        state.fontSize = Math.min(26, Math.max(14, state.fontSize + delta));
+        saveDemo();
+        if (state.view === 'reader') {
+          const lbl = document.getElementById('readerFontSizeLabel');
+          if (lbl) lbl.textContent = `ขนาดตัวอักษร (${state.fontSize}px)`;
+          renderReaderCanvases();
+        } else {
+          render();
+        }
+      };
       const fDown = document.getElementById('fontDownBtn') || document.getElementById('setFontDown');
-      if (fDown) fDown.addEventListener('click', () => { state.fontSize = Math.max(14, state.fontSize - 2); saveDemo(); render(); });
+      if (fDown) fDown.addEventListener('click', () => updateReaderFontSize(-2));
 
       const fUp = document.getElementById('fontUpBtn') || document.getElementById('setFontUp');
-      if (fUp) fUp.addEventListener('click', () => { state.fontSize = Math.min(26, state.fontSize + 2); saveDemo(); render(); });
+      if (fUp) fUp.addEventListener('click', () => updateReaderFontSize(2));
 
       // Admin: Add Novel
       const addNovelForm = document.getElementById('addNovelForm');
@@ -4033,14 +4480,16 @@
           const nid = state.adminSelectedNovelId;
           const pubRaw = document.getElementById('chPublishAt').value;
           const publishIso = pubRaw ? new Date(pubRaw).toISOString() : new Date().toISOString();
+          const isNoteFlag = !!document.getElementById('chIsNote')?.checked;
           const payload = {
             novel_id: nid,
             chapter_number: Number(document.getElementById('chNum').value),
             title: document.getElementById('chTitle').value.trim(),
-            price_coins: Math.max(0, roundCoins(document.getElementById('chPrice').value || 0)),
+            price_coins: isNoteFlag ? 0 : Math.max(0, roundCoins(document.getElementById('chPrice').value || 0)),
             content: document.getElementById('chContent').value.trim(),
             status: document.getElementById('chStatus').value,
-            publish_at: publishIso
+            publish_at: publishIso,
+            is_note: isNoteFlag
           };
 
           if (state.editingChapterId) {
@@ -4131,6 +4580,32 @@
             render();
             showToast('สลับลำดับตอนเรียบร้อย');
           } catch (err) { showToast('สลับไม่สำเร็จ: ' + err.message); }
+        });
+      });
+
+      document.querySelectorAll('[data-toggle-free]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const cid = btn.getAttribute('data-toggle-free');
+          const curP = Number(btn.getAttribute('data-cur-price') || 0);
+          const nextP = curP === 0 ? 1.5 : 0;
+          btn.disabled = true;
+          try {
+            if (state.isLive) {
+              const { error } = await sb.from('chapters').update({ price_coins: nextP }).eq('id', cid);
+              if (error) throw error;
+              await loadLiveData();
+            } else {
+              const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+              const ch = (novel?.chapters || []).find(c => c.id === cid);
+              if (ch) ch.price_coins = nextP;
+              saveDemo();
+            }
+            render();
+            showToast(nextP === 0 ? 'เปิดเป็นตอนอ่านฟรีเรียบร้อย!' : 'ปรับกลับเป็นติดเหรียญ 1.5 เหรียญแล้ว');
+          } catch (err) {
+            btn.disabled = false;
+            showToast('ปรับราคาไม่สำเร็จ: ' + err.message);
+          }
         });
       });
 
@@ -4667,6 +5142,91 @@
     document.getElementById('tabLoginBtn').addEventListener('click', () => setAuthMode('login'));
     document.getElementById('tabSignupBtn').addEventListener('click', () => setAuthMode('signup'));
 
+
+    // Direct Google Sign-In via Google Identity Services + Supabase signInWithIdToken (Zero supabase.co URL shown!)
+    let _gsiInitialized = false;
+    let _gsiRawNonce = '';
+
+    async function makeGoogleNoncePair() {
+      const bytes = new Uint8Array(16);
+      if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(bytes);
+      } else {
+        for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+      }
+      const raw = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      if (window.crypto && window.crypto.subtle) {
+        const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+        const hashed = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+        return { raw, hashed };
+      }
+      return { raw, hashed: raw };
+    }
+
+    async function initDirectGoogleButtonIfReady(attempt = 0) {
+      const clientId = String(CFG.googleClientId || '').trim();
+      const gsiWrap = document.getElementById('googleGsiBtnWrap');
+      const fallbackBtn = document.getElementById('googleLoginBtn');
+      if (!state.isLive || !clientId || !gsiWrap) {
+        if (gsiWrap) gsiWrap.classList.add('hidden');
+        if (fallbackBtn) fallbackBtn.classList.remove('hidden');
+        return;
+      }
+      if (!window.google?.accounts?.id) {
+        if (attempt < 15) {
+          setTimeout(() => initDirectGoogleButtonIfReady(attempt + 1), 200);
+        } else {
+          gsiWrap.classList.add('hidden');
+          if (fallbackBtn) fallbackBtn.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (!_gsiInitialized) {
+        const pair = await makeGoogleNoncePair();
+        _gsiRawNonce = pair.raw;
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          nonce: pair.hashed,
+          callback: async (response) => {
+            if (!response?.credential) {
+              showToast('เข้าสู่ระบบ Google ไม่สำเร็จ กรุณาลองใหม่');
+              return;
+            }
+            try {
+              showToast('กำลังเข้าสู่ระบบด้วย Google...');
+              const { error } = await sb.auth.signInWithIdToken({
+                provider: 'google',
+                token: response.credential,
+                nonce: _gsiRawNonce
+              });
+              if (error) throw error;
+              await loadLiveData();
+              closeAuthModal();
+              render();
+              if (typeof resumePendingQuickSlipIfAny === 'function') resumePendingQuickSlipIfAny();
+              showToast('เข้าสู่ระบบด้วย Google สำเร็จ!');
+            } catch (err) {
+              showToast('เข้าสู่ระบบ Google ไม่สำเร็จ: ' + err.message);
+            }
+          }
+        });
+        _gsiInitialized = true;
+      }
+
+      gsiWrap.classList.remove('hidden');
+      if (fallbackBtn) fallbackBtn.classList.add('hidden');
+      gsiWrap.innerHTML = '';
+      window.google.accounts.id.renderButton(gsiWrap, {
+        theme: state.mode === 'light' ? 'outline' : 'filled_black',
+        size: 'large',
+        shape: 'pill',
+        text: 'continue_with',
+        width: Math.min(336, Math.max(240, gsiWrap.clientWidth || 320)),
+        locale: 'th'
+      });
+    }
+
     document.getElementById('googleLoginBtn').addEventListener('click', async () => {
       if (!state.isLive) {
         state.user = { id: 'demo-admin', email: 'google.user@gmail.com', display_name: 'Google User (ทดลอง)', role: 'admin', coin_balance: state.user?.coin_balance || 0 };
@@ -4901,20 +5461,9 @@
       document.getElementById('topupStep2').classList.remove('hidden');
     });
 
-    document.getElementById('downloadQrBtn').addEventListener('click', () => {
-      const box = document.getElementById('promptpayQrCanvas');
-      const canvas = box?.querySelector('canvas');
-      const img = box?.querySelector('img');
-      const dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
-      if (!dataUrl) { showToast('ไม่สามารถบันทึกรูป QR ได้'); return; }
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = `GoldNovel-PromptPay-${state.selectedBaht}THB.png`;
-      a.click();
-      showToast('บันทึกรูป QR ลงเครื่องแล้ว');
-    });
 
     document.getElementById('backPayBtn').addEventListener('click', () => {
+      stopMobileSlipPoller();
       document.getElementById('topupStep2').classList.add('hidden');
       document.getElementById('topupStep1').classList.remove('hidden');
     });
@@ -4932,21 +5481,69 @@
         const slipUrl = await uploadImageFile(slipFile, 'slips');
         if (state.isLive) {
           const isVip = state.topupMode === 'vip';
+          const payBaht = isVip ? 99 : state.selectedBaht;
+          const useAutoVerify = isVip || payBaht >= 100;
+
+          if (useAutoVerify) {
+            if (btn) btn.textContent = '⚡ กำลังตรวจสลิปอัตโนมัติ...';
+            try {
+              const { data: { session } } = await sb.auth.getSession();
+              const token = session?.access_token || '';
+              const fd = new FormData();
+              fd.append('files', slipFile);
+              fd.append('topup_type', isVip ? 'vip' : 'topup');
+              fd.append('amount_baht', String(payBaht));
+              fd.append('slip_url', slipUrl);
+
+              const verifyRes = await fetch(`${CFG.supabaseUrl}/functions/v1/verify-slip`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'apikey': CFG.supabaseAnonKey
+                },
+                body: fd
+              });
+
+              if (verifyRes.ok) {
+                const vData = await verifyRes.json().catch(() => ({}));
+                if (vData.ok) {
+                  // อัปเดตยอดเหรียญและสิทธิ์ VIP บนแถบด้านบนทันที (0ms ไม่ต้องรอโหลดหน้าใหม่!)
+                  if (state.user) {
+                    if (typeof vData.new_balance === 'number') state.user.coin_balance = vData.new_balance;
+                    if (vData.vip_until) state.user.vip_until = vData.vip_until;
+                  }
+                  applyChrome();
+                  closeTopup();
+                  render();
+                  showToast(vData.message || (isVip ? '⚡ เปิดสิทธิ์ VIP 30 วันเรียบร้อยแล้ว!' : '⚡ ตรวจสลิปผ่านแล้ว! เติมเหรียญเข้าบัญชีทันที'));
+                  loadLiveData().then(() => { applyChrome(); render(); }).catch(() => {});
+                  return;
+                }
+                if (vData.rejected) {
+                  showToast('❌ ' + (vData.message || 'สลิปไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง'));
+                  return;
+                }
+              }
+            } catch (autoErr) {
+              // Edge Function ยังไม่ติดตั้งหรือเครือข่ายสะดุด -> บันทึกเป็น pending ให้แอดมินตรวจแทน
+            }
+          }
+
           const { error } = await sb.from('transactions').insert({
             user_id: state.user.id,
             type: isVip ? 'vip' : 'topup',
-            amount_baht: isVip ? 99 : state.selectedBaht,
+            amount_baht: payBaht,
             coins_delta: isVip ? 0 : coins,
-            payment_method: state.selectedPay,
+            payment_method: 'promptpay',
             slip_url: slipUrl,
-            note: isVip ? `สมัคร VIP รายเดือน 30 วัน (${state.selectedPay})` : `เติมเงิน ${state.selectedBaht} บาท (${state.selectedPay})`,
+            note: isVip ? 'สมัคร VIP รายเดือน 30 วัน (promptpay)' : `เติมเงิน ${payBaht} บาท (promptpay)`,
             status: 'pending'
           });
           if (error) throw error;
           await loadLiveData();
           closeTopup();
           render();
-          showToast('ส่งสลิปเรียบร้อย! รอระบบตรวจสอบหรืออนุมัติในหน้า Admin');
+          showToast(useAutoVerify ? 'ส่งสลิปเรียบร้อย! ระบบส่งต่อให้แอดมินตรวจสอบแล้ว' : 'ส่งสลิปเรียบร้อย! (ยอดต่ำกว่า 100 บาท รอแอดมินตรวจสอบ)');
         } else {
           state.user.coin_balance += coins;
           state.transactions.unshift({
@@ -4998,9 +5595,12 @@
         if (freshCh) await fetchChapterContentIfNeeded(freshCh);
         state.activeNovelId = novel.id;
         state.activeChapterId = ch.id;
+        state.loadedChapterIds = [ch.id];
+        recordLocalRead(novel.id, freshCh || ch);
         state.view = 'reader';
+        state.pendingScrollChapterId = null;
+        state.pendingScrollToTop = true;
         closeUnlockModal();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
         render();
         showToast(`ปลดล็อกตอนที่ ${ch.chapter_number} สำเร็จ!`);
       } catch (err) { showToast('ปลดล็อกไม่สำเร็จ: ' + err.message); }
@@ -5529,10 +6129,272 @@
       showToast('กลับสู่มุมมองเจ้าของเว็บ (Admin) แล้ว');
     });
 
+
+    // Mobile Quick-Slip Handoff QR + Desktop Auto-Sync Poller
+    let mobileSlipPollTimer = null;
+    let mobileSlipStartBal = 0;
+    let mobileSlipStartVip = '';
+
+    function stopMobileSlipPoller() {
+      if (mobileSlipPollTimer) {
+        clearInterval(mobileSlipPollTimer);
+        mobileSlipPollTimer = null;
+      }
+      const panel = document.getElementById('mobileSlipQrPanel');
+      const tBtn = document.getElementById('toggleMobileSlipQrBtn');
+      if (panel) panel.classList.add('hidden');
+      if (tBtn) tBtn.textContent = 'แสดง QR ส่งสลิป';
+    }
+
+    async function checkMobileTopupSynced(manual = false) {
+      if (!state.isLive || !state.user) return;
+      const { data: prof } = await sb.from('profiles').select('coin_balance, vip_until').eq('id', state.user.id).single();
+      if (!prof) return;
+      const newBal = Number(prof.coin_balance || 0);
+      const newVip = String(prof.vip_until || '');
+      if (newBal > mobileSlipStartBal || (newVip && newVip !== mobileSlipStartVip)) {
+        stopMobileSlipPoller();
+        await loadLiveData();
+        closeTopup();
+        render();
+        showToast('⚡ ได้รับยอดเติมจากมือถือเรียบร้อยแล้ว! อัปเดตบัญชีให้ทันที');
+      } else if (manual) {
+        showToast('ยังไม่พบยอดใหม่ หากเพิ่งส่งสลิปรอสักครู่แล้วกดเช็กอีกครั้งครับ');
+      }
+    }
+
+    function renderMobileSlipQr() {
+      const box = document.getElementById('mobileSlipQrCanvas');
+      if (!box) return;
+      const isVip = state.topupMode === 'vip';
+      const baht = isVip ? 99 : Math.max(1, Number(state.selectedBaht || 100));
+      const base = (window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('blob:'))
+        ? (window.location.origin + window.location.pathname)
+        : 'https://www.goldnovelth.com/';
+      const handoffUrl = `${base}?quickslip=1&mode=${isVip ? 'vip' : 'topup'}&baht=${baht}`;
+      box.innerHTML = '';
+      if (window.QRCode) {
+        new window.QRCode(box, {
+          text: handoffUrl,
+          width: 128,
+          height: 128,
+          colorDark: '#0F172A',
+          colorLight: '#FFFFFF',
+          correctLevel: window.QRCode.CorrectLevel.M
+        });
+      }
+    }
+
+    const toggleMobileSlipQrBtn = document.getElementById('toggleMobileSlipQrBtn');
+    if (toggleMobileSlipQrBtn) toggleMobileSlipQrBtn.addEventListener('click', () => {
+      const panel = document.getElementById('mobileSlipQrPanel');
+      if (!panel) return;
+      const willOpen = panel.classList.contains('hidden');
+      if (!willOpen) {
+        stopMobileSlipPoller();
+        return;
+      }
+      renderMobileSlipQr();
+      panel.classList.remove('hidden');
+      toggleMobileSlipQrBtn.textContent = 'ซ่อน QR';
+      mobileSlipStartBal = Number(state.user?.coin_balance || 0);
+      mobileSlipStartVip = String(state.user?.vip_until || '');
+      if (state.isLive && !mobileSlipPollTimer) {
+        mobileSlipPollTimer = setInterval(() => checkMobileTopupSynced(false), 5000);
+      }
+    });
+
+    const checkMobileSyncBtn = document.getElementById('checkMobileSyncBtn');
+    if (checkMobileSyncBtn) checkMobileSyncBtn.addEventListener('click', () => checkMobileTopupSynced(true));
+
+    function handleQuickSlipFromUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('quickslip') !== '1') return;
+        const mode = params.get('mode') === 'vip' ? 'vip' : 'coins';
+        const baht = Math.max(1, Number(params.get('baht') || (mode === 'vip' ? 99 : 100)));
+        if (!state.user) {
+          sessionStorage.setItem('goldnovel_pending_quickslip', JSON.stringify({ mode, baht }));
+          openAuthModal();
+          showToast('กรุณาเข้าสู่ระบบบัญชีเดียวกันเพื่อแนบสลิปโอนเงิน');
+          return;
+        }
+        openQuickSlipDirect(mode, baht);
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch {}
+    }
+
+    function openQuickSlipDirect(mode, baht) {
+      openTopup(mode === 'vip' ? 'แนบสลิปสมัคร VIP 99 บาทจากมือถือได้เลย' : `แนบสลิปยอดโอน ${baht} บาทจากมือถือได้เลย`);
+      setTopupMode(mode === 'vip' ? 'vip' : 'coins');
+      state.selectedBaht = mode === 'vip' ? 99 : baht;
+      const ci = document.getElementById('customBahtInput');
+      if (ci && mode !== 'vip') ci.value = String(baht);
+      document.getElementById('goPayStepBtn').click();
+    }
+
+    function resumePendingQuickSlipIfAny() {
+      try {
+        const raw = sessionStorage.getItem('goldnovel_pending_quickslip');
+        if (!raw || !state.user) return;
+        sessionStorage.removeItem('goldnovel_pending_quickslip');
+        const { mode, baht } = JSON.parse(raw);
+        openQuickSlipDirect(mode, baht);
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch {}
+    }
+
+    // PWA Install & Service Worker Controller
+    (function setupPwaInstall() {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      let deferredPrompt = null;
+
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+
+      const headerBtn = document.getElementById('pwaHeaderInstallBtn');
+      const drawerBtn = document.getElementById('pwaDrawerInstallBtn');
+      const modal = document.getElementById('pwaInstallModal');
+      const iosSteps = document.getElementById('pwaInstallIosSteps');
+      const otherSteps = document.getElementById('pwaInstallOtherSteps');
+
+      const showInstallButtons = (visible) => {
+        if (headerBtn) {
+          headerBtn.classList.toggle('hidden', !visible);
+          headerBtn.classList.toggle('flex', visible);
+        }
+        if (drawerBtn) {
+          drawerBtn.classList.toggle('hidden', !visible);
+        }
+      };
+
+      const closePwaModal = () => {
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+
+      const openPwaModal = () => {
+        if (!modal) return;
+        if (iosSteps) iosSteps.classList.toggle('hidden', !isIos);
+        if (otherSteps) otherSteps.classList.toggle('hidden', isIos);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      };
+
+      if (!isStandalone) {
+        showInstallButtons(true);
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!isStandalone) showInstallButtons(true);
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        showInstallButtons(false);
+        closePwaModal();
+        showToast('ติดตั้งแอป GoldNovel เรียบร้อยแล้ว!');
+      });
+
+      const handleInstallClick = async () => {
+        const mobileDrawer = document.getElementById('mobileDrawer');
+        if (mobileDrawer) mobileDrawer.classList.add('hidden');
+        if (deferredPrompt) {
+          try {
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            if (choice && choice.outcome === 'accepted') {
+              deferredPrompt = null;
+              showInstallButtons(false);
+            }
+            return;
+          } catch (_) {}
+        }
+        openPwaModal();
+      };
+
+      if (headerBtn) headerBtn.addEventListener('click', handleInstallClick);
+      if (drawerBtn) drawerBtn.addEventListener('click', handleInstallClick);
+      const closeBtn1 = document.getElementById('closePwaInstallBtn');
+      const closeBtn2 = document.getElementById('pwaInstallConfirmCloseBtn');
+      if (closeBtn1) closeBtn1.addEventListener('click', closePwaModal);
+      if (closeBtn2) closeBtn2.addEventListener('click', closePwaModal);
+      if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closePwaModal(); });
+    })();
+
+    // Lightweight Live Coin & VIP Balance Auto-Refresh (Updates header immediately on PWA/tab resume or admin approval)
+    let _lastBalRefreshAt = 0;
+    let _pendingBalWatchTimer = null;
+
+    async function refreshUserBalanceOnly(silent = true) {
+      if (!state.isLive || !state.user || !sb) return false;
+      const now = Date.now();
+      if (now - _lastBalRefreshAt < 2500) return false;
+      _lastBalRefreshAt = now;
+      try {
+        const { data: prof } = await sb
+          .from('profiles')
+          .select('coin_balance, vip_until, display_name, role')
+          .eq('id', state.user.id)
+          .single();
+        if (!prof) return false;
+        const oldBal = Number(state.user.coin_balance || 0);
+        const newBal = Number(prof.coin_balance || 0);
+        const oldVip = state.user.vip_until || null;
+        const newVip = prof.vip_until || null;
+        const changed = newBal !== oldBal || newVip !== oldVip;
+        if (changed) {
+          state.user.coin_balance = newBal;
+          state.user.vip_until = newVip;
+          if (prof.display_name) state.user.display_name = prof.display_name;
+          applyChrome();
+          if (state.view === 'library' || state.view === 'settings') render();
+          if (!silent && newBal > oldBal) {
+            showToast(`🎉 เหรียญเข้าแล้ว! ยอดล่าสุด ${newBal.toLocaleString()} เหรียญ`);
+          } else if (!silent && newVip && newVip !== oldVip) {
+            showToast('👑 เปิดสิทธิ์ VIP เรียบร้อยแล้ว!');
+          }
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
+
+    function startPendingBalanceWatcher() {
+      if (_pendingBalWatchTimer) clearInterval(_pendingBalWatchTimer);
+      const startedAt = Date.now();
+      _pendingBalWatchTimer = setInterval(async () => {
+        if (Date.now() - startedAt > 10 * 60 * 1000) {
+          clearInterval(_pendingBalWatchTimer);
+          _pendingBalWatchTimer = null;
+          return;
+        }
+        const updated = await refreshUserBalanceOnly(false);
+        if (updated) {
+          clearInterval(_pendingBalWatchTimer);
+          _pendingBalWatchTimer = null;
+        }
+      }, 8000);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refreshUserBalanceOnly(false);
+    });
+    window.addEventListener('focus', () => refreshUserBalanceOnly(false));
+
     (async function init() {
       if (state.isLive) await loadLiveData();
       else loadDemo();
       render();
+      handleQuickSlipFromUrl();
+      resumePendingQuickSlipIfAny();
     })();
   </script>
 </body>
