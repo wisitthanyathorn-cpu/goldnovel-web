@@ -1701,6 +1701,7 @@
                     return `<button type="button" data-open-ch="${chapters[0].id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">เริ่มอ่านตอนที่ ${chapters[0].chapter_number}</button>`;
                   })()}
                   <button type="button" data-toggle-bm="${novel.id}" class="px-4 py-2.5 rounded-full text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">${state.bookmarks.includes(novel.id) ? '🔖 อยู่ในคลังแล้ว' : '📑 เพิ่มเข้าคลัง'}</button>
+                  <button type="button" id="shareNovelLinkBtn" data-share-novel-id="${novel.id}" data-share-novel-title="${escapeHtml(novel.title)}" class="px-4 py-2.5 rounded-full text-xs font-medium transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">🔗 แชร์ลิงก์เรื่องนี้</button>
                   <button type="button" data-report-copyright="${escapeHtml(novel.title)}" class="px-3.5 py-2.5 rounded-full text-xs font-medium transition-colors hover:bg-white/[0.06]" style="color: var(--text-muted); border: 1px solid var(--border-soft);">🛡️ แจ้งลิขสิทธิ์</button>
                 </div>
               </div>
@@ -2859,7 +2860,10 @@
                   <h2 class="text-base font-bold">รายการนิยายของคุณ (${state.novels.length} เรื่อง)</h2>
                   <p class="text-xs" style="color: var(--text-muted);">คลิกเลือกเรื่องที่ต้องการเพื่อเข้าไปเพิ่ม แก้ไข หรือจัดการตอนนิยายของเรื่องนั้นโดยเฉพาะ</p>
                 </div>
-                <button type="button" id="toggleNewNovelBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มนิยายเรื่องใหม่</button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button type="button" id="downloadSitemapBtn" class="px-3.5 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);" title="ดาวน์โหลดไฟล์ sitemap.xml ล่าสุดสำหรับอัปโหลดขึ้น GitHub / Google Search Console">🗺️ โหลด sitemap.xml</button>
+                  <button type="button" id="toggleNewNovelBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มนิยายเรื่องใหม่</button>
+                </div>
               </div>
 
               ${newNovelFormHtml}
@@ -3285,6 +3289,7 @@
           document.fonts.ready.then(() => renderReaderCanvases());
         }
       }
+      if (typeof syncSeoMetadata === 'function') syncSeoMetadata();
       startHeroAutoSlide();
     }
 
@@ -3654,12 +3659,55 @@
         });
       });
       document.querySelectorAll('[data-open-novel]').forEach(el => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
+          if (el.tagName === 'A') e.preventDefault();
           state.activeNovelId = el.getAttribute('data-open-novel');
           state.view = 'novel';
           window.scrollTo({ top: 0, behavior: 'smooth' });
           render();
         });
+      });
+
+      const shareNovelLinkBtn = document.getElementById('shareNovelLinkBtn');
+      if (shareNovelLinkBtn) shareNovelLinkBtn.addEventListener('click', async () => {
+        const nid = shareNovelLinkBtn.getAttribute('data-share-novel-id');
+        const ntitle = shareNovelLinkBtn.getAttribute('data-share-novel-title') || 'GoldNovel';
+        const base = (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : 'https://www.goldnovelth.com';
+        const shareUrl = `${base}/?novel=${encodeURIComponent(nid)}`;
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: `${ntitle} — GoldNovel`, url: shareUrl });
+            return;
+          } catch (err) {
+            if (err && err.name === 'AbortError') return;
+          }
+        }
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          showToast('คัดลอกลิงก์นิยายแล้ว! นำไปวางแชร์ได้เลย');
+        } catch (_) {
+          window.prompt('คัดลอกลิงก์นิยาย:', shareUrl);
+        }
+      });
+
+      const downloadSitemapBtn = document.getElementById('downloadSitemapBtn');
+      if (downloadSitemapBtn) downloadSitemapBtn.addEventListener('click', () => {
+        const today = new Date().toISOString().slice(0, 10);
+        const urls = [
+          `  <url>\n    <loc>https://www.goldnovelth.com/</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`
+        ];
+        (state.novels || []).forEach(n => {
+          const lm = (n.updated_at || n.created_at || today).slice(0, 10);
+          urls.push(`  <url>\n    <loc>https://www.goldnovelth.com/?novel=${encodeURIComponent(n.id)}</loc>\n    <lastmod>${lm}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+        });
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
+        const blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'sitemap.xml';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        showToast(`ดาวน์โหลด sitemap.xml (${state.novels.length} เรื่อง) แล้ว — อัปโหลดใส่ goldnovel-web/ บน GitHub ได้เลย`);
       });
 
       document.querySelectorAll('[data-open-ch]').forEach(el => {
@@ -6389,9 +6437,87 @@
     });
     window.addEventListener('focus', () => refreshUserBalanceOnly(false));
 
+    function syncSeoMetadata() {
+      const defaultTitle = 'GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์';
+      const defaultDesc = 'GoldNovel (goldnovelth.com) แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน อ่านลื่น ปลดล็อกตอนอัตโนมัติ';
+      const baseOrigin = 'https://www.goldnovelth.com';
+      const setMeta = (sel, attr, val) => {
+        const el = document.querySelector(sel);
+        if (el) el.setAttribute(attr, val);
+      };
+      const removeNovelSchema = () => {
+        const old = document.getElementById('dynamicNovelSchema');
+        if (old) old.remove();
+      };
+
+      const canPushUrl = (location.protocol === 'http:' || location.protocol === 'https:') && !location.search.includes('quickslip=');
+
+      if ((state.view === 'novel' || state.view === 'reader') && state.activeNovelId) {
+        const novel = getNovel(state.activeNovelId);
+        if (novel) {
+          const novelUrl = `${baseOrigin}/?novel=${encodeURIComponent(novel.id)}`;
+          const ch = state.view === 'reader' ? (novel.chapters || []).find(c => c.id === state.activeChapterId) : null;
+          const pageTitle = ch ? `${ch.title} — ${novel.title} | GoldNovel` : `${novel.title} — อ่านนิยายออนไลน์ | GoldNovel`;
+          const desc = (novel.synopsis || '').replace(/\s+/g, ' ').trim().slice(0, 160) || `อ่านนิยาย ${novel.title} ออนไลน์บน GoldNovel`;
+
+          document.title = pageTitle;
+          setMeta('meta[name="description"]', 'content', desc);
+          setMeta('link[rel="canonical"]', 'href', novelUrl);
+          setMeta('meta[property="og:title"]', 'content', pageTitle);
+          setMeta('meta[property="og:description"]', 'content', desc);
+          setMeta('meta[property="og:url"]', 'content', novelUrl);
+          if (novel.cover_url) setMeta('meta[property="og:image"]', 'content', novel.cover_url);
+
+          if (canPushUrl) {
+            const targetSearch = `?novel=${encodeURIComponent(novel.id)}`;
+            if (location.search !== targetSearch) {
+              try { window.history.replaceState({}, '', `${location.pathname}${targetSearch}`); } catch (_) {}
+            }
+          }
+
+          removeNovelSchema();
+          const ld = document.createElement('script');
+          ld.id = 'dynamicNovelSchema';
+          ld.type = 'application/ld+json';
+          ld.textContent = JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Book',
+            name: novel.title,
+            author: { '@type': 'Person', name: novel.author_name || 'GoldNovel' },
+            description: desc,
+            image: novel.cover_url || `${baseOrigin}/favicon.png`,
+            url: novelUrl,
+            inLanguage: 'th'
+          });
+          document.head.appendChild(ld);
+          return;
+        }
+      }
+
+      document.title = defaultTitle;
+      setMeta('meta[name="description"]', 'content', defaultDesc);
+      setMeta('link[rel="canonical"]', 'href', `${baseOrigin}/`);
+      setMeta('meta[property="og:title"]', 'content', defaultTitle);
+      setMeta('meta[property="og:description"]', 'content', defaultDesc);
+      setMeta('meta[property="og:url"]', 'content', `${baseOrigin}/`);
+      setMeta('meta[property="og:image"]', 'content', `${baseOrigin}/favicon.png`);
+      removeNovelSchema();
+      if (canPushUrl && location.search.includes('novel=')) {
+        try { window.history.replaceState({}, '', location.pathname); } catch (_) {}
+      }
+    }
+
     (async function init() {
       if (state.isLive) await loadLiveData();
       else loadDemo();
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const novelParam = params.get('novel');
+        if (novelParam && state.novels.some(n => String(n.id) === String(novelParam))) {
+          state.activeNovelId = String(novelParam);
+          state.view = 'novel';
+        }
+      } catch (_) {}
       render();
       handleQuickSlipFromUrl();
       resumePendingQuickSlipIfAny();
