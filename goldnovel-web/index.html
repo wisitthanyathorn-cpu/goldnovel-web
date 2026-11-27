@@ -496,7 +496,11 @@
     <div class="card-panel rounded-3xl max-w-3xl w-full p-0 overflow-hidden shadow-2xl fade-in grid grid-cols-1 md:grid-cols-12 border" style="border-color: rgba(234,184,84,0.28);">
       <!-- Left Illustrated Panel (Custom Xianxia Gold-Black Swordsman) -->
       <div class="relative md:col-span-5 h-44 sm:h-52 md:h-auto overflow-hidden flex flex-col justify-end p-5 text-center md:text-left" style="background: #0B0D14;">
-        <img src="/login-art.jpg" alt="GoldNovel Immortal Swordsman" class="absolute inset-0 w-full h-full object-cover object-[50%_18%]" onerror="this.style.display='none'">
+        <img id="authLoginArtImg" src="/login-art.jpg" alt="GoldNovel Artwork" class="absolute inset-0 w-full h-full object-cover object-[50%_18%]" onerror="this.style.display='none'">
+        <label id="quickChangeLoginArtBtn" class="hidden absolute top-3 left-3 z-20 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer bg-black/70 text-amber-200 border border-amber-300/40 hover:bg-black/90 backdrop-blur-xs items-center gap-1" title="เปลี่ยนภาพหน้าล็อกอิน (เห็นเฉพาะเจ้าของเว็บ)">
+          <span>📷 เปลี่ยนรูป</span>
+          <input id="quickLoginArtFileInput" type="file" accept="image/*" class="hidden">
+        </label>
         <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(10,11,15,0.08) 0%, rgba(10,11,15,0.42) 58%, rgba(10,11,15,0.94) 100%);"></div>
         <div class="relative z-10 space-y-1">
           <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase" style="background-color: rgba(234,184,84,0.2); border: 1px solid rgba(234,184,84,0.45); color: #F7DF9B;">✦ GoldNovel</span>
@@ -1290,6 +1294,20 @@
 
       
       const customLogo = state.settings?.site_logo_url || '';
+      const loginArtImgEl = document.getElementById('authLoginArtImg');
+      if (loginArtImgEl) {
+        const targetArt = state.settings?.promo_banner_url || '/login-art.jpg';
+        if (loginArtImgEl.getAttribute('data-loaded-src') !== targetArt) {
+          loginArtImgEl.style.display = '';
+          loginArtImgEl.src = targetArt;
+          loginArtImgEl.setAttribute('data-loaded-src', targetArt);
+        }
+      }
+      const quickLoginArtBtn = document.getElementById('quickChangeLoginArtBtn');
+      if (quickLoginArtBtn) {
+        quickLoginArtBtn.classList.toggle('hidden', !showAdmin);
+        quickLoginArtBtn.classList.toggle('inline-flex', showAdmin);
+      }
       const defaultLogoSvg = '<svg viewBox="0 0 36 36" class="w-5 h-5" fill="none" aria-hidden="true"><path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#EAB854" stroke-width="2" stroke-linejoin="round"/><path d="M18 11V27" stroke="#EAB854" stroke-width="1.8"/><path d="M18 5L19.2 7.8L22 9L19.2 10.2L18 13L16.8 10.2L14 9L16.8 7.8L18 5Z" fill="#F3D999"/></svg>';
       const sideLogoWrap = document.getElementById('brandLogoSideWrap');
       const mobLogoWrap = document.getElementById('brandLogoMobWrap');
@@ -3114,6 +3132,22 @@
                   <div class="flex-1 min-w-0 space-y-1">
                     <input id="bLogoFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
                     <div class="text-[11px]" style="color: var(--text-muted);">แนะนำรูปสี่เหลี่ยมจัตุรัส 1:1 (512×512 px)</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-2.5 pb-4 border-b" style="border-color: var(--border-soft);">
+                <div class="flex items-center justify-between gap-2">
+                  <label class="block text-xs font-semibold">ภาพประกอบหน้าต่างเข้าสู่ระบบ (Login Artwork)</label>
+                  ${s.promo_banner_url ? `<button type="button" id="clearLoginArtBtn" class="text-[11px] text-rose-400 hover:underline">ใช้รูปเริ่มต้น</button>` : ''}
+                </div>
+                <div class="flex items-center gap-3.5">
+                  <div class="w-14 h-18 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border" style="background-color: var(--bg-input); border-color: var(--border-subtle);">
+                    <img src="${s.promo_banner_url || '/login-art.jpg'}" alt="Login Art Preview" class="w-full h-full object-cover object-top">
+                  </div>
+                  <div class="flex-1 min-w-0 space-y-1">
+                    <input id="bLoginArtFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
+                    <div class="text-[11px]" style="color: var(--text-muted);">แนะนำรูปแนวตั้ง 3:4 · อัปโหลดแล้วเปลี่ยนทันทีทั้งเว็บโดยไม่ต้องอัปไฟล์ขึ้น GitHub</div>
                   </div>
                 </div>
               </div>
@@ -4969,6 +5003,20 @@
 
       // Admin: Update Banners
 
+      const clearLoginArtBtn = document.getElementById('clearLoginArtBtn');
+      if (clearLoginArtBtn) clearLoginArtBtn.addEventListener('click', async () => {
+        try {
+          if (state.isLive) {
+            const { error } = await sb.from('site_settings').update({ promo_banner_url: '' }).eq('id', 'main');
+            if (error) throw error;
+          }
+          state.settings.promo_banner_url = '';
+          saveDemo();
+          render();
+          showToast('กลับไปใช้ภาพหน้าล็อกอินเริ่มต้นแล้ว');
+        } catch (err) { showToast('ล้างรูปไม่สำเร็จ: ' + err.message); }
+      });
+
       const clearLogoBtn = document.getElementById('clearLogoBtn');
       if (clearLogoBtn) clearLogoBtn.addEventListener('click', async () => {
         try {
@@ -5109,7 +5157,9 @@
           };
           if (logoFile) nextSettings.site_logo_url = await uploadImageFile(logoFile, 'media');
           if (heroFile) nextSettings.hero_banner_url = await uploadImageFile(heroFile, 'media');
-          if (promoFile) nextSettings.promo_banner_url = await uploadImageFile(promoFile, 'media');
+          const loginArtFile = document.getElementById('bLoginArtFile')?.files[0];
+          if (loginArtFile) nextSettings.promo_banner_url = await uploadImageFile(loginArtFile, 'media');
+          else if (promoFile) nextSettings.promo_banner_url = await uploadImageFile(promoFile, 'media');
 
           if (state.isLive) {
             const { error } = await sb.from('site_settings').update(nextSettings).eq('id', 'main');
@@ -6778,6 +6828,29 @@
       state.mode = state.mode === 'light' ? 'dark' : 'light';
       saveDemo();
       render();
+    });
+
+    const quickLoginArtFileInput = document.getElementById('quickLoginArtFileInput');
+    if (quickLoginArtFileInput) quickLoginArtFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file || !isAdmin()) return;
+      try {
+        showToast('กำลังอัปโหลดภาพหน้าล็อกอินใหม่...');
+        const newUrl = await uploadImageFile(file, 'media');
+        if (state.isLive) {
+          const { error } = await sb.from('site_settings').update({ promo_banner_url: newUrl }).eq('id', 'main');
+          if (error) throw error;
+        }
+        state.settings.promo_banner_url = newUrl;
+        saveDemo();
+        applyChrome();
+        render();
+        showToast('เปลี่ยนภาพหน้าล็อกอินเรียบร้อยแล้ว!');
+      } catch (err) {
+        showToast('อัปโหลดภาพไม่สำเร็จ: ' + err.message);
+      } finally {
+        e.target.value = '';
+      }
     });
 
     (async function init() {
