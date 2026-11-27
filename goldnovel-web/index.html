@@ -252,13 +252,23 @@
       .vip-gold-text, .vip-beam-box, .vip-avatar-ring { animation: none !important; }
     }
     .reading-sheet, #mainContent { overflow-anchor: none; }
+    /* Pro UI v35: Royal Obsidian & Imperial Gold Accents */
+  .pro-gold-card { background: linear-gradient(160deg, rgba(26,29,40,0.92), rgba(14,16,24,0.96)); border: 1px solid rgba(234,184,84,0.16); transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+  .pro-gold-card:hover { border-color: rgba(234,184,84,0.52); transform: translateY(-2px); box-shadow: 0 12px 28px -10px rgba(234,184,84,0.22); }
+  .pro-gold-card.is-active { background: linear-gradient(155deg, rgba(234,184,84,0.18), rgba(20,23,32,0.96)); border-color: #EAB854; box-shadow: 0 0 0 1px rgba(234,184,84,0.45), 0 12px 28px -8px rgba(234,184,84,0.28); }
+  body[data-mode="light"] .pro-gold-card { background: #FFFFFF; border-color: rgba(184,128,28,0.2); }
+  body[data-mode="light"] .pro-gold-card.is-active { background: linear-gradient(155deg, rgba(234,184,84,0.16), #FFFFFF); border-color: #B8801C; }
+  .pro-vip-btn { background: linear-gradient(135deg, #2A1E08, #1A140B); border: 1px solid rgba(234,184,84,0.55); color: #F7DF9B; box-shadow: 0 6px 20px -6px rgba(234,184,84,0.3); }
+  .pro-vip-btn:hover { background: linear-gradient(135deg, #3A2A0C, #241A0C); border-color: #F7DF9B; }
+  .pro-stat-tile { background-color: rgba(255,255,255,0.03); border: 1px solid var(--border-soft); }
+  body[data-mode="light"] .pro-stat-tile { background-color: rgba(15,23,42,0.03); }
   </style>
   <script src="/config.js"></script>
 </head>
 <body data-mode="dark" class="min-h-screen flex">
 
   <!-- Left Sidebar (Desktop) -->
-  <aside class="hidden lg:flex flex-col w-[212px] shrink-0 sticky top-0 h-screen border-r px-3 py-4 justify-between z-30" style="background-color: var(--bg-sidebar); border-color: var(--border-soft);">
+  <aside class="hidden flex-col w-[212px] shrink-0 sticky top-0 h-screen border-r px-3 py-4 justify-between z-30" style="background-color: var(--bg-sidebar); border-color: var(--border-soft);">
     <div>
       <button type="button" data-view="home" class="w-full flex items-center gap-2.5 px-2.5 mb-6 text-left focus:outline-none">
         <div id="brandLogoSideWrap" class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.28);">
@@ -323,19 +333,22 @@
     <header class="sticky top-0 z-20 backdrop-blur-md border-b px-3.5 sm:px-6 h-14 flex items-center justify-between gap-2.5" style="background-color: color-mix(in srgb, var(--bg-app) 92%, transparent); border-color: var(--border-soft);">
       <div class="flex items-center gap-2.5 lg:gap-5 min-w-0">
         <button type="button" id="mobileMenuBtn" class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="color: var(--text-sub); background-color: var(--bg-card); border: 1px solid var(--border-soft);" aria-label="เปิดเมนู"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-        <button type="button" data-view="home" class="lg:hidden flex items-center gap-2 text-left shrink-0 focus:outline-none">
-          <div id="brandLogoMobWrap" class="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(234,184,84,0.22), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.3);">
+        <button type="button" data-view="home" class="flex items-center gap-2.5 text-left shrink-0 focus:outline-none mr-1">
+          <div id="brandLogoMobWrap" class="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm" style="background: linear-gradient(135deg, rgba(234,184,84,0.24), rgba(201,146,43,0.06)); border: 1px solid rgba(234,184,84,0.38);">
             <svg viewBox="0 0 36 36" class="w-4 h-4" fill="none" aria-hidden="true">
               <path d="M18 11C14.5 8.5 9.5 8 5.5 9.5V25.5C9.5 24 14.5 24.5 18 27C21.5 24.5 26.5 24 30.5 25.5V9.5C26.5 8 21.5 8.5 18 11Z" stroke="#EAB854" stroke-width="2.2" stroke-linejoin="round"/>
               <path d="M18 11V27" stroke="#EAB854" stroke-width="1.8"/>
             </svg>
           </div>
-          <span class="text-[14px] font-bold tracking-tight" style="color: var(--text-main);">Gold<span style="color: var(--gold-1);">Novel</span></span>
+          <span class="text-[15px] font-bold tracking-tight" style="color: var(--text-main);">Gold<span style="color: var(--gold-1);">Novel</span></span>
         </button>
-        <nav class="hidden lg:flex items-center gap-6 text-[13px] font-medium">
+        <nav class="hidden lg:flex items-center gap-5 text-[13px] font-medium">
           <button type="button" data-top-tab="home" class="top-tab py-4 border-b-2 transition-colors">หน้าหลัก</button>
-          <button type="button" data-top-tab="ranking" class="top-tab py-4 border-b-2 transition-colors">นิยายประจำสัปดาห์</button>
-          <button type="button" data-top-tab="categories" class="top-tab py-4 border-b-2 transition-colors">คลังนิยาย</button>
+          <button type="button" data-top-tab="categories" class="top-tab py-4 border-b-2 transition-colors">หมวดหมู่นิยาย</button>
+          <button type="button" data-top-tab="ranking" class="top-tab py-4 border-b-2 transition-colors">อันดับมาแรง</button>
+          <button type="button" data-view="library" class="py-4 border-b-2 border-transparent transition-colors hover:text-amber-300" style="color: var(--text-sub);">ชั้นหนังสือ</button>
+          <button type="button" data-view="settings" class="py-4 border-b-2 border-transparent transition-colors hover:text-amber-300" style="color: var(--text-sub);">ตั้งค่า</button>
+          <button type="button" id="topAdminBtn" data-view="admin" class="hidden px-3 py-1 rounded-full text-xs font-semibold transition-colors" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.35); color: var(--gold-1);">✨ หลังบ้านนักเขียน</button>
         </nav>
       </div>
 
@@ -344,6 +357,10 @@
           <input id="searchInput" type="text" placeholder="ค้นหาชื่อเรื่อง หรือนามปากกา..." class="w-full rounded-lg pl-3 pr-8 py-1.5 text-xs focus:outline-none transition-colors" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
           <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style="color: var(--text-muted);"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
         </div>
+
+        <button type="button" id="headerThemeToggleBtn" class="hidden sm:flex w-8 h-8 rounded-lg items-center justify-center shrink-0 transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-card); border: 1px solid var(--border-soft); color: var(--text-sub);" title="สลับโหมดสว่าง / มืด" aria-label="สลับโหมดสี">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
+        </button>
 
         <button type="button" id="pwaHeaderInstallBtn" class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors hover:bg-white/[0.06]" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.32); color: var(--gold-1);" title="ติดตั้งแอป GoldNovel ลงหน้าจอ">
           <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -417,8 +434,19 @@
   </div>
 
   <!-- Auth Modal -->
-  <div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-    <div class="card-panel rounded-2xl max-w-sm w-full p-6 shadow-2xl fade-in">
+  <div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
+    <div class="card-panel rounded-3xl max-w-3xl w-full p-0 overflow-hidden shadow-2xl fade-in grid grid-cols-1 md:grid-cols-12 border" style="border-color: rgba(234,184,84,0.28);">
+      <!-- Left Illustrated Panel (Custom Xianxia Gold-Black Swordsman) -->
+      <div class="relative md:col-span-5 h-44 sm:h-52 md:h-auto overflow-hidden flex flex-col justify-end p-5 text-center md:text-left" style="background: #0B0D14;">
+        <img src="/login-art.jpg" alt="GoldNovel Immortal Swordsman" class="absolute inset-0 w-full h-full object-cover object-[50%_18%]" onerror="this.style.display='none'">
+        <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(10,11,15,0.08) 0%, rgba(10,11,15,0.42) 58%, rgba(10,11,15,0.94) 100%);"></div>
+        <div class="relative z-10 space-y-1">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase" style="background-color: rgba(234,184,84,0.2); border: 1px solid rgba(234,184,84,0.45); color: #F7DF9B;">✦ GoldNovel</span>
+          <div class="text-sm sm:text-base font-bold text-white leading-snug">ประตูสู่โลกนิยายกำลังภายในและแฟนตาซี</div>
+        </div>
+      </div>
+      <!-- Right Auth Form Panel -->
+      <div class="md:col-span-7 p-5 sm:p-7 max-h-[82vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h2 id="authModalTitle" class="text-lg font-bold">เข้าสู่ระบบ GoldNovel</h2>
         <button type="button" id="closeAuthBtn" class="w-8 h-8 rounded-full text-sm" style="background-color: var(--bg-input);">✕</button>
@@ -481,114 +509,141 @@
           <span>ดำเนินการต่อด้วย Google</span>
         </button>
       </div>
+      </div>
     </div>
   </div>
 
   <!-- Top-Up Modal -->
-  <div id="topupModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-    <div class="card-panel rounded-2xl max-w-md w-full p-6 shadow-2xl fade-in max-h-[90vh] overflow-y-auto">
-      <div class="flex items-start justify-between gap-3 mb-4">
-        <div>
-          <span id="topupBonusBadge" class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-1.5" style="background-color: var(--gold-soft); color: var(--gold-1);">โปรโมชั่นโบนัส +10%</span>
-          <h2 class="text-xl font-bold">เติมเหรียญ GoldNovel</h2>
-          <p id="topupSubtext" class="text-xs mt-0.5" style="color: var(--text-sub);">โอนผ่าน PromptPay QR ล็อกยอดอัตโนมัติ (รองรับทุกธนาคาร)</p>
+  <div id="topupModal" class="fixed inset-0 z-50 hidden items-center justify-center p-2.5 sm:p-5 bg-black/80 backdrop-blur-sm">
+    <div class="card-panel rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl fade-in max-h-[92vh] overflow-y-auto border" style="border-color: rgba(234,184,84,0.28);">
+      <div class="flex items-center justify-between gap-3 mb-5 pb-4 border-b" style="border-color: var(--border-soft);">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, rgba(247,223,155,0.22), rgba(201,146,43,0.08)); border: 1px solid rgba(234,184,84,0.38);">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#gnCoinGrad2)"/><text x="12" y="15.5" text-anchor="middle" font-size="10" font-weight="800" fill="#1A1408" font-family="sans-serif">G</text><defs><linearGradient id="gnCoinGrad2" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#F7DF9B"/><stop offset="1" stop-color="#C9922B"/></linearGradient></defs></svg>
+          </div>
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-lg sm:text-xl font-bold">คลังเหรียญ GoldNovel</h2>
+              <span id="topupBonusBadge" class="inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">โปรโมชั่นโบนัส +10%</span>
+            </div>
+            <p id="topupSubtext" class="text-xs mt-0.5 truncate" style="color: var(--text-sub);">โอนผ่าน PromptPay QR ล็อกยอดอัตโนมัติ (รองรับทุกธนาคาร)</p>
+          </div>
         </div>
-        <button type="button" id="closeTopupBtn" class="w-8 h-8 rounded-full text-sm" style="background-color: var(--bg-input);">✕</button>
+        <button type="button" id="closeTopupBtn" class="w-9 h-9 rounded-full text-sm shrink-0 transition-colors hover:bg-white/10" style="background-color: var(--bg-input);">✕</button>
       </div>
 
       <div id="topupStep1">
-        <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl mb-4" style="background-color: var(--bg-input);">
-          <button type="button" id="topupModeCoinsBtn" class="py-2 rounded-lg text-xs font-semibold transition-all">เติมเหรียญรายตอน</button>
-          <button type="button" id="topupModeVipBtn" class="py-2 rounded-lg text-xs font-semibold transition-all">👑 สมัคร VIP (99฿/เดือน)</button>
+        <div class="max-w-md mx-auto grid grid-cols-2 gap-1.5 p-1 rounded-2xl mb-6 border" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+          <button type="button" id="topupModeCoinsBtn" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">🪙 เติมเหรียญทอง</button>
+          <button type="button" id="topupModeVipBtn" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">👑 บัตร VIP (99฿/เดือน)</button>
         </div>
 
-        <div id="topupCoinsPane">
-          <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">1. เลือกจำนวนเงิน (ล็อกยอดบน QR อัตโนมัติ)</div>
-          <div id="pkgGrid" class="grid grid-cols-3 gap-2.5 mb-3"></div>
-          <div class="mb-4 space-y-2">
-            <label class="block text-[11px]" style="color: var(--text-sub);">หรือกรอกจำนวนเงินที่ต้องการโอนเอง (กี่บาทก็ได้ เช่น 10, 20, 30, 75 บาท)</label>
-            <input id="customBahtInput" type="number" min="1" step="1" placeholder="พิมพ์จำนวนเงิน (บาท) เช่น 10, 20, 30" class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-input); border: 1px solid var(--border-soft); color: var(--text-main);">
-            <div id="topupLiveSummary" class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">
-              <span>ยอดโอนที่เลือก: 100 บาท</span>
-              <span>ได้รับ 110 เหรียญ</span>
-            </div>
-          </div>
-        </div>
-
-        <div id="topupVipPane" class="hidden mb-4">
-          <div class="rounded-2xl p-4 space-y-3 border" style="background: linear-gradient(145deg, rgba(234,184,84,0.14), rgba(20,23,32,0.95)); border-color: rgba(234,184,84,0.4);">
-            <div class="flex items-center justify-between gap-2">
-              <div>
-                <div class="text-xs font-bold uppercase tracking-wider" style="color: var(--gold-1);">👑 GoldNovel VIP 30 วัน</div>
-                <div class="text-[11px] font-medium mt-0.5" style="color: var(--text-main);">(เหมาะสำหรับคนที่ต้องการอ่านจำนวนเยอะๆ)</div>
-                <div class="text-2xl font-extrabold mt-1">99 <span class="text-xs font-normal" style="color: var(--text-sub);">บาท / 30 วัน</span></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div class="lg:col-span-8">
+            <div id="topupCoinsPane" class="space-y-4">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs sm:text-sm font-bold flex items-center gap-2"><span class="section-accent-bar"></span>เลือกแพ็กเกจเหรียญทอง</span>
+                <span class="text-[11px]" style="color: var(--text-muted);">ล็อกยอดบน QR อัตโนมัติ</span>
               </div>
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0" style="background: linear-gradient(135deg, #F0C466, #CE9631); color: #120F0A;">ลด 50% ทุกตอน</span>
+              <div id="pkgGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+              <div class="rounded-2xl p-3.5 border space-y-2" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+                <label class="block text-xs font-medium" style="color: var(--text-sub);">หรือระบุจำนวนเงินเอง (กี่บาทก็ได้ เช่น 10, 35, 150 บาท)</label>
+                <input id="customBahtInput" type="number" min="1" step="1" placeholder="พิมพ์จำนวนเงิน (บาท)..." class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main);">
+              </div>
             </div>
-            <ul class="text-xs space-y-1.5 leading-relaxed" style="color: var(--text-main);">
-              <li>✓ <strong>ลดราคาปลดล็อกทุกตอน 50% ทันที</strong> (จากปกติ <span class="line-through opacity-60">1.5</span> เหลือเพียง <strong>0.75 เหรียญ/ตอน</strong>)</li>
-              <li>✓ <strong>ยิ่งอ่านเยอะยิ่งคุ้ม!</strong> อ่านเกิน 132 ตอน/เดือน ประหยัดค่าเหรียญไปได้หลายร้อยบาท</li>
-              <li>✓ ใช้สิทธิ์ลด 50% ได้ครบทั้ง <strong>ซื้อรายตอน, โหมดอ่านต่อเนื่อง และปลดล็อกเหมาหลายตอน</strong></li>
-              <li>✓ หมดอายุอัตโนมัติเมื่อครบ 30 วัน ไม่ผูกบัตร ไม่หักเงินซ้ำ (ต่ออายุก่อนหมดระบบทบวันเดิมให้ +30 วัน)</li>
-            </ul>
-          </div>
-        </div>
 
-        <div class="mb-4 rounded-xl p-3 border space-y-1" style="background-color: var(--bg-input); border-color: rgba(234,184,84,0.3);">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-bold" style="color: var(--gold-1);">⚡ ช่องทางชำระเงิน: PromptPay QR (ทุกธนาคาร)</span>
-            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">ออโต้ 24 ชม.</span>
+            <div id="topupVipPane" class="hidden">
+              <div class="rounded-3xl p-6 space-y-4 border relative overflow-hidden" style="background: linear-gradient(145deg, rgba(234,184,84,0.18), rgba(16,18,26,0.98)); border-color: rgba(234,184,84,0.48);">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <span class="inline-block px-3 py-1 rounded-full text-[11px] font-bold mb-2" style="background: linear-gradient(135deg, #F7DF9B, #C9922B); color: #120F0A;">👑 ROYAL VIP PASS · ลด 50% ทุกตอน</span>
+                    <h3 class="text-xl font-bold">GoldNovel VIP 30 วัน</h3>
+                    <p class="text-xs mt-0.5" style="color: var(--text-sub);">คุ้มที่สุดสำหรับนักอ่านสายลุยอ่านยาว</p>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-3xl font-extrabold" style="color: var(--gold-1);">99 ฿</div>
+                    <div class="text-[11px]" style="color: var(--text-muted);">ใช้งานได้ 30 วัน</div>
+                  </div>
+                </div>
+                <ul class="text-xs sm:text-sm space-y-2 leading-relaxed pt-2 border-t" style="border-color: rgba(234,184,84,0.2); color: var(--text-main);">
+                  <li>✦ <strong>ลดราคาปลดล็อกทุกตอน 50% ทันที</strong> (จาก <span class="line-through opacity-60">1.5</span> เหลือเพียง <strong>0.75 เหรียญ/ตอน</strong>)</li>
+                  <li>✦ <strong>ใช้ลดได้ทุกระบบ</strong> ทั้งซื้อรายตอน, โหมดอ่านต่อเนื่อง และปลดล็อกเหมาหลายตอน</li>
+                  <li>✦ <strong>กรอบทอง VIP พิเศษ</strong> พร้อมชื่อเรืองแสงในช่องคอมเมนต์</li>
+                  <li>✦ <strong>ไม่ผูกบัตร ไม่หักซ้ำ</strong> หมดอายุอัตโนมัติ (ต่อก่อนหมดระบบทบวันให้ +30 วัน)</li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <p class="text-[11px] leading-relaxed" style="color: var(--text-sub);">
-            • เติม <strong>100 บาทขึ้นไป</strong> หรือ <strong>VIP 99 บาท</strong>: ตรวจสลิปอัตโนมัติ เหรียญ/VIP เข้าทันที<br>
-            • เติม <strong>ต่ำกว่า 100 บาท</strong>: แนบสลิปรอแอดมินตรวจสอบอนุมัติ
-          </p>
+
+          <div class="lg:col-span-4 space-y-3.5">
+            <div class="rounded-2xl p-4 border space-y-3" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+              <div class="flex items-center justify-between text-xs pb-2.5 border-b" style="border-color: var(--border-soft);">
+                <span style="color: var(--text-sub);">เหรียญคงเหลือของคุณ</span>
+                <span id="topupModalBalanceVal" class="font-bold text-sm" style="color: var(--gold-1);">0 เหรียญ</span>
+              </div>
+              <div class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted);">สรุปรายการ</div>
+              <div id="topupLiveSummary" class="flex flex-col gap-1.5 px-3.5 py-3 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">
+                <span>ยอดโอนที่เลือก: 100 บาท</span>
+                <span>ได้รับ 110 เหรียญ</span>
+              </div>
+              <div class="rounded-xl p-3 border space-y-1" style="background-color: var(--bg-card); border-color: rgba(234,184,84,0.28);">
+                <div class="text-xs font-bold" style="color: var(--text-main);">PromptPay QR</div>
+                <p class="text-[11px] leading-relaxed" style="color: var(--text-muted);">
+                  • 100฿+ หรือ VIP 99฿: เหรียญเข้าทันที<br>
+                  • ต่ำกว่า 100฿: รอแอดมินอนุมัติ
+                </p>
+              </div>
+              <button type="button" id="goPayStepBtn" class="w-full py-3.5 rounded-xl text-sm font-bold btn-gold shadow-lg">ดำเนินการชำระเงิน</button>
+            </div>
+          </div>
         </div>
-        <button type="button" id="goPayStepBtn" class="w-full py-3 rounded-xl text-sm btn-gold">ดำเนินการชำระเงิน</button>
       </div>
 
-      <div id="topupStep2" class="hidden space-y-4">
-        <div class="rounded-2xl p-4 text-center" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">
-          <div id="payChannelLabel" class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: var(--gold-1);">PromptPay QR (ล็อกยอดอัตโนมัติ)</div>
-          <div id="payAccountDetail" class="text-xs mb-3" style="color: var(--text-sub);"></div>
+      <div id="topupStep2" class="hidden">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+          <div class="md:col-span-6 rounded-2xl p-5 text-center" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">
+            <div id="payChannelLabel" class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: var(--gold-1);">PromptPay QR (ล็อกยอดอัตโนมัติ)</div>
+            <div id="payAccountDetail" class="text-xs mb-3" style="color: var(--text-sub);"></div>
 
-          <div id="qrBoxWrap" class="flex flex-col items-center justify-center mb-3">
-            <div class="bg-white p-3 rounded-2xl shadow-md inline-block">
-              <div id="promptpayQrCanvas" class="w-44 h-44 flex items-center justify-center"></div>
+            <div id="qrBoxWrap" class="flex flex-col items-center justify-center mb-3">
+              <div class="bg-white p-3 rounded-2xl shadow-md inline-block">
+                <div id="promptpayQrCanvas" class="w-44 h-44 flex items-center justify-center"></div>
+              </div>
+              <div class="mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">📸 สามารถแคปหน้าจอนี้ไปสแกนจ่ายในแอปธนาคารได้เลย</div>
             </div>
-            <div class="mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">📸 สามารถแคปหน้าจอนี้ไปสแกนจ่ายในแอปธนาคารได้เลย</div>
+
+            <div id="payPlaceholderWarn" class="hidden text-[11px] text-amber-300 bg-amber-500/10 border border-amber-400/25 rounded-lg px-3 py-1.5 mb-2">⚠️ กรุณาเปลี่ยนเบอร์พร้อมเพย์จริงของคุณในไฟล์ config.js ก่อนเปิดรับเงินจริง</div>
+            <div id="payBahtText" class="text-2xl font-bold">100.00 บาท</div>
+            <div id="payCoinText" class="text-xs mt-1" style="color: var(--gold-1);">รับ 110 เหรียญ</div>
           </div>
 
-          <div id="payPlaceholderWarn" class="hidden text-[11px] text-amber-300 bg-amber-500/10 border border-amber-400/25 rounded-lg px-3 py-1.5 mb-2">⚠️ กรุณาเปลี่ยนเบอร์พร้อมเพย์จริงของคุณในไฟล์ config.js ก่อนเปิดรับเงินจริง</div>
-          <div id="payBahtText" class="text-2xl font-bold">100.00 บาท</div>
-          <div id="payCoinText" class="text-xs mt-1" style="color: var(--gold-1);">รับ 110 เหรียญ</div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium mb-1.5" style="color: var(--text-sub);">แนบรูปสลิปการโอนเงิน</label>
-          <input id="slipFileInput" type="file" accept="image/*" class="w-full text-xs p-2.5 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
-        </div>
-
-        <!-- Mobile Quick-Slip Handoff QR (Helps PC readers upload slip directly from phone!) -->
-        <div class="hidden sm:block rounded-xl p-3 border space-y-2.5" style="background-color: var(--bg-input); border-color: var(--border-soft);">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-[11px] font-semibold" style="color: var(--text-main);">📱 สลิปอยู่ในมือถือ? แสกนส่งจากมือถือได้เลย</span>
-            <button type="button" id="toggleMobileSlipQrBtn" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">แสดง QR ส่งสลิป</button>
-          </div>
-          <div id="mobileSlipQrPanel" class="hidden pt-2 border-t text-center space-y-2" style="border-color: var(--border-soft);">
-            <p class="text-[11px]" style="color: var(--text-sub);">ใช้กล้องมือถือสแกน QR นี้เพื่อเปิดหน้าแนบสลิปบนมือถือ (พอส่งเสร็จ หน้าคอมจะอัปเดตเหรียญให้อัตโนมัติ)</p>
-            <div class="bg-white p-2 rounded-xl inline-block shadow">
-              <div id="mobileSlipQrCanvas" class="w-32 h-32 flex items-center justify-center"></div>
+          <div class="md:col-span-6 space-y-4">
+            <div class="rounded-2xl p-4 border space-y-3" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+              <label class="block text-xs font-bold" style="color: var(--gold-1);">ขั้นตอนสุดท้าย: แนบรูปสลิปการโอนเงิน</label>
+              <input id="slipFileInput" type="file" accept="image/*" class="w-full text-xs p-3 rounded-xl" style="background-color: var(--bg-card); border: 1px dashed rgba(234,184,84,0.4);">
+              <button type="button" id="submitSlipBtn" class="w-full py-3.5 rounded-xl text-sm font-bold btn-gold">ยืนยันการโอนเงิน / ส่งสลิป</button>
             </div>
-            <div class="flex items-center justify-center gap-2">
-              <span class="text-[10px]" style="color: var(--gold-1);">⏳ กำลังรอรับยอดจากมือถืออัตโนมัติ...</span>
-              <button type="button" id="checkMobileSyncBtn" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main);">🔄 เช็กยอดตอนนี้</button>
+
+            <div class="hidden sm:block rounded-2xl p-3.5 border space-y-2.5" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-semibold" style="color: var(--text-main);">📱 สลิปอยู่ในมือถือ? สแกนส่งจากมือถือได้เลย</span>
+                <button type="button" id="toggleMobileSlipQrBtn" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">แสดง QR ส่งสลิป</button>
+              </div>
+              <div id="mobileSlipQrPanel" class="hidden pt-2 border-t text-center space-y-2" style="border-color: var(--border-soft);">
+                <p class="text-[11px]" style="color: var(--text-sub);">ใช้กล้องมือถือสแกน QR นี้เพื่อเปิดหน้าแนบสลิปบนมือถือ (พอส่งเสร็จ หน้าคอมจะอัปเดตเหรียญให้อัตโนมัติ)</p>
+                <div class="bg-white p-2 rounded-xl inline-block shadow">
+                  <div id="mobileSlipQrCanvas" class="w-32 h-32 flex items-center justify-center"></div>
+                </div>
+                <div class="flex items-center justify-center gap-2">
+                  <span class="text-[10px]" style="color: var(--gold-1);">⏳ กำลังรอรับยอดจากมือถืออัตโนมัติ...</span>
+                  <button type="button" id="checkMobileSyncBtn" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main);">🔄 เช็กยอดตอนนี้</button>
+                </div>
+              </div>
             </div>
+
+            <button type="button" id="backPayBtn" class="w-full py-2 text-xs font-medium hover:underline" style="color: var(--text-sub);">← เปลี่ยนจำนวนเงินหรือแพ็กเกจ</button>
           </div>
         </div>
-
-        <button type="button" id="submitSlipBtn" class="w-full py-3 rounded-xl text-sm btn-gold">ยืนยันการโอนเงิน / ส่งสลิป</button>
-        <button type="button" id="backPayBtn" class="w-full py-1.5 text-xs" style="color: var(--text-sub);">← เปลี่ยนจำนวนเงินหรือช่องทาง</button>
       </div>
     </div>
   </div>
@@ -1662,12 +1717,12 @@
             <div class="relative w-[156px] h-[208px] sm:w-[186px] sm:h-[248px] mx-auto sm:mx-0 flex-none self-start rounded-xl overflow-hidden shadow-xl border" style="border-color: rgba(255,255,255,0.12);">${renderCoverBox(novel)}</div>
             <div class="flex-1 flex flex-col justify-between">
               <div>
-                <div class="flex flex-wrap gap-1.5 mb-2">
+                <div class="flex flex-wrap justify-center sm:justify-start gap-1.5 mb-2">
                   ${(novel.categories || []).map(c => `<span class="text-[11px] px-2.5 py-0.5 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">${c}</span>`).join('')}
                 </div>
-                <h1 class="text-2xl font-bold mb-1">${novel.title}</h1>
-                <div class="text-xs mb-3" style="color: var(--text-muted);">โดย ${novel.author} · ${novel.status}</div>
-                <p class="text-sm leading-relaxed mb-5" style="color: var(--text-sub);">${novel.synopsis || ''}</p>
+                <h1 class="text-xl sm:text-2xl font-bold mb-1 text-center sm:text-left">${novel.title}</h1>
+                <div class="text-xs mb-3 text-center sm:text-left" style="color: var(--text-muted);">โดย ${novel.author} · ${novel.status}</div>
+                <p class="text-xs sm:text-sm leading-relaxed mb-5 text-center sm:text-left" style="color: var(--text-sub);">${novel.synopsis || ''}</p>
               </div>
               <div>
                 ${(() => {
@@ -1690,23 +1745,80 @@
                     </div>
                   `;
                 })()}
-                <div class="flex flex-wrap gap-2.5">
-                  ${(() => {
-                    if (!chapters.length) return '';
-                    const prog = getReadingProgressForNovel(novel);
-                    if (prog && chapters.some(c => c.id === prog.chapter.id)) {
-                      return `<button type="button" data-open-ch="${prog.chapter.id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">อ่านต่อตอนที่ ${prog.chapter.chapter_number} →</button>`;
-                    }
-                    return `<button type="button" data-open-ch="${chapters[0].id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">เริ่มอ่านตอนที่ ${chapters[0].chapter_number}</button>`;
-                  })()}
-                  <button type="button" data-toggle-bm="${novel.id}" class="px-4 py-2.5 rounded-full text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">${state.bookmarks.includes(novel.id) ? '🔖 อยู่ในคลังแล้ว' : '📑 เพิ่มเข้าคลัง'}</button>
-                  <button type="button" id="shareNovelLinkBtn" data-share-novel-id="${novel.id}" data-share-novel-title="${escapeHtml(novel.title)}" class="px-4 py-2.5 rounded-full text-xs font-medium transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">🔗 แชร์ลิงก์เรื่องนี้</button>
-                  <button type="button" data-report-copyright="${escapeHtml(novel.title)}" class="px-3.5 py-2.5 rounded-full text-xs font-medium transition-colors hover:bg-white/[0.06]" style="color: var(--text-muted); border: 1px solid var(--border-soft);">🛡️ แจ้งลิขสิทธิ์</button>
-                </div>
+                ${(() => {
+                  const realChs = chapters.filter(c => !c.is_note);
+                  const freeCnt = realChs.filter(c => Number(c.price_coins || 0) === 0).length;
+                  const commentCnt = (state.comments || []).filter(cm => cm.novel_id === novel.id).length;
+                  const prog = getReadingProgressForNovel(novel);
+                  const primaryBtn = !chapters.length ? '' : (
+                    prog && chapters.some(c => c.id === prog.chapter.id)
+                      ? `<button type="button" data-open-ch="${prog.chapter.id}" class="w-full h-full px-6 py-3.5 rounded-2xl text-sm font-bold btn-gold flex items-center justify-center gap-2 shadow-lg">📖 อ่านต่อตอนที่ ${prog.chapter.chapter_number}</button>`
+                      : `<button type="button" data-open-ch="${chapters[0].id}" class="w-full h-full px-6 py-3.5 rounded-2xl text-sm font-bold btn-gold flex items-center justify-center gap-2 shadow-lg">📖 เริ่มอ่านตอนที่ ${chapters[0].chapter_number}</button>`
+                  );
+                  return `
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 mb-3">
+                      <div class="sm:col-span-5">${primaryBtn}</div>
+                      <div class="sm:col-span-7 grid grid-cols-3 gap-2">
+                        <div class="pro-stat-tile rounded-2xl py-2.5 px-2 text-center">
+                          <div class="text-sm sm:text-base font-extrabold" style="color: var(--gold-1);">${realChs.length.toLocaleString()}</div>
+                          <div class="text-[10px]" style="color: var(--text-muted);">จำนวนตอน</div>
+                        </div>
+                        <div class="pro-stat-tile rounded-2xl py-2.5 px-2 text-center">
+                          <div class="text-sm sm:text-base font-extrabold text-emerald-400">${freeCnt.toLocaleString()}</div>
+                          <div class="text-[10px]" style="color: var(--text-muted);">ตอนอ่านฟรี</div>
+                        </div>
+                        <div class="pro-stat-tile rounded-2xl py-2.5 px-2 text-center">
+                          <div class="text-sm sm:text-base font-extrabold" style="color: var(--text-main);">${commentCnt.toLocaleString()}</div>
+                          <div class="text-[10px]" style="color: var(--text-muted);">คอมเมนต์</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <button type="button" data-toggle-bm="${novel.id}" class="px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">${state.bookmarks.includes(novel.id) ? '🔖 ในชั้นแล้ว' : '📑 เก็บเข้าชั้น'}</button>
+                      <button type="button" id="shareNovelLinkBtn" data-share-novel-id="${novel.id}" data-share-novel-title="${escapeHtml(novel.title)}" class="px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">🔗 แชร์เรื่องนี้</button>
+                      <button type="button" id="detailAutoToggleBtn" class="px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors" style="background-color: ${state.autoContinuousMode ? 'var(--gold-soft)' : 'var(--bg-input)'}; border: 1px solid ${state.autoContinuousMode ? 'rgba(234,184,84,0.5)' : 'var(--border-subtle)'}; color: ${state.autoContinuousMode ? 'var(--gold-1)' : 'var(--text-sub)'};">⚡ อ่านต่อเนื่อง ${state.autoContinuousMode ? 'ON' : 'OFF'}</button>
+                      <button type="button" data-report-copyright="${escapeHtml(novel.title)}" class="px-3 py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1 transition-colors hover:bg-white/[0.06]" style="color: var(--text-muted); border: 1px solid var(--border-soft);">🛡️ แจ้งลิขสิทธิ์</button>
+                    </div>
+                  `;
+                })()}
               </div>
             </div>
             </div>
           </div>
+
+          <!-- Latest 3 Chapters Quick-Access Card -->
+          ${(() => {
+            const latest3 = [...chapters].filter(c => !c.is_note).slice(-3).reverse();
+            if (!latest3.length) return '';
+            return `
+              <section class="card-panel rounded-2xl overflow-hidden border" style="border-color: rgba(234,184,84,0.22);">
+                <div class="px-5 py-3 border-b flex items-center justify-between gap-2" style="background: linear-gradient(90deg, rgba(234,184,84,0.12), transparent); border-color: var(--border-soft);">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold" style="color: var(--gold-1);">⚡ อัปเดตล่าสุด</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold" style="background-color: var(--gold-soft); color: var(--gold-1);">3 ตอนใหม่สุด</span>
+                  </div>
+                  <span class="text-[11px]" style="color: var(--text-muted);">แตะเพื่ออ่านทันที</span>
+                </div>
+                <div class="divide-y" style="border-color: var(--border-soft);">
+                  ${latest3.map(ch => {
+                    const eff = getEffectivePrice(ch);
+                    const acc = isAccessible(ch);
+                    return `
+                      <button type="button" data-open-ch="${ch.id}" class="w-full text-left px-5 py-3 flex items-center justify-between gap-3 transition-colors hover:bg-white/[0.04]">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                          <span class="px-2 py-0.5 rounded-md text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">${getChapterLabel(ch)}</span>
+                          <span class="text-xs sm:text-sm font-medium truncate" style="color: var(--text-main);">${escapeHtml(ch.title)}</span>
+                        </div>
+                        <span class="text-[11px] font-semibold shrink-0" style="color: ${Number(ch.price_coins || 0) <= 0 ? '#34D399' : (acc ? 'var(--gold-1)' : 'var(--text-sub)')};">
+                          ${Number(ch.price_coins || 0) <= 0 ? 'ฟรี' : (acc ? 'เปิดแล้ว' : `🪙 ${eff}`)}
+                        </span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </section>
+            `;
+          })()}
 
           ${(() => {
             const hasImg = !!String(novel.detail_image_url || '').trim();
@@ -3455,15 +3567,42 @@
       }
     }
 
+    function getGoldTierSvg(baht) {
+      if (baht <= 50) {
+        return `<svg class="w-11 h-11 mx-auto" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" fill="url(#gC1)" stroke="#FFF2C2" stroke-width="1.5"/><circle cx="24" cy="24" r="11.5" stroke="#8E6010" stroke-width="1.2" stroke-dasharray="2 2"/><text x="24" y="29" text-anchor="middle" font-size="14" font-weight="800" fill="#4A2E04" font-family="sans-serif">G</text><defs><linearGradient id="gC1" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF2B8"/><stop offset="0.5" stop-color="#EAB854"/><stop offset="1" stop-color="#A66D12"/></linearGradient></defs></svg>`;
+      }
+      if (baht <= 200) {
+        return `<svg class="w-11 h-11 mx-auto" viewBox="0 0 48 48" fill="none"><circle cx="19" cy="27" r="12" fill="url(#gC2a)" stroke="#FFF2C2" stroke-width="1.2"/><circle cx="29" cy="21" r="13" fill="url(#gC2b)" stroke="#FFF5CF" stroke-width="1.5"/><text x="29" y="26" text-anchor="middle" font-size="12" font-weight="800" fill="#4A2E04" font-family="sans-serif">G</text><defs><linearGradient id="gC2a" x1="7" y1="15" x2="31" y2="39" gradientUnits="userSpaceOnUse"><stop stop-color="#F7DF9B"/><stop offset="1" stop-color="#9A6410"/></linearGradient><linearGradient id="gC2b" x1="16" y1="8" x2="42" y2="34" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF2B8"/><stop offset="0.55" stop-color="#EAB854"/><stop offset="1" stop-color="#A66D12"/></linearGradient></defs></svg>`;
+      }
+      if (baht <= 500) {
+        return `<svg class="w-11 h-11 mx-auto" viewBox="0 0 48 48" fill="none"><path d="M18 11h12l-2 5H20l-2-5z" fill="#EAB854"/><path d="M15 17c-5 4-7 11-6 17 1 5 6 7 15 7s14-2 15-7c1-6-1-13-6-17H15z" fill="url(#gPouch)" stroke="#FFF2C2" stroke-width="1.4"/><rect x="18" y="15" width="12" height="3.5" rx="1.75" fill="#9A6410"/><text x="24" y="33" text-anchor="middle" font-size="13" font-weight="800" fill="#4A2E04" font-family="sans-serif">G</text><defs><linearGradient id="gPouch" x1="10" y1="17" x2="38" y2="41" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF0B0"/><stop offset="0.5" stop-color="#E5AE44"/><stop offset="1" stop-color="#8C590C"/></linearGradient></defs></svg>`;
+      }
+      return `<svg class="w-11 h-11 mx-auto" viewBox="0 0 48 48" fill="none"><rect x="7" y="18" width="34" height="21" rx="4" fill="url(#gChest)" stroke="#FFF2C2" stroke-width="1.5"/><path d="M7 22c0-6 6-10 17-10s17 4 17 10H7z" fill="url(#gLid)" stroke="#FFF2C2" stroke-width="1.4"/><rect x="7" y="21" width="34" height="4" fill="#6E4508"/><rect x="20" y="19" width="8" height="9" rx="2" fill="#FFF2B8" stroke="#6E4508" stroke-width="1.3"/><circle cx="24" cy="23.5" r="1.6" fill="#6E4508"/><defs><linearGradient id="gChest" x1="7" y1="18" x2="41" y2="39" gradientUnits="userSpaceOnUse"><stop stop-color="#EAB854"/><stop offset="1" stop-color="#7B4E0A"/></linearGradient><linearGradient id="gLid" x1="7" y1="12" x2="41" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF2B8"/><stop offset="1" stop-color="#C9922B"/></linearGradient></defs></svg>`;
+    }
+
     function renderPackages() {
       const grid = document.getElementById('pkgGrid');
+      const balEl = document.getElementById('topupModalBalanceVal');
+      if (balEl && state.user) {
+        balEl.textContent = `${Number(state.user.coin_balance || 0).toLocaleString()} เหรียญ`;
+      }
       grid.innerHTML = PACKAGES.map(baht => {
         const active = baht === state.selectedBaht;
         const coins = calcCoins(baht);
+        const badge = baht === 100
+          ? `<span class="absolute -top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold shadow" style="background: linear-gradient(135deg, #34D399, #059669); color: #052E16;">แนะนำ ⚡</span>`
+          : (baht === 500
+            ? `<span class="absolute -top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold shadow" style="background: linear-gradient(135deg, #FB7185, #E11D48); color: #FFFFFF;">สุดคุ้ม 🔥</span>`
+            : '');
         return `
-          <button type="button" data-pkg="${baht}" class="p-3 rounded-xl border text-center" style="border-color: ${active ? 'var(--gold-1)' : 'var(--border-soft)'}; background-color: ${active ? 'var(--gold-soft)' : 'var(--bg-input)'};">
-            <div class="text-base font-bold">${baht} ฿</div>
-            <div class="text-[11px]" style="color: var(--gold-1);">${coins} เหรียญ</div>
+          <button type="button" data-pkg="${baht}" class="relative pro-gold-card ${active ? 'is-active' : ''} rounded-2xl p-3.5 text-center flex flex-col items-center justify-between gap-1.5">
+            ${badge}
+            <div class="pt-1">${getGoldTierSvg(baht)}</div>
+            <div>
+              <div class="text-base sm:text-lg font-extrabold leading-tight" style="color: var(--text-main);">${coins.toLocaleString()}</div>
+              <div class="text-[10px]" style="color: var(--text-muted);">เหรียญทอง</div>
+            </div>
+            <div class="w-full py-1 rounded-lg text-xs font-bold" style="background-color: ${active ? 'rgba(234,184,84,0.22)' : 'rgba(255,255,255,0.05)'}; color: var(--gold-1);">${baht.toLocaleString()} บาท</div>
           </button>
         `;
       }).join('');
@@ -3479,12 +3618,17 @@
       const goBtn = document.getElementById('goPayStepBtn');
       const curBaht = Math.max(1, Number(state.selectedBaht || 100));
       const curCoins = calcCoins(curBaht);
+      const bonusCoins = roundCoins(curCoins - curBaht);
       if (sumEl) {
-        sumEl.innerHTML = `<span>ยอดโอนที่เลือก: ${curBaht.toLocaleString()} บาท</span><span>ได้รับ ${curCoins.toLocaleString()} เหรียญ</span>`;
+        if (state.topupMode === 'vip') {
+          sumEl.innerHTML = `<div class="flex justify-between"><span>แพ็กเกจ:</span><strong>VIP 30 วัน (-50%)</strong></div><div class="flex justify-between"><span>ยอดชำระ:</span><strong>99 บาท</strong></div>`;
+        } else {
+          sumEl.innerHTML = `<div class="flex justify-between"><span>ยอดโอน:</span><strong>${curBaht.toLocaleString()} บาท</strong></div>${bonusCoins > 0 ? `<div class="flex justify-between text-[11px] opacity-90"><span>โบนัสฟรี (+${CFG.topupBonusPercent}%):</span><strong>+${bonusCoins.toLocaleString()} เหรียญ</strong></div>` : ''}<div class="flex justify-between pt-1.5 mt-1 border-t" style="border-color: rgba(234,184,84,0.28);"><span>รวมที่ได้รับ:</span><strong class="text-sm">${curCoins.toLocaleString()} เหรียญ</strong></div>`;
+        }
       }
       if (goBtn) {
         goBtn.textContent = state.topupMode === 'vip'
-          ? 'สมัคร VIP 30 วัน (99 บาท)'
+          ? 'ชำระเงินสมัคร VIP (99 บาท)'
           : `ดำเนินการชำระเงิน (${curBaht.toLocaleString()} บาท)`;
       }
     }
@@ -3915,6 +4059,18 @@
 
       document.querySelectorAll('#mainContent [data-set-mode]').forEach(btn => {
         btn.addEventListener('click', () => { state.mode = btn.getAttribute('data-set-mode'); saveDemo(); render(); });
+      });
+
+      const detailAutoToggleBtn = document.getElementById('detailAutoToggleBtn');
+      if (detailAutoToggleBtn) detailAutoToggleBtn.addEventListener('click', () => {
+        if (!state.autoContinuousMode && !state.user) {
+          openAuthModal();
+          showToast('กรุณาเข้าสู่ระบบก่อนเปิดโหมดอ่านต่อเนื่อง');
+          return;
+        }
+        state.autoContinuousMode = !state.autoContinuousMode;
+        render();
+        showToast(state.autoContinuousMode ? '⚡ เปิดโหมดอ่านต่อเนื่องแล้ว' : 'ปิดโหมดอ่านต่อเนื่องแล้ว');
       });
 
       const detailBulkBtn = document.getElementById('detailBulkUnlockBtn');
@@ -6312,7 +6468,7 @@
       const showInstallButtons = (visible) => {
         if (headerBtn) {
           headerBtn.classList.toggle('hidden', !visible);
-          headerBtn.classList.toggle('flex', visible);
+          headerBtn.classList.toggle('sm:flex', visible);
         }
         if (drawerBtn) {
           drawerBtn.classList.toggle('hidden', !visible);
@@ -6519,6 +6675,13 @@
         try { window.history.replaceState({}, '', '/'); } catch (_) {}
       }
     }
+
+    const headerThemeToggleBtn = document.getElementById('headerThemeToggleBtn');
+    if (headerThemeToggleBtn) headerThemeToggleBtn.addEventListener('click', () => {
+      state.mode = state.mode === 'light' ? 'dark' : 'light';
+      saveDemo();
+      render();
+    });
 
     (async function init() {
       if (state.isLive) await loadLiveData();
