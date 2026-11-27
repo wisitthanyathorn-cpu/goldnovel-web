@@ -8,6 +8,12 @@
   <link rel="canonical" href="https://www.goldnovelth.com/">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0A0B0F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GoldNovel">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="GoldNovel">
   <meta property="og:title" content="GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์">
@@ -339,6 +345,11 @@
           <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style="color: var(--text-muted);"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
         </div>
 
+        <button type="button" id="pwaHeaderInstallBtn" class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors hover:bg-white/[0.06]" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.32); color: var(--gold-1);" title="ติดตั้งแอป GoldNovel ลงหน้าจอ">
+          <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="hidden md:inline">ติดตั้งแอป</span>
+        </button>
+
         <button type="button" id="headerTopupBtn" class="flex items-center gap-1.5 pl-2 pr-1 py-0.5 rounded-full text-xs font-semibold shrink-0 transition-transform hover:scale-[1.02]" style="background-color: var(--bg-card); border: 1px solid rgba(234,184,84,0.38); color: var(--gold-1);" title="เติมเหรียญ">
           <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#gnCoinGrad)"/><text x="12" y="15.5" text-anchor="middle" font-size="10" font-weight="800" fill="#1A1408" font-family="sans-serif">G</text><defs><linearGradient id="gnCoinGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#F7DF9B"/><stop offset="1" stop-color="#C9922B"/></linearGradient></defs></svg>
           <span id="coinBalanceText" class="px-0.5 tabular-nums text-[12px]">0</span>
@@ -359,6 +370,10 @@
             <button type="button" id="closeDrawerBtn" class="w-7 h-7 rounded-lg text-xs" style="background-color: var(--bg-input); color: var(--text-sub);">✕</button>
           </div>
           <nav class="space-y-1">
+            <button type="button" id="pwaDrawerInstallBtn" class="hidden w-full text-left px-3 py-2.5 mb-2 rounded-xl text-[13px] font-semibold flex items-center gap-2.5" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.32); color: var(--gold-1);">
+              <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>ติดตั้งแอปลงหน้าจอ</span>
+            </button>
             <button type="button" data-mview="home" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4.5v-6h3v6H18a1 1 0 0 0 1-1V9.5"/></svg><span>หน้าหลัก</span></button>
             <button type="button" data-mview="library" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>ชั้นหนังสือ</span></button>
             <button type="button" id="mobileTopupBtn" class="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2.5 hover:bg-white/[0.04]"><svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h.01"/><path d="M2 10h20"/></svg><span>เติมเหรียญ</span></button>
@@ -717,6 +732,52 @@
         <button type="button" id="cancelDeleteBtn" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="background-color: var(--bg-input);">ยกเลิก</button>
         <button type="button" id="confirmDeleteBtn" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-35 disabled:cursor-not-allowed">ยืนยันการลบถาวร</button>
       </div>
+    </div>
+  </div>
+
+  <!-- PWA Install Guide Modal (for iOS Safari & browsers without native prompt) -->
+  <div id="pwaInstallModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+    <div class="w-full max-w-sm rounded-3xl p-6 card-panel shadow-2xl fade-in space-y-4">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-3">
+          <img src="/favicon.png" alt="GoldNovel" class="w-11 h-11 rounded-2xl object-cover border" style="border-color: rgba(234,184,84,0.35);" onerror="this.style.display='none'">
+          <div>
+            <h3 class="text-base font-bold" style="color: var(--gold-1);">ติดตั้งแอป GoldNovel</h3>
+            <p class="text-[11px]" style="color: var(--text-sub);">เปิดอ่านเต็มจอจากหน้าจอหลักได้ทันที</p>
+          </div>
+        </div>
+        <button type="button" id="closePwaInstallBtn" class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background-color: var(--bg-input); color: var(--text-sub);">✕</button>
+      </div>
+
+      <div id="pwaInstallIosSteps" class="hidden space-y-2.5 text-xs leading-relaxed p-3.5 rounded-2xl" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+        <div class="font-bold text-sm" style="color: var(--text-main);">วิธีติดตั้งบน iPhone / iPad</div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">1</span>
+          <span style="color: var(--text-sub);">กดปุ่ม <strong>แชร์ (Share ⬆️)</strong> ที่แถบด้านล่างของ Safari</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">2</span>
+          <span style="color: var(--text-sub);">เลื่อนลงมาแล้วแตะ <strong>เพิ่มไปยังหน้าจอโฮม (Add to Home Screen)</strong></span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">3</span>
+          <span style="color: var(--text-sub);">กด <strong>เพิ่ม (Add)</strong> มุมขวาบน — ไอคอน GoldNovel จะขึ้นบนหน้าจอทันทีครับ</span>
+        </div>
+      </div>
+
+      <div id="pwaInstallOtherSteps" class="hidden space-y-2.5 text-xs leading-relaxed p-3.5 rounded-2xl" style="background-color: var(--bg-input); border: 1px solid var(--border-soft);">
+        <div class="font-bold text-sm" style="color: var(--text-main);">วิธีติดตั้งลงมือถือ / คอมพิวเตอร์</div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">1</span>
+          <span style="color: var(--text-sub);"><strong>บนมือถือ Android (Chrome):</strong> กดปุ่มเมนู <strong>⋮</strong> มุมขวาบน แล้วเลือก <strong>เพิ่มลงหน้าจอหลัก / ติดตั้งแอป</strong></span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">2</span>
+          <span style="color: var(--text-sub);"><strong>บนคอมพิวเตอร์ (Chrome / Edge):</strong> กดไอคอน <strong>ติดตั้งแอป (⊕)</strong> ที่มุมขวาของช่องพิมพ์ URL ด้านบน</span>
+        </div>
+      </div>
+
+      <button type="button" id="pwaInstallConfirmCloseBtn" class="w-full py-2.5 rounded-xl text-sm font-semibold btn-gold">เข้าใจแล้ว</button>
     </div>
   </div>
 
@@ -6123,6 +6184,91 @@
         window.history.replaceState({}, '', window.location.pathname);
       } catch {}
     }
+
+    // PWA Install & Service Worker Controller
+    (function setupPwaInstall() {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      let deferredPrompt = null;
+
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+
+      const headerBtn = document.getElementById('pwaHeaderInstallBtn');
+      const drawerBtn = document.getElementById('pwaDrawerInstallBtn');
+      const modal = document.getElementById('pwaInstallModal');
+      const iosSteps = document.getElementById('pwaInstallIosSteps');
+      const otherSteps = document.getElementById('pwaInstallOtherSteps');
+
+      const showInstallButtons = (visible) => {
+        if (headerBtn) {
+          headerBtn.classList.toggle('hidden', !visible);
+          headerBtn.classList.toggle('flex', visible);
+        }
+        if (drawerBtn) {
+          drawerBtn.classList.toggle('hidden', !visible);
+        }
+      };
+
+      const closePwaModal = () => {
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+
+      const openPwaModal = () => {
+        if (!modal) return;
+        if (iosSteps) iosSteps.classList.toggle('hidden', !isIos);
+        if (otherSteps) otherSteps.classList.toggle('hidden', isIos);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      };
+
+      if (!isStandalone) {
+        showInstallButtons(true);
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!isStandalone) showInstallButtons(true);
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        showInstallButtons(false);
+        closePwaModal();
+        showToast('ติดตั้งแอป GoldNovel เรียบร้อยแล้ว!');
+      });
+
+      const handleInstallClick = async () => {
+        const mobileDrawer = document.getElementById('mobileDrawer');
+        if (mobileDrawer) mobileDrawer.classList.add('hidden');
+        if (deferredPrompt) {
+          try {
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            if (choice && choice.outcome === 'accepted') {
+              deferredPrompt = null;
+              showInstallButtons(false);
+            }
+            return;
+          } catch (_) {}
+        }
+        openPwaModal();
+      };
+
+      if (headerBtn) headerBtn.addEventListener('click', handleInstallClick);
+      if (drawerBtn) drawerBtn.addEventListener('click', handleInstallClick);
+      const closeBtn1 = document.getElementById('closePwaInstallBtn');
+      const closeBtn2 = document.getElementById('pwaInstallConfirmCloseBtn');
+      if (closeBtn1) closeBtn1.addEventListener('click', closePwaModal);
+      if (closeBtn2) closeBtn2.addEventListener('click', closePwaModal);
+      if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closePwaModal(); });
+    })();
 
     (async function init() {
       if (state.isLive) await loadLiveData();
