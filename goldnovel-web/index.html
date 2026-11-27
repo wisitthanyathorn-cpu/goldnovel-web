@@ -253,7 +253,7 @@
     }
     .reading-sheet, #mainContent { overflow-anchor: none; }
   </style>
-  <script src="config.js"></script>
+  <script src="/config.js"></script>
 </head>
 <body data-mode="dark" class="min-h-screen flex">
 
@@ -554,7 +554,6 @@
 
           <div id="qrBoxWrap" class="flex flex-col items-center justify-center mb-3">
             <div class="bg-white p-3 rounded-2xl shadow-md inline-block">
-              <div class="text-[11px] font-bold text-[#113566] tracking-wide mb-1.5">THAI QR PAYMENT · PROMPTPAY</div>
               <div id="promptpayQrCanvas" class="w-44 h-44 flex items-center justify-center"></div>
             </div>
             <div class="mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">📸 สามารถแคปหน้าจอนี้ไปสแกนจ่ายในแอปธนาคารได้เลย</div>
@@ -3673,7 +3672,7 @@
         const nid = shareNovelLinkBtn.getAttribute('data-share-novel-id');
         const ntitle = shareNovelLinkBtn.getAttribute('data-share-novel-title') || 'GoldNovel';
         const base = (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : 'https://www.goldnovelth.com';
-        const shareUrl = `${base}/?novel=${encodeURIComponent(nid)}`;
+        const shareUrl = `${base}/novel/${encodeURIComponent(getNovelShortCode(nid))}`;
         if (navigator.share) {
           try {
             await navigator.share({ title: `${ntitle} — GoldNovel`, url: shareUrl });
@@ -3698,7 +3697,7 @@
         ];
         (state.novels || []).forEach(n => {
           const lm = (n.updated_at || n.created_at || today).slice(0, 10);
-          urls.push(`  <url>\n    <loc>https://www.goldnovelth.com/?novel=${encodeURIComponent(n.id)}</loc>\n    <lastmod>${lm}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+          urls.push(`  <url>\n    <loc>https://www.goldnovelth.com/novel/${encodeURIComponent(getNovelShortCode(n.id))}</loc>\n    <lastmod>${lm}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
         });
         const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
         const blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
@@ -6437,6 +6436,21 @@
     });
     window.addEventListener('focus', () => refreshUserBalanceOnly(false));
 
+    function getNovelShortCode(id) {
+      const s = String(id || '').trim();
+      if (!s) return '';
+      return s.includes('-') ? s.split('-')[0].toLowerCase() : s;
+    }
+
+    function findNovelByUrlKey(key) {
+      const k = String(key || '').trim().toLowerCase();
+      if (!k) return null;
+      return (state.novels || []).find(n => {
+        const nid = String(n.id || '').toLowerCase();
+        return nid === k || getNovelShortCode(nid) === k;
+      }) || null;
+    }
+
     function syncSeoMetadata() {
       const defaultTitle = 'GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์';
       const defaultDesc = 'GoldNovel (goldnovelth.com) แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน อ่านลื่น ปลดล็อกตอนอัตโนมัติ';
@@ -6455,7 +6469,9 @@
       if ((state.view === 'novel' || state.view === 'reader') && state.activeNovelId) {
         const novel = getNovel(state.activeNovelId);
         if (novel) {
-          const novelUrl = `${baseOrigin}/?novel=${encodeURIComponent(novel.id)}`;
+          const shortCode = getNovelShortCode(novel.id);
+          const targetPath = `/novel/${encodeURIComponent(shortCode)}`;
+          const novelUrl = `${baseOrigin}${targetPath}`;
           const ch = state.view === 'reader' ? (novel.chapters || []).find(c => c.id === state.activeChapterId) : null;
           const pageTitle = ch ? `${ch.title} — ${novel.title} | GoldNovel` : `${novel.title} — อ่านนิยายออนไลน์ | GoldNovel`;
           const desc = (novel.synopsis || '').replace(/\s+/g, ' ').trim().slice(0, 160) || `อ่านนิยาย ${novel.title} ออนไลน์บน GoldNovel`;
@@ -6468,11 +6484,8 @@
           setMeta('meta[property="og:url"]', 'content', novelUrl);
           if (novel.cover_url) setMeta('meta[property="og:image"]', 'content', novel.cover_url);
 
-          if (canPushUrl) {
-            const targetSearch = `?novel=${encodeURIComponent(novel.id)}`;
-            if (location.search !== targetSearch) {
-              try { window.history.replaceState({}, '', `${location.pathname}${targetSearch}`); } catch (_) {}
-            }
+          if (canPushUrl && (location.pathname !== targetPath || location.search)) {
+            try { window.history.replaceState({}, '', targetPath); } catch (_) {}
           }
 
           removeNovelSchema();
@@ -6502,8 +6515,8 @@
       setMeta('meta[property="og:url"]', 'content', `${baseOrigin}/`);
       setMeta('meta[property="og:image"]', 'content', `${baseOrigin}/favicon.png`);
       removeNovelSchema();
-      if (canPushUrl && location.search.includes('novel=')) {
-        try { window.history.replaceState({}, '', location.pathname); } catch (_) {}
+      if (canPushUrl && (location.pathname.startsWith('/novel/') || location.search.includes('novel='))) {
+        try { window.history.replaceState({}, '', '/'); } catch (_) {}
       }
     }
 
@@ -6511,11 +6524,15 @@
       if (state.isLive) await loadLiveData();
       else loadDemo();
       try {
+        const pathMatch = window.location.pathname.match(/^\/novel\/([^\/]+)\/?$/i);
         const params = new URLSearchParams(window.location.search);
-        const novelParam = params.get('novel');
-        if (novelParam && state.novels.some(n => String(n.id) === String(novelParam))) {
-          state.activeNovelId = String(novelParam);
-          state.view = 'novel';
+        const novelKey = pathMatch ? decodeURIComponent(pathMatch[1]) : params.get('novel');
+        if (novelKey) {
+          const matched = findNovelByUrlKey(novelKey);
+          if (matched) {
+            state.activeNovelId = matched.id;
+            state.view = 'novel';
+          }
         }
       } catch (_) {}
       render();
