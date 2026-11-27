@@ -533,6 +533,24 @@
           <input id="slipFileInput" type="file" accept="image/*" class="w-full text-xs p-2.5 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
         </div>
 
+        <!-- Mobile Quick-Slip Handoff QR (Helps PC readers upload slip directly from phone!) -->
+        <div class="hidden sm:block rounded-xl p-3 border space-y-2.5" style="background-color: var(--bg-input); border-color: var(--border-soft);">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] font-semibold" style="color: var(--text-main);">📱 สลิปอยู่ในมือถือ? แสกนส่งจากมือถือได้เลย</span>
+            <button type="button" id="toggleMobileSlipQrBtn" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0" style="background-color: var(--gold-soft); color: var(--gold-1);">แสดง QR ส่งสลิป</button>
+          </div>
+          <div id="mobileSlipQrPanel" class="hidden pt-2 border-t text-center space-y-2" style="border-color: var(--border-soft);">
+            <p class="text-[11px]" style="color: var(--text-sub);">ใช้กล้องมือถือสแกน QR นี้เพื่อเปิดหน้าแนบสลิปบนมือถือ (พอส่งเสร็จ หน้าคอมจะอัปเดตเหรียญให้อัตโนมัติ)</p>
+            <div class="bg-white p-2 rounded-xl inline-block shadow">
+              <div id="mobileSlipQrCanvas" class="w-32 h-32 flex items-center justify-center"></div>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+              <span class="text-[10px]" style="color: var(--gold-1);">⏳ กำลังรอรับยอดจากมือถืออัตโนมัติ...</span>
+              <button type="button" id="checkMobileSyncBtn" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold" style="background-color: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-main);">🔄 เช็กยอดตอนนี้</button>
+            </div>
+          </div>
+        </div>
+
         <button type="button" id="submitSlipBtn" class="w-full py-3 rounded-xl text-sm btn-gold">ยืนยันการโอนเงิน / ส่งสลิป</button>
         <button type="button" id="backPayBtn" class="w-full py-1.5 text-xs" style="color: var(--text-sub);">← เปลี่ยนจำนวนเงินหรือช่องทาง</button>
       </div>
@@ -3086,6 +3104,7 @@
     }
 
     function closeTopup() {
+      if (typeof stopMobileSlipPoller === 'function') stopMobileSlipPoller();
       const m = document.getElementById('topupModal');
       m.classList.add('hidden');
       m.classList.remove('flex');
@@ -4992,6 +5011,7 @@
     });
 
     document.getElementById('backPayBtn').addEventListener('click', () => {
+      stopMobileSlipPoller();
       document.getElementById('topupStep2').classList.add('hidden');
       document.getElementById('topupStep1').classList.remove('hidden');
     });
@@ -5648,10 +5668,127 @@
       showToast('กลับสู่มุมมองเจ้าของเว็บ (Admin) แล้ว');
     });
 
+
+    // Mobile Quick-Slip Handoff QR + Desktop Auto-Sync Poller
+    let mobileSlipPollTimer = null;
+    let mobileSlipStartBal = 0;
+    let mobileSlipStartVip = '';
+
+    function stopMobileSlipPoller() {
+      if (mobileSlipPollTimer) {
+        clearInterval(mobileSlipPollTimer);
+        mobileSlipPollTimer = null;
+      }
+      const panel = document.getElementById('mobileSlipQrPanel');
+      const tBtn = document.getElementById('toggleMobileSlipQrBtn');
+      if (panel) panel.classList.add('hidden');
+      if (tBtn) tBtn.textContent = 'แสดง QR ส่งสลิป';
+    }
+
+    async function checkMobileTopupSynced(manual = false) {
+      if (!state.isLive || !state.user) return;
+      const { data: prof } = await sb.from('profiles').select('coin_balance, vip_until').eq('id', state.user.id).single();
+      if (!prof) return;
+      const newBal = Number(prof.coin_balance || 0);
+      const newVip = String(prof.vip_until || '');
+      if (newBal > mobileSlipStartBal || (newVip && newVip !== mobileSlipStartVip)) {
+        stopMobileSlipPoller();
+        await loadLiveData();
+        closeTopup();
+        render();
+        showToast('⚡ ได้รับยอดเติมจากมือถือเรียบร้อยแล้ว! อัปเดตบัญชีให้ทันที');
+      } else if (manual) {
+        showToast('ยังไม่พบยอดใหม่ หากเพิ่งส่งสลิปรอสักครู่แล้วกดเช็กอีกครั้งครับ');
+      }
+    }
+
+    function renderMobileSlipQr() {
+      const box = document.getElementById('mobileSlipQrCanvas');
+      if (!box) return;
+      const isVip = state.topupMode === 'vip';
+      const baht = isVip ? 99 : Math.max(1, Number(state.selectedBaht || 100));
+      const base = (window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('blob:'))
+        ? (window.location.origin + window.location.pathname)
+        : 'https://www.goldnovelth.com/';
+      const handoffUrl = `${base}?quickslip=1&mode=${isVip ? 'vip' : 'topup'}&baht=${baht}`;
+      box.innerHTML = '';
+      if (window.QRCode) {
+        new window.QRCode(box, {
+          text: handoffUrl,
+          width: 128,
+          height: 128,
+          colorDark: '#0F172A',
+          colorLight: '#FFFFFF',
+          correctLevel: window.QRCode.CorrectLevel.M
+        });
+      }
+    }
+
+    const toggleMobileSlipQrBtn = document.getElementById('toggleMobileSlipQrBtn');
+    if (toggleMobileSlipQrBtn) toggleMobileSlipQrBtn.addEventListener('click', () => {
+      const panel = document.getElementById('mobileSlipQrPanel');
+      if (!panel) return;
+      const willOpen = panel.classList.contains('hidden');
+      if (!willOpen) {
+        stopMobileSlipPoller();
+        return;
+      }
+      renderMobileSlipQr();
+      panel.classList.remove('hidden');
+      toggleMobileSlipQrBtn.textContent = 'ซ่อน QR';
+      mobileSlipStartBal = Number(state.user?.coin_balance || 0);
+      mobileSlipStartVip = String(state.user?.vip_until || '');
+      if (state.isLive && !mobileSlipPollTimer) {
+        mobileSlipPollTimer = setInterval(() => checkMobileTopupSynced(false), 5000);
+      }
+    });
+
+    const checkMobileSyncBtn = document.getElementById('checkMobileSyncBtn');
+    if (checkMobileSyncBtn) checkMobileSyncBtn.addEventListener('click', () => checkMobileTopupSynced(true));
+
+    function handleQuickSlipFromUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('quickslip') !== '1') return;
+        const mode = params.get('mode') === 'vip' ? 'vip' : 'coins';
+        const baht = Math.max(1, Number(params.get('baht') || (mode === 'vip' ? 99 : 100)));
+        if (!state.user) {
+          sessionStorage.setItem('goldnovel_pending_quickslip', JSON.stringify({ mode, baht }));
+          openAuthModal();
+          showToast('กรุณาเข้าสู่ระบบบัญชีเดียวกันเพื่อแนบสลิปโอนเงิน');
+          return;
+        }
+        openQuickSlipDirect(mode, baht);
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch {}
+    }
+
+    function openQuickSlipDirect(mode, baht) {
+      openTopup(mode === 'vip' ? 'แนบสลิปสมัคร VIP 99 บาทจากมือถือได้เลย' : `แนบสลิปยอดโอน ${baht} บาทจากมือถือได้เลย`);
+      setTopupMode(mode === 'vip' ? 'vip' : 'coins');
+      state.selectedBaht = mode === 'vip' ? 99 : baht;
+      const ci = document.getElementById('customBahtInput');
+      if (ci && mode !== 'vip') ci.value = String(baht);
+      document.getElementById('goPayStepBtn').click();
+    }
+
+    function resumePendingQuickSlipIfAny() {
+      try {
+        const raw = sessionStorage.getItem('goldnovel_pending_quickslip');
+        if (!raw || !state.user) return;
+        sessionStorage.removeItem('goldnovel_pending_quickslip');
+        const { mode, baht } = JSON.parse(raw);
+        openQuickSlipDirect(mode, baht);
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch {}
+    }
+
     (async function init() {
       if (state.isLive) await loadLiveData();
       else loadDemo();
       render();
+      handleQuickSlipFromUrl();
+      resumePendingQuickSlipIfAny();
     })();
   </script>
 </body>
