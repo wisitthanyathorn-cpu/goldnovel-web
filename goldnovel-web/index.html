@@ -454,7 +454,7 @@
         <div>
           <span id="topupBonusBadge" class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-1.5" style="background-color: var(--gold-soft); color: var(--gold-1);">โปรโมชั่นโบนัส +10%</span>
           <h2 class="text-xl font-bold">เติมเหรียญ GoldNovel</h2>
-          <p id="topupSubtext" class="text-xs mt-0.5" style="color: var(--text-sub);">รองรับ PromptPay และ TrueMoney Wallet</p>
+          <p id="topupSubtext" class="text-xs mt-0.5" style="color: var(--text-sub);">โอนผ่าน PromptPay QR ล็อกยอดอัตโนมัติ (รองรับทุกธนาคาร)</p>
         </div>
         <button type="button" id="closeTopupBtn" class="w-8 h-8 rounded-full text-sm" style="background-color: var(--bg-input);">✕</button>
       </div>
@@ -497,16 +497,15 @@
           </div>
         </div>
 
-        <div class="text-xs font-medium mb-2" style="color: var(--text-muted);">2. เลือกช่องทางชำระเงิน</div>
-        <div class="grid grid-cols-2 gap-2.5 mb-5">
-          <button type="button" data-pay="promptpay" class="pay-opt p-3 rounded-xl border text-left">
-            <div class="text-sm font-semibold">PromptPay</div>
-            <div class="text-[11px] mt-0.5" style="color: var(--text-sub);">โอนพร้อมเพย์ทุกธนาคาร</div>
-          </button>
-          <button type="button" data-pay="truemoney" class="pay-opt p-3 rounded-xl border text-left">
-            <div class="text-sm font-semibold">TrueMoney Wallet</div>
-            <div class="text-[11px] mt-0.5" style="color: var(--text-sub);">โอนเข้าวอลเล็ท</div>
-          </button>
+        <div class="mb-4 rounded-xl p-3 border space-y-1" style="background-color: var(--bg-input); border-color: rgba(234,184,84,0.3);">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold" style="color: var(--gold-1);">⚡ ช่องทางชำระเงิน: PromptPay QR (ทุกธนาคาร)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold" style="background-color: rgba(34,197,94,0.16); color: #4ADE80;">ออโต้ 24 ชม.</span>
+          </div>
+          <p class="text-[11px] leading-relaxed" style="color: var(--text-sub);">
+            • เติม <strong>100 บาทขึ้นไป</strong> หรือ <strong>VIP 99 บาท</strong>: ตรวจสลิปอัตโนมัติ เหรียญ/VIP เข้าทันที<br>
+            • เติม <strong>ต่ำกว่า 100 บาท</strong>: แนบสลิปรอแอดมินตรวจสอบอนุมัติ
+          </p>
         </div>
         <button type="button" id="goPayStepBtn" class="w-full py-3 rounded-xl text-sm btn-gold">ดำเนินการชำระเงิน</button>
       </div>
@@ -3076,7 +3075,7 @@
         return;
       }
       document.getElementById('topupBonusBadge').textContent = CFG.topupBonusPercent > 0 ? `โปรโมชั่นโบนัส +${CFG.topupBonusPercent}%` : 'เติมเหรียญ GoldNovel';
-      document.getElementById('topupSubtext').textContent = msg || 'รองรับ PromptPay และ TrueMoney Wallet';
+      document.getElementById('topupSubtext').textContent = msg || 'โอนผ่าน PromptPay QR ล็อกยอดอัตโนมัติ (รองรับทุกธนาคาร)';
       document.getElementById('topupStep1').classList.remove('hidden');
       document.getElementById('topupStep2').classList.add('hidden');
       setTopupMode('coins');
@@ -5010,21 +5009,63 @@
         const slipUrl = await uploadImageFile(slipFile, 'slips');
         if (state.isLive) {
           const isVip = state.topupMode === 'vip';
+          const payBaht = isVip ? 99 : state.selectedBaht;
+          const useAutoVerify = isVip || payBaht >= 100;
+
+          if (useAutoVerify) {
+            if (btn) btn.textContent = '⚡ กำลังตรวจสลิปอัตโนมัติ...';
+            try {
+              const { data: { session } } = await sb.auth.getSession();
+              const token = session?.access_token || '';
+              const fd = new FormData();
+              fd.append('files', slipFile);
+              fd.append('topup_type', isVip ? 'vip' : 'topup');
+              fd.append('amount_baht', String(payBaht));
+              fd.append('slip_url', slipUrl);
+
+              const verifyRes = await fetch(`${CFG.supabaseUrl}/functions/v1/verify-slip`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'apikey': CFG.supabaseAnonKey
+                },
+                body: fd
+              });
+
+              if (verifyRes.ok) {
+                const vData = await verifyRes.json().catch(() => ({}));
+                if (vData.ok) {
+                  await loadLiveData();
+                  closeTopup();
+                  render();
+                  showToast(vData.message || (isVip ? '⚡ เปิดสิทธิ์ VIP 30 วันเรียบร้อยแล้ว!' : '⚡ ตรวจสลิปผ่านแล้ว! เติมเหรียญเข้าบัญชีทันที'));
+                  return;
+                }
+                if (vData.rejected) {
+                  showToast('❌ ' + (vData.message || 'สลิปไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง'));
+                  return;
+                }
+              }
+            } catch (autoErr) {
+              // Edge Function ยังไม่ติดตั้งหรือเครือข่ายสะดุด -> บันทึกเป็น pending ให้แอดมินตรวจแทน
+            }
+          }
+
           const { error } = await sb.from('transactions').insert({
             user_id: state.user.id,
             type: isVip ? 'vip' : 'topup',
-            amount_baht: isVip ? 99 : state.selectedBaht,
+            amount_baht: payBaht,
             coins_delta: isVip ? 0 : coins,
-            payment_method: state.selectedPay,
+            payment_method: 'promptpay',
             slip_url: slipUrl,
-            note: isVip ? `สมัคร VIP รายเดือน 30 วัน (${state.selectedPay})` : `เติมเงิน ${state.selectedBaht} บาท (${state.selectedPay})`,
+            note: isVip ? 'สมัคร VIP รายเดือน 30 วัน (promptpay)' : `เติมเงิน ${payBaht} บาท (promptpay)`,
             status: 'pending'
           });
           if (error) throw error;
           await loadLiveData();
           closeTopup();
           render();
-          showToast('ส่งสลิปเรียบร้อย! รอระบบตรวจสอบหรืออนุมัติในหน้า Admin');
+          showToast(useAutoVerify ? 'ส่งสลิปเรียบร้อย! ระบบส่งต่อให้แอดมินตรวจสอบแล้ว' : 'ส่งสลิปเรียบร้อย! (ยอดต่ำกว่า 100 บาท รอแอดมินตรวจสอบ)');
         } else {
           state.user.coin_balance += coins;
           state.transactions.unshift({
