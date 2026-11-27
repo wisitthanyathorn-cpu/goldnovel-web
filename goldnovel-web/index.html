@@ -557,8 +557,7 @@
               <div class="text-[11px] font-bold text-[#113566] tracking-wide mb-1.5">THAI QR PAYMENT · PROMPTPAY</div>
               <div id="promptpayQrCanvas" class="w-44 h-44 flex items-center justify-center"></div>
             </div>
-            <button type="button" id="downloadQrBtn" class="mt-2.5 px-4 py-2 rounded-xl text-xs font-semibold" style="background-color: var(--gold-soft); border: 1px solid rgba(234,184,84,0.3); color: var(--gold-1);">💾 บันทึกรูป QR ลงแกลเลอรี</button>
-            <div class="text-[10px] mt-1.5 sm:hidden" style="color: var(--text-muted);">กดปุ่มด้านบนแล้วเลือก "บันทึกภาพ" (หรือแตะค้างที่รูป QR เพื่อบันทึกลงอัลบั้มรูป)</div>
+            <div class="mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--gold-soft); color: var(--gold-1);">📸 สามารถแคปหน้าจอนี้ไปสแกนจ่ายในแอปธนาคารได้เลย</div>
           </div>
 
           <div id="payPlaceholderWarn" class="hidden text-[11px] text-amber-300 bg-amber-500/10 border border-amber-400/25 rounded-lg px-3 py-1.5 mb-2">⚠️ กรุณาเปลี่ยนเบอร์พร้อมเพย์จริงของคุณในไฟล์ config.js ก่อนเปิดรับเงินจริง</div>
@@ -1702,6 +1701,7 @@
                     return `<button type="button" data-open-ch="${chapters[0].id}" class="px-6 py-2.5 rounded-full text-sm btn-gold">เริ่มอ่านตอนที่ ${chapters[0].chapter_number}</button>`;
                   })()}
                   <button type="button" data-toggle-bm="${novel.id}" class="px-4 py-2.5 rounded-full text-xs font-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle);">${state.bookmarks.includes(novel.id) ? '🔖 อยู่ในคลังแล้ว' : '📑 เพิ่มเข้าคลัง'}</button>
+                  <button type="button" id="shareNovelLinkBtn" data-share-novel-id="${novel.id}" data-share-novel-title="${escapeHtml(novel.title)}" class="px-4 py-2.5 rounded-full text-xs font-medium transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);">🔗 แชร์ลิงก์เรื่องนี้</button>
                   <button type="button" data-report-copyright="${escapeHtml(novel.title)}" class="px-3.5 py-2.5 rounded-full text-xs font-medium transition-colors hover:bg-white/[0.06]" style="color: var(--text-muted); border: 1px solid var(--border-soft);">🛡️ แจ้งลิขสิทธิ์</button>
                 </div>
               </div>
@@ -2860,7 +2860,10 @@
                   <h2 class="text-base font-bold">รายการนิยายของคุณ (${state.novels.length} เรื่อง)</h2>
                   <p class="text-xs" style="color: var(--text-muted);">คลิกเลือกเรื่องที่ต้องการเพื่อเข้าไปเพิ่ม แก้ไข หรือจัดการตอนนิยายของเรื่องนั้นโดยเฉพาะ</p>
                 </div>
-                <button type="button" id="toggleNewNovelBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มนิยายเรื่องใหม่</button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button type="button" id="downloadSitemapBtn" class="px-3.5 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-white/[0.06]" style="background-color: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--gold-1);" title="ดาวน์โหลดไฟล์ sitemap.xml ล่าสุดสำหรับอัปโหลดขึ้น GitHub / Google Search Console">🗺️ โหลด sitemap.xml</button>
+                  <button type="button" id="toggleNewNovelBtn" class="px-4 py-2 rounded-xl text-xs btn-gold">+ เพิ่มนิยายเรื่องใหม่</button>
+                </div>
               </div>
 
               ${newNovelFormHtml}
@@ -3286,6 +3289,7 @@
           document.fonts.ready.then(() => renderReaderCanvases());
         }
       }
+      if (typeof syncSeoMetadata === 'function') syncSeoMetadata();
       startHeroAutoSlide();
     }
 
@@ -3370,12 +3374,77 @@
       return body + crc16Ccitt(body);
     }
 
+    window._cachedQrCardFile = null;
+    window._cachedQrCardUrl = '';
+    window._cachedQrCardName = 'GoldNovel-PromptPay.png';
+
     function renderPromptPayQR(targetRaw, amount) {
       const container = document.getElementById('promptpayQrCanvas');
       if (!container) return;
       container.innerHTML = '';
+      window._cachedQrCardFile = null;
+      window._cachedQrCardUrl = '';
+      const bahtVal = Number(amount || 0);
+      const fileName = `GoldNovel-PromptPay-${bahtVal}THB.png`;
+      window._cachedQrCardName = fileName;
+
       const payload = buildPromptPayPayload(targetRaw, amount);
-      if (window.QRCode) {
+      if (!window.QRCode) return;
+
+      // Render high-res QR in offscreen temp div, then compose crisp card PNG + real <img> (supports long-press Save to Photos + instant Web Share)
+      const tmp = document.createElement('div');
+      new window.QRCode(tmp, {
+        text: payload,
+        width: 360,
+        height: 360,
+        colorDark: '#0F172A',
+        colorLight: '#FFFFFF',
+        correctLevel: window.QRCode.CorrectLevel.M
+      });
+
+      const qrCanvas = tmp.querySelector('canvas');
+      if (qrCanvas) {
+        const out = document.createElement('canvas');
+        const W = 540, H = 640;
+        out.width = W;
+        out.height = H;
+        const ctx = out.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#113566';
+        ctx.fillRect(0, 0, W, 68);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('THAI QR PAYMENT · PROMPTPAY', W / 2, 42);
+        ctx.drawImage(qrCanvas, 90, 96, 360, 360);
+        ctx.fillStyle = '#111827';
+        ctx.font = 'bold 30px sans-serif';
+        ctx.fillText(`${bahtVal.toFixed(2)} บาท`, W / 2, 530);
+        ctx.fillStyle = '#6B7280';
+        ctx.font = '18px sans-serif';
+        ctx.fillText('GoldNovel · สแกนจ่ายได้ทุกแอปธนาคาร', W / 2, 574);
+
+        const dataUrl = out.toDataURL('image/png');
+        window._cachedQrCardUrl = dataUrl;
+
+        // Pre-build File object BEFORE user taps Save so iOS Safari Web Share keeps user gesture!
+        out.toBlob((blob) => {
+          if (blob) {
+            try { window._cachedQrCardFile = new File([blob], fileName, { type: 'image/png' }); } catch (_) {}
+          }
+        }, 'image/png');
+
+        // Display real <img> so mobile users can ALSO long-press -> Save to Photos directly
+        const imgEl = document.createElement('img');
+        imgEl.src = dataUrl;
+        imgEl.alt = `PromptPay QR ${bahtVal} บาท`;
+        imgEl.className = 'w-44 h-auto rounded-lg select-none';
+        imgEl.style.webkitTouchCallout = 'default';
+        imgEl.style.pointerEvents = 'auto';
+        container.className = 'flex items-center justify-center';
+        container.appendChild(imgEl);
+      } else {
         new window.QRCode(container, {
           text: payload,
           width: 176,
@@ -3590,12 +3659,55 @@
         });
       });
       document.querySelectorAll('[data-open-novel]').forEach(el => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
+          if (el.tagName === 'A') e.preventDefault();
           state.activeNovelId = el.getAttribute('data-open-novel');
           state.view = 'novel';
           window.scrollTo({ top: 0, behavior: 'smooth' });
           render();
         });
+      });
+
+      const shareNovelLinkBtn = document.getElementById('shareNovelLinkBtn');
+      if (shareNovelLinkBtn) shareNovelLinkBtn.addEventListener('click', async () => {
+        const nid = shareNovelLinkBtn.getAttribute('data-share-novel-id');
+        const ntitle = shareNovelLinkBtn.getAttribute('data-share-novel-title') || 'GoldNovel';
+        const base = (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : 'https://www.goldnovelth.com';
+        const shareUrl = `${base}/?novel=${encodeURIComponent(nid)}`;
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: `${ntitle} — GoldNovel`, url: shareUrl });
+            return;
+          } catch (err) {
+            if (err && err.name === 'AbortError') return;
+          }
+        }
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          showToast('คัดลอกลิงก์นิยายแล้ว! นำไปวางแชร์ได้เลย');
+        } catch (_) {
+          window.prompt('คัดลอกลิงก์นิยาย:', shareUrl);
+        }
+      });
+
+      const downloadSitemapBtn = document.getElementById('downloadSitemapBtn');
+      if (downloadSitemapBtn) downloadSitemapBtn.addEventListener('click', () => {
+        const today = new Date().toISOString().slice(0, 10);
+        const urls = [
+          `  <url>\n    <loc>https://www.goldnovelth.com/</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`
+        ];
+        (state.novels || []).forEach(n => {
+          const lm = (n.updated_at || n.created_at || today).slice(0, 10);
+          urls.push(`  <url>\n    <loc>https://www.goldnovelth.com/?novel=${encodeURIComponent(n.id)}</loc>\n    <lastmod>${lm}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+        });
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
+        const blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'sitemap.xml';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        showToast(`ดาวน์โหลด sitemap.xml (${state.novels.length} เรื่อง) แล้ว — อัปโหลดใส่ goldnovel-web/ บน GitHub ได้เลย`);
       });
 
       document.querySelectorAll('[data-open-ch]').forEach(el => {
@@ -5397,78 +5509,6 @@
       document.getElementById('topupStep2').classList.remove('hidden');
     });
 
-    async function buildPromptPayCardBlob() {
-      const box = document.getElementById('promptpayQrCanvas');
-      const qrCanvas = box?.querySelector('canvas');
-      const qrImg = box?.querySelector('img');
-      const qrSrc = qrCanvas ? qrCanvas.toDataURL('image/png') : (qrImg ? qrImg.src : '');
-      if (!qrSrc) return null;
-
-      return await new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const out = document.createElement('canvas');
-          const W = 540, H = 640;
-          out.width = W;
-          out.height = H;
-          const ctx = out.getContext('2d');
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, W, H);
-          // Header bar
-          ctx.fillStyle = '#113566';
-          ctx.fillRect(0, 0, W, 68);
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = 'bold 22px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('THAI QR PAYMENT · PROMPTPAY', W / 2, 42);
-          // QR code with generous white quiet-zone so banking apps scan reliably
-          ctx.drawImage(img, 70, 96, 400, 400);
-          // Amount & site footer
-          const bahtVal = state.topupMode === 'vip' ? 99 : Number(state.selectedBaht || 0);
-          ctx.fillStyle = '#111827';
-          ctx.font = 'bold 30px sans-serif';
-          ctx.fillText(`${bahtVal.toFixed(2)} บาท`, W / 2, 550);
-          ctx.fillStyle = '#6B7280';
-          ctx.font = '18px sans-serif';
-          ctx.fillText('GoldNovel · สแกนจ่ายได้ทุกแอปธนาคาร', W / 2, 592);
-          out.toBlob((blob) => resolve({ blob, dataUrl: out.toDataURL('image/png') }), 'image/png');
-        };
-        img.onerror = () => resolve(null);
-        img.src = qrSrc;
-      });
-    }
-
-    document.getElementById('downloadQrBtn').addEventListener('click', async () => {
-      const result = await buildPromptPayCardBlob();
-      if (!result || !result.blob) { showToast('ไม่สามารถบันทึกรูป QR ได้'); return; }
-      const bahtVal = state.topupMode === 'vip' ? 99 : Number(state.selectedBaht || 0);
-      const fileName = `GoldNovel-PromptPay-${bahtVal}THB.png`;
-      const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent || '');
-
-      // On mobile (especially iOS Safari), Web Share API lets the reader tap "Save Image" straight to Photos/Gallery instead of Files!
-      if (isMobile && navigator.share && navigator.canShare) {
-        try {
-          const file = new File([result.blob], fileName, { type: 'image/png' });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: `QR พร้อมเพย์ ${bahtVal} บาท — GoldNovel`
-            });
-            return;
-          }
-        } catch (err) {
-          if (err && err.name === 'AbortError') return;
-        }
-      }
-
-      // Desktop / fallback download
-      const a = document.createElement('a');
-      a.href = result.dataUrl;
-      a.download = fileName;
-      a.click();
-      showToast('บันทึกรูป QR ลงเครื่องแล้ว');
-    });
 
     document.getElementById('backPayBtn').addEventListener('click', () => {
       stopMobileSlipPoller();
@@ -5515,10 +5555,16 @@
               if (verifyRes.ok) {
                 const vData = await verifyRes.json().catch(() => ({}));
                 if (vData.ok) {
-                  await loadLiveData();
+                  // อัปเดตยอดเหรียญและสิทธิ์ VIP บนแถบด้านบนทันที (0ms ไม่ต้องรอโหลดหน้าใหม่!)
+                  if (state.user) {
+                    if (typeof vData.new_balance === 'number') state.user.coin_balance = vData.new_balance;
+                    if (vData.vip_until) state.user.vip_until = vData.vip_until;
+                  }
+                  applyChrome();
                   closeTopup();
                   render();
                   showToast(vData.message || (isVip ? '⚡ เปิดสิทธิ์ VIP 30 วันเรียบร้อยแล้ว!' : '⚡ ตรวจสลิปผ่านแล้ว! เติมเหรียญเข้าบัญชีทันที'));
+                  loadLiveData().then(() => { applyChrome(); render(); }).catch(() => {});
                   return;
                 }
                 if (vData.rejected) {
@@ -6331,9 +6377,147 @@
       if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closePwaModal(); });
     })();
 
+    // Lightweight Live Coin & VIP Balance Auto-Refresh (Updates header immediately on PWA/tab resume or admin approval)
+    let _lastBalRefreshAt = 0;
+    let _pendingBalWatchTimer = null;
+
+    async function refreshUserBalanceOnly(silent = true) {
+      if (!state.isLive || !state.user || !sb) return false;
+      const now = Date.now();
+      if (now - _lastBalRefreshAt < 2500) return false;
+      _lastBalRefreshAt = now;
+      try {
+        const { data: prof } = await sb
+          .from('profiles')
+          .select('coin_balance, vip_until, display_name, role')
+          .eq('id', state.user.id)
+          .single();
+        if (!prof) return false;
+        const oldBal = Number(state.user.coin_balance || 0);
+        const newBal = Number(prof.coin_balance || 0);
+        const oldVip = state.user.vip_until || null;
+        const newVip = prof.vip_until || null;
+        const changed = newBal !== oldBal || newVip !== oldVip;
+        if (changed) {
+          state.user.coin_balance = newBal;
+          state.user.vip_until = newVip;
+          if (prof.display_name) state.user.display_name = prof.display_name;
+          applyChrome();
+          if (state.view === 'library' || state.view === 'settings') render();
+          if (!silent && newBal > oldBal) {
+            showToast(`🎉 เหรียญเข้าแล้ว! ยอดล่าสุด ${newBal.toLocaleString()} เหรียญ`);
+          } else if (!silent && newVip && newVip !== oldVip) {
+            showToast('👑 เปิดสิทธิ์ VIP เรียบร้อยแล้ว!');
+          }
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
+
+    function startPendingBalanceWatcher() {
+      if (_pendingBalWatchTimer) clearInterval(_pendingBalWatchTimer);
+      const startedAt = Date.now();
+      _pendingBalWatchTimer = setInterval(async () => {
+        if (Date.now() - startedAt > 10 * 60 * 1000) {
+          clearInterval(_pendingBalWatchTimer);
+          _pendingBalWatchTimer = null;
+          return;
+        }
+        const updated = await refreshUserBalanceOnly(false);
+        if (updated) {
+          clearInterval(_pendingBalWatchTimer);
+          _pendingBalWatchTimer = null;
+        }
+      }, 8000);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refreshUserBalanceOnly(false);
+    });
+    window.addEventListener('focus', () => refreshUserBalanceOnly(false));
+
+    function syncSeoMetadata() {
+      const defaultTitle = 'GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์';
+      const defaultDesc = 'GoldNovel (goldnovelth.com) แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน อ่านลื่น ปลดล็อกตอนอัตโนมัติ';
+      const baseOrigin = 'https://www.goldnovelth.com';
+      const setMeta = (sel, attr, val) => {
+        const el = document.querySelector(sel);
+        if (el) el.setAttribute(attr, val);
+      };
+      const removeNovelSchema = () => {
+        const old = document.getElementById('dynamicNovelSchema');
+        if (old) old.remove();
+      };
+
+      const canPushUrl = (location.protocol === 'http:' || location.protocol === 'https:') && !location.search.includes('quickslip=');
+
+      if ((state.view === 'novel' || state.view === 'reader') && state.activeNovelId) {
+        const novel = getNovel(state.activeNovelId);
+        if (novel) {
+          const novelUrl = `${baseOrigin}/?novel=${encodeURIComponent(novel.id)}`;
+          const ch = state.view === 'reader' ? (novel.chapters || []).find(c => c.id === state.activeChapterId) : null;
+          const pageTitle = ch ? `${ch.title} — ${novel.title} | GoldNovel` : `${novel.title} — อ่านนิยายออนไลน์ | GoldNovel`;
+          const desc = (novel.synopsis || '').replace(/\s+/g, ' ').trim().slice(0, 160) || `อ่านนิยาย ${novel.title} ออนไลน์บน GoldNovel`;
+
+          document.title = pageTitle;
+          setMeta('meta[name="description"]', 'content', desc);
+          setMeta('link[rel="canonical"]', 'href', novelUrl);
+          setMeta('meta[property="og:title"]', 'content', pageTitle);
+          setMeta('meta[property="og:description"]', 'content', desc);
+          setMeta('meta[property="og:url"]', 'content', novelUrl);
+          if (novel.cover_url) setMeta('meta[property="og:image"]', 'content', novel.cover_url);
+
+          if (canPushUrl) {
+            const targetSearch = `?novel=${encodeURIComponent(novel.id)}`;
+            if (location.search !== targetSearch) {
+              try { window.history.replaceState({}, '', `${location.pathname}${targetSearch}`); } catch (_) {}
+            }
+          }
+
+          removeNovelSchema();
+          const ld = document.createElement('script');
+          ld.id = 'dynamicNovelSchema';
+          ld.type = 'application/ld+json';
+          ld.textContent = JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Book',
+            name: novel.title,
+            author: { '@type': 'Person', name: novel.author_name || 'GoldNovel' },
+            description: desc,
+            image: novel.cover_url || `${baseOrigin}/favicon.png`,
+            url: novelUrl,
+            inLanguage: 'th'
+          });
+          document.head.appendChild(ld);
+          return;
+        }
+      }
+
+      document.title = defaultTitle;
+      setMeta('meta[name="description"]', 'content', defaultDesc);
+      setMeta('link[rel="canonical"]', 'href', `${baseOrigin}/`);
+      setMeta('meta[property="og:title"]', 'content', defaultTitle);
+      setMeta('meta[property="og:description"]', 'content', defaultDesc);
+      setMeta('meta[property="og:url"]', 'content', `${baseOrigin}/`);
+      setMeta('meta[property="og:image"]', 'content', `${baseOrigin}/favicon.png`);
+      removeNovelSchema();
+      if (canPushUrl && location.search.includes('novel=')) {
+        try { window.history.replaceState({}, '', location.pathname); } catch (_) {}
+      }
+    }
+
     (async function init() {
       if (state.isLive) await loadLiveData();
       else loadDemo();
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const novelParam = params.get('novel');
+        if (novelParam && state.novels.some(n => String(n.id) === String(novelParam))) {
+          state.activeNovelId = String(novelParam);
+          state.view = 'novel';
+        }
+      } catch (_) {}
       render();
       handleQuickSlipFromUrl();
       resumePendingQuickSlipIfAny();
