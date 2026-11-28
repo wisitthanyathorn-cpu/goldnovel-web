@@ -968,7 +968,8 @@
       view: 'home', // home | novel | reader | library | settings | admin
       heroSlideIdx: 0,
       adminTab: 'novels', // novels | banners | topups
-      adminSelectedNovelId: null, // null = novel list view, id = inside that novel's workspace
+      adminSelectedNovelId: null,
+      adminSelectedChapterIds: [], // null = novel list view, id = inside that novel's workspace
       adminShowNewNovel: false,
       adminEditNovelOpen: false,
       adminAuditOpen: false,
@@ -2974,6 +2975,25 @@
                         </div>
                       `;
                     })() : ''}
+                    ${chList.length > 0 ? (() => {
+                      const validSelected = (state.adminSelectedChapterIds || []).filter(id => chList.some(c => c.id === id));
+                      const selCount = validSelected.length;
+                      const allSel = selCount > 0 && selCount === chList.length;
+                      return `
+                        <div class="px-5 py-2.5 border-b flex flex-wrap items-center justify-between gap-2.5" style="border-color: var(--border-soft); background-color: ${selCount > 0 ? 'rgba(244,63,94,0.08)' : 'color-mix(in srgb, var(--bg-input) 40%, transparent)'};">
+                          <label class="inline-flex items-center gap-2 text-xs font-medium cursor-pointer select-none" style="color: var(--text-main);">
+                            <input type="checkbox" id="adminSelectAllChBox" ${allSel ? 'checked' : ''} class="w-4 h-4 rounded accent-amber-400 cursor-pointer">
+                            <span>${selCount > 0 ? `เลือกแล้ว <strong style="color: var(--gold-1);">${selCount}</strong> จาก ${chList.length} ตอน` : `ติ๊กเลือกหลายตอนเพื่อลบพร้อมกัน (${chList.length} ตอน)`}</span>
+                          </label>
+                          ${selCount > 0 ? `
+                            <div class="flex items-center gap-2">
+                              <button type="button" id="clearSelectedChBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background-color: var(--bg-input); color: var(--text-sub);">ล้างการเลือก</button>
+                              <button type="button" id="bulkDeleteChaptersBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 transition-colors">🗑️ ลบที่เลือก (${selCount} ตอน)</button>
+                            </div>
+                          ` : ''}
+                        </div>
+                      `;
+                    })() : ''}
                     <div>
                       ${chList.length === 0 ? `<div class="p-10 text-center text-xs" style="color: var(--text-muted);">ยังไม่มีตอนนิยายในเรื่องนี้ กดปุ่ม <strong>+ เพิ่มตอนใหม่</strong> หรือ <strong>✂️ แยกตอนจาก 1 ไฟล์ .txt</strong> ด้านบนได้เลยครับ</div>` : (() => {
                         const adminGroups = buildChapterGroups(chList, 50, false);
@@ -3005,7 +3025,10 @@
                                       stBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full" style="background-color: var(--gold-soft); color: var(--gold-1);">⏰ ตั้งเวลา ${dt}</span>`;
                                     }
                                     return `
-                                      <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors" style="border-color: var(--border-soft);">
+                                      <div class="px-5 py-3.5 border-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors" style="border-color: var(--border-soft); ${(state.adminSelectedChapterIds || []).includes(c.id) ? 'background-color: rgba(244,63,94,0.07);' : ''}">
+                                        <label class="flex items-center shrink-0 cursor-pointer pr-1" title="ติ๊กเลือกตอนนี้">
+                                          <input type="checkbox" data-sel-ch="${c.id}" ${(state.adminSelectedChapterIds || []).includes(c.id) ? 'checked' : ''} class="w-4 h-4 rounded accent-amber-400 cursor-pointer">
+                                        </label>
                                         <button type="button" data-edit-ch="${c.id}" class="min-w-0 flex-1 text-left focus:outline-none">
                                           <div class="flex flex-wrap items-center gap-2 mb-0.5">
                                             <span class="text-xs font-bold ${c.is_note ? 'px-2 py-0.5 rounded-md' : ''}" style="${c.is_note ? 'background-color: rgba(234,184,84,0.18); color: var(--gold-1);' : 'color: var(--gold-1);'}">${getChapterLabel(c)}</span>
@@ -4095,6 +4118,7 @@
       document.querySelectorAll('[data-manage-novel]').forEach(el => {
         el.addEventListener('click', () => {
           state.adminSelectedNovelId = el.getAttribute('data-manage-novel');
+          state.adminSelectedChapterIds = [];
           state.adminShowChapterForm = false;
           state.editingChapterId = null;
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4877,6 +4901,66 @@
           window.scrollTo({ top: 0, behavior: 'smooth' });
           render();
         });
+      });
+
+      document.querySelectorAll('[data-sel-ch]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const cid = cb.getAttribute('data-sel-ch');
+          const cur = Array.isArray(state.adminSelectedChapterIds) ? state.adminSelectedChapterIds.slice() : [];
+          if (cb.checked) {
+            if (!cur.includes(cid)) cur.push(cid);
+          } else {
+            const idx = cur.indexOf(cid);
+            if (idx >= 0) cur.splice(idx, 1);
+          }
+          state.adminSelectedChapterIds = cur;
+          render();
+        });
+      });
+
+      const adminSelectAllChBox = document.getElementById('adminSelectAllChBox');
+      if (adminSelectAllChBox) adminSelectAllChBox.addEventListener('change', () => {
+        const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+        const allIds = (novel?.chapters || []).map(c => c.id);
+        state.adminSelectedChapterIds = adminSelectAllChBox.checked ? allIds : [];
+        render();
+      });
+
+      const clearSelectedChBtn = document.getElementById('clearSelectedChBtn');
+      if (clearSelectedChBtn) clearSelectedChBtn.addEventListener('click', () => {
+        state.adminSelectedChapterIds = [];
+        render();
+      });
+
+      const bulkDeleteChaptersBtn = document.getElementById('bulkDeleteChaptersBtn');
+      if (bulkDeleteChaptersBtn) bulkDeleteChaptersBtn.addEventListener('click', async () => {
+        const novel = state.novels.find(n => n.id === state.adminSelectedNovelId);
+        if (!novel) return;
+        const ids = (state.adminSelectedChapterIds || []).filter(id => (novel.chapters || []).some(c => c.id === id));
+        if (!ids.length) return;
+        if (!window.confirm(`ยืนยันลบตอนนิยายที่เลือกทั้งหมด ${ids.length} ตอนถาวรหรือไม่?\n(เมื่อลบแล้วไม่สามารถกู้คืนได้)`)) return;
+        bulkDeleteChaptersBtn.disabled = true;
+        bulkDeleteChaptersBtn.textContent = 'กำลังลบ...';
+        try {
+          if (state.isLive) {
+            // Delete in chunks of 50 to avoid URL length limits
+            for (let i = 0; i < ids.length; i += 50) {
+              const chunk = ids.slice(i, i + 50);
+              const { error } = await sb.from('chapters').delete().in('id', chunk);
+              if (error) throw error;
+            }
+            await loadLiveData();
+          } else {
+            novel.chapters = (novel.chapters || []).filter(c => !ids.includes(c.id));
+            saveDemo();
+          }
+          state.adminSelectedChapterIds = [];
+          render();
+          showToast(`🗑️ ลบตอนนิยาย ${ids.length} ตอนเรียบร้อยแล้ว`);
+        } catch (err) {
+          bulkDeleteChaptersBtn.disabled = false;
+          showToast('ลบตอนไม่สำเร็จ: ' + err.message);
+        }
       });
 
       document.querySelectorAll('[data-del-ch]').forEach(btn => {
