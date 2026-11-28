@@ -20,6 +20,11 @@
   <meta property="og:description" content="GoldNovel แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน">
   <meta property="og:url" content="https://www.goldnovelth.com/">
   <meta property="og:image" content="https://www.goldnovelth.com/favicon.png">
+  <meta property="og:image:type" content="image/png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์">
+  <meta name="twitter:description" content="GoldNovel แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน">
+  <meta name="twitter:image" content="https://www.goldnovelth.com/favicon.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -272,10 +277,10 @@
     50% { box-shadow: 0 0 0 1.5px rgba(247,223,155,0.85), 0 0 38px rgba(234,184,84,0.58), 0 16px 36px -8px rgba(0,0,0,0.75); }
   }
   .cover-fx-wrap { position: relative; width: 100%; height: 100%; overflow: hidden; }
-  .cover-fx-img { width: 100%; height: 100%; object-fit: cover; will-change: transform; animation: coverBreathe 7s ease-in-out infinite; }
+  .cover-fx-img { width: 100%; height: 100%; object-fit: cover; object-position: top center; transform-origin: 50% 12%; will-change: transform; animation: coverBreathe 7.5s ease-in-out infinite; }
   @keyframes coverBreathe {
-    0%, 100% { transform: scale(1) translate3d(0, 0, 0); }
-    50% { transform: scale(1.095) translate3d(0, -2.5%, 0); }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.055); }
   }
   .cover-fx-aura {
     position: absolute; inset: 0; pointer-events: none; z-index: 2;
@@ -496,7 +501,7 @@
     <div class="card-panel rounded-3xl max-w-3xl w-full p-0 overflow-hidden shadow-2xl fade-in grid grid-cols-1 md:grid-cols-12 border" style="border-color: rgba(234,184,84,0.28);">
       <!-- Left Illustrated Panel (Custom Xianxia Gold-Black Swordsman) -->
       <div class="relative md:col-span-5 h-44 sm:h-52 md:h-auto overflow-hidden flex flex-col justify-end p-5 text-center md:text-left" style="background: #0B0D14;">
-        <img id="authLoginArtImg" src="/login-art.jpg" alt="GoldNovel Artwork" class="absolute inset-0 w-full h-full object-cover object-[50%_18%]" onerror="this.style.display='none'">
+        <img id="authLoginArtImg" src="" alt="GoldNovel Artwork" class="absolute inset-0 w-full h-full object-cover object-[50%_18%]" onerror="this.style.display='none'">
         <label id="quickChangeLoginArtBtn" class="hidden absolute top-3 left-3 z-20 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer bg-black/70 text-amber-200 border border-amber-300/40 hover:bg-black/90 backdrop-blur-xs items-center gap-1" title="เปลี่ยนภาพหน้าล็อกอิน (เห็นเฉพาะเจ้าของเว็บ)">
           <span>📷 เปลี่ยนรูป</span>
           <input id="quickLoginArtFileInput" type="file" accept="image/*" class="hidden">
