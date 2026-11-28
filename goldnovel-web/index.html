@@ -19,12 +19,13 @@
   <meta property="og:title" content="GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์">
   <meta property="og:description" content="GoldNovel แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน">
   <meta property="og:url" content="https://www.goldnovelth.com/">
-  <meta property="og:image" content="https://www.goldnovelth.com/favicon.png">
-  <meta property="og:image:type" content="image/png">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://www.goldnovelth.com/og-cover.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="GoldNovel — แพลตฟอร์มอ่านนิยายออนไลน์">
   <meta name="twitter:description" content="GoldNovel แพลตฟอร์มอ่านนิยายออนไลน์ นิยายแปลจีน แฟนตาซี กำลังภายใน และยุคปัจจุบัน">
-  <meta name="twitter:image" content="https://www.goldnovelth.com/favicon.png">
+  <meta name="twitter:image" content="https://www.goldnovelth.com/og-cover.jpg">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -1301,7 +1302,7 @@
       const customLogo = state.settings?.site_logo_url || '';
       const loginArtImgEl = document.getElementById('authLoginArtImg');
       if (loginArtImgEl) {
-        const targetArt = state.settings?.promo_banner_url || '/login-art.jpg';
+        const targetArt = state.settings?.promo_banner_url || '';
         if (loginArtImgEl.getAttribute('data-loaded-src') !== targetArt) {
           loginArtImgEl.style.display = '';
           loginArtImgEl.src = targetArt;
@@ -3148,7 +3149,7 @@
                 </div>
                 <div class="flex items-center gap-3.5">
                   <div class="w-14 h-18 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border" style="background-color: var(--bg-input); border-color: var(--border-subtle);">
-                    <img src="${s.promo_banner_url || '/login-art.jpg'}" alt="Login Art Preview" class="w-full h-full object-cover object-top">
+                    <img src="${s.promo_banner_url || ''}" alt="Login Art Preview" class="w-full h-full object-cover object-top">
                   </div>
                   <div class="flex-1 min-w-0 space-y-1">
                     <input id="bLoginArtFile" type="file" accept="image/*" class="w-full text-xs p-2 rounded-xl" style="background-color: var(--bg-input); border: 1px dashed var(--border-subtle);">
@@ -6821,7 +6822,7 @@
       setMeta('meta[property="og:title"]', 'content', defaultTitle);
       setMeta('meta[property="og:description"]', 'content', defaultDesc);
       setMeta('meta[property="og:url"]', 'content', `${baseOrigin}/`);
-      setMeta('meta[property="og:image"]', 'content', `${baseOrigin}/favicon.png`);
+      setMeta('meta[property="og:image"]', 'content', `${baseOrigin}/og-cover.jpg`);
       removeNovelSchema();
       if (canPushUrl && (location.pathname.startsWith('/novel/') || location.search.includes('novel='))) {
         try { window.history.replaceState({}, '', '/'); } catch (_) {}
